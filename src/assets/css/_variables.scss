@@ -1,0 +1,45 @@
+@use "sass:map";
+
+// Brand colors
+$brand-color: hsl(227, 87%, 64%);
+$brand-light-color: hsl(227, 87%, 96%);
+$body-color: #eff1f5;
+$body-text-color: #333333;
+
+$black: #000;
+$white: #fff;
+
+// Custom warning
+$custom-warning: #ff9800;
+$custom-info: #673AB7 ;
+
+// Override Bootstrap's theme colors BEFORE importing Bootstrap
+$primary: $brand-color;
+$warning: $custom-warning;
+$info: $custom-info;
+
+// You can override all Bootstrap theme colors here
+$theme-colors: (
+  "primary": $primary,
+  "secondary": #6c757d,  // Bootstrap default or customize
+  "success": #198754,    // Bootstrap default or customize
+  "info": $info,       // Bootstrap default or customize
+  "warning": $warning,
+  "danger": #dc3545,     // Bootstrap default or customize
+  "light": #f8f9fa,      // Bootstrap default or customize
+  "dark": #212529        // Bootstrap default or customize
+);
+
+// Optional: Override other Bootstrap variables
+$border-radius: 4px;
+$body-bg: $body-color;
+$body-color: $body-text-color;
+
+// Fonts
+$font-family-sans-serif: "Open Sans", sans-serif;
+
+// Border radius scale
+$border-radius-1: 2px;
+$border-radius-2: 4px;
+$border-radius-3: 6px;
+$border-radius-4: 8px;

@@ -1,0 +1,344 @@
+@use "sass:color";
+@use "./variables" as *;
+// ============================================
+// PRIMARY COLOR OVERRIDES
+// ============================================
+
+// Background
+.bg-primary {
+  background-color: $brand-color !important;
+}
+
+// Text
+.text-primary {
+  color: $brand-color !important;
+}
+
+a.text-primary:hover,
+a.text-primary:focus {
+  color: color.scale($brand-color, $lightness: -10%) !important;
+}
+
+// Border
+.border-primary {
+  border-color: $brand-color !important;
+}
+
+// Buttons
+.btn-primary {
+  background-color: $brand-color;
+  border-color: $brand-color;
+
+  &:hover {
+    background-color: color.scale($brand-color, $lightness: -7.5%);
+    border-color: color.scale($brand-color, $lightness: -10%);
+  }
+
+  &:focus,
+  &.focus {
+    background-color: color.scale($brand-color, $lightness: -7.5%);
+    border-color: color.scale($brand-color, $lightness: -10%);
+    box-shadow: 0 0 0 0.2rem rgba($brand-color, 0.5);
+  }
+
+  &:active,
+  &.active {
+    background-color: color.scale($brand-color, $lightness: -10%);
+    border-color: color.scale($brand-color, $lightness: -12.5%);
+  }
+
+  &:disabled,
+  &.disabled {
+    background-color: $brand-color;
+    border-color: $brand-color;
+  }
+}
+
+.btn-outline-primary {
+  color: $brand-color;
+  border-color: $brand-color;
+
+  &:hover {
+    color: $white;
+    background-color: $brand-color;
+    border-color: $brand-color;
+  }
+
+  &:focus,
+  &.focus {
+    box-shadow: 0 0 0 0.2rem rgba($brand-color, 0.5);
+  }
+
+  &:active,
+  &.active {
+    color: $white;
+    background-color: $brand-color;
+    border-color: $brand-color;
+  }
+
+  &:disabled,
+  &.disabled {
+    color: $brand-color;
+    background-color: transparent;
+  }
+}
+
+// Links
+.link-primary {
+  color: $brand-color !important;
+
+  &:hover,
+  &:focus {
+    color: color.scale($brand-color, $lightness: -10%) !important;
+  }
+}
+
+// Alerts
+.alert-primary {
+  background-color: color.scale($brand-color, $lightness: 35%);
+  border-color: color.scale($brand-color, $lightness: 30%);
+  color: color.scale($brand-color, $lightness: -10%);
+
+  .alert-link {
+    color: color.scale($brand-color, $lightness: -15%);
+  }
+}
+
+// Badges
+.badge.bg-primary {
+  background-color: $brand-color !important;
+}
+
+// List Group
+.list-group-item-primary {
+  background-color: color.scale($brand-color, $lightness: 35%);
+  color: color.scale($brand-color, $lightness: -10%);
+
+  &.list-group-item-action:hover,
+  &.list-group-item-action:focus {
+    background-color: color.scale($brand-color, $lightness: 30%);
+  }
+
+  &.list-group-item-action.active {
+    background-color: color.scale($brand-color, $lightness: -10%);
+    border-color: color.scale($brand-color, $lightness: -10%);
+    color: $white;
+  }
+}
+
+// Progress
+.progress-bar {
+  background-color: $brand-color;
+}
+
+// Tables
+.table-primary {
+  background-color: color.scale($brand-color, $lightness: 35%);
+
+  th,
+  td,
+  thead th,
+  tbody + tbody {
+    border-color: color.scale($brand-color, $lightness: 25%);
+  }
+}
+
+// ============================================
+// WARNING COLOR OVERRIDES
+// ============================================
+
+.bg-warning {
+  background-color: $custom-warning !important;
+}
+
+.text-warning {
+  color: $custom-warning !important;
+}
+
+.border-warning {
+  border-color: $custom-warning !important;
+}
+
+.btn-warning {
+  background-color: $custom-warning;
+  border-color: $custom-warning;
+  color: $white;
+
+  &:hover {
+    background-color: color.scale($custom-warning, $lightness: -7.5%);
+    border-color: color.scale($custom-warning, $lightness: -10%);
+  }
+
+  &:focus,
+  &.focus {
+    box-shadow: 0 0 0 0.2rem rgba($custom-warning, 0.5);
+  }
+
+  &:active,
+  &.active {
+    background-color: color.scale($custom-warning, $lightness: -10%);
+    border-color: color.scale($custom-warning, $lightness: -12.5%);
+  }
+}
+
+.alert-warning {
+  background-color: color.scale($custom-warning, $lightness: 35%);
+  border-color: color.scale($custom-warning, $lightness: 30%);
+  color: color.scale($custom-warning, $lightness: -30%);
+}
+
+// ============================================
+// INFO COLOR OVERRIDES
+// ============================================
+
+.bg-info {
+  background-color: $custom-info !important;
+}
+
+.text-info {
+  color: $custom-info !important;
+}
+
+.border-info {
+  border-color: $custom-info !important;
+}
+
+.btn-info {
+  background-color: $custom-info;
+  border-color: $custom-info;
+  color: $white;
+
+  &:hover {
+    background-color: color.scale($custom-info, $lightness: -7.5%);
+    border-color: color.scale($custom-info, $lightness: -10%);
+  }
+
+  &:focus,
+  &.focus {
+    box-shadow: 0 0 0 0.2rem rgba($custom-info, 0.5);
+  }
+
+  &:active,
+  &.active {
+    background-color: color.scale($custom-info, $lightness: -10%);
+    border-color: color.scale($custom-info, $lightness: -12.5%);
+  }
+}
+
+.alert-info {
+  background-color: color.scale($custom-info, $lightness: 35%);
+  border-color: color.scale($custom-info, $lightness: 30%);
+  color: color.scale($custom-info, $lightness: -30%);
+}
+
+// ============================================
+// ADDITIONAL CUSTOMIZATIONS
+// ============================================
+.bg-info-subtle {
+    background-color: #673ab717 !important;
+}
+// Buttons
+.btn {
+  border-radius: 4px;
+
+  svg {
+    margin-top: -3px;
+  }
+}
+
+// Typography
+th {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+td {
+  font-weight: 400;
+  font-size: 14px;
+}
+
+// Font utilities
+.fs-8  { font-size: 8px !important; }
+.fs-10 { font-size: 10px !important; }
+.fs-11 { font-size: 11px !important; }
+.fs-12 { font-size: 12px !important; }
+.fs-13 { font-size: 13px !important; }
+.fs-14 { font-size: 14px !important; }
+
+.error-message,
+.invalid-feedback {
+  font-size: 12px;
+}
+
+// Forms
+.form-control,
+.form-select {
+  font-size: 0.8rem;
+  padding: 8px 12px;
+  border-radius: 2px;
+
+  &:focus {
+    box-shadow: none;
+    border-color: $brand-color;
+  }
+}
+
+.form-label,
+label {
+  margin-bottom: 0.3rem;
+  font-weight: 500;
+  font-size: 0.8rem;
+}
+
+.input-group-text {
+  border-radius: 2px;
+}
+
+.form-check {
+  border: 1px solid #dee2e6;
+  padding: 8px 10px;
+}
+
+.form-check-input {
+  &:checked {
+    background-color: $brand-color;
+    border-color: $brand-color;
+  }
+
+  &:focus {
+    box-shadow: none;
+    border-color: $brand-color;
+  }
+}
+
+// Modal
+.modal {
+  .modal-header {
+    background-color: $brand-color;
+    color: $white;
+    border: 0;
+    border-radius: 3px 3px 0 0;
+
+    .btn-close {
+      filter: brightness(0) invert(1);
+      opacity: 1;
+
+      &:hover {
+        opacity: 0.75;
+      }
+
+      &:focus {
+        box-shadow: none;
+      }
+    }
+  }
+
+  .modal-content {
+    border-radius: 0.3rem;
+  }
+}
+
+// Utilities
+.end-1 {
+  right: 1rem;
+}
