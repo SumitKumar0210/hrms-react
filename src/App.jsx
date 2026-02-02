@@ -19,6 +19,8 @@ import AddEmployee from './pages/Employees/AddEmployee.jsx';
 import PayrollSummary from './pages/Payroll/PayrollSummary.jsx';
 import SalarySlip from './pages/SalarySlip/SalarySlip.JSX';
 import PayrollHistory from './pages/Payroll/PayrollHistory.jsx';
+import EmployeeExit from './pages/Employees/EmployeeExit.jsx';
+import EmployeeFinalSettlement from './pages/Employees/EmployeeFinalSettlement.jsx';
 
 const App = () => {
   return (
@@ -35,10 +37,12 @@ const App = () => {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/attendance" element={<Attendance />} />
           <Route path="/employees" element={<Employees />} />
-          <Route path="/add-employee" element={<AddEmployee />} />
+          <Route path="/employees/add" element={<AddEmployee />} />
           <Route path="/payroll-summary" element={<PayrollSummary />} />
-          <Route path="/payroll-history" element={<PayrollHistory />} />
-          <Route path="/salary-slip" element={<SalarySlip />} />
+          <Route path="/employees/payroll-history" element={<PayrollHistory />} />
+          <Route path="payroll/slips" element={<SalarySlip />} />
+          <Route path="/employees/full-final-settlement" element={<EmployeeFinalSettlement />} />
+          <Route path="/employees/exit" element={<EmployeeExit />} />
           <Route path="/users" element={<User />} />
           <Route path="/reports" element={<Report />} />
           <Route path="/leave" element={<Leave />} />

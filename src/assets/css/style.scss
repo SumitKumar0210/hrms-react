@@ -91,10 +91,10 @@ main{
     margin: 0;
     background: $brand-color;
     overflow: hidden;
-
+    max-height: 52px;
     .logo {
       padding: 10px 13px;
-      min-height: 50px;
+      min-height: 52px;
       display: flex;
       align-items: center;
       display: block;
@@ -102,7 +102,7 @@ main{
 
       img {
         max-width: 100%;
-        max-height: 54px;
+        max-height: 52px;
       }
     }
   }
@@ -884,4 +884,39 @@ main{
   .rdt_Pagination {
     border-top-width: 0 !important;
   }
+}
+
+.verification-checklist {
+    label{
+      margin-bottom: 0 !important;
+    }
+}
+.react-datepicker-wrapper{
+  width: 100%;
+}
+.sidebar-popover {
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.sidebar-popover .popover-arrow {
+  bottom: auto !important;
+  top: 10px;
+}
+
+.popover-item {
+  display: block;
+ padding: 6px 10px;
+  font-size: 13px;
+  color: #333;
+  text-decoration: none;
+}
+
+.popover-item:hover {
+  background: #f5f7fa;
+  color: #000;
+}
+.popover-header {
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
 }
