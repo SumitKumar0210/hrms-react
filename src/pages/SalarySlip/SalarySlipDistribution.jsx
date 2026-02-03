@@ -8,6 +8,7 @@ import { BsCalendar3 } from 'react-icons/bs';
 import { IoEyeOutline } from "react-icons/io5";
 import { BsSend } from "react-icons/bs";
 import { SlRefresh } from "react-icons/sl";
+import { useNavigate } from 'react-router-dom';
 
 
 /* ================= DATE INPUT ================= */
@@ -102,12 +103,13 @@ const stats = [
 
 /* ================= COMPONENT ================= */
 
-const SalarySlip = () => {
+const SalarySlipDistribution = () => {
     const [data, setData] = useState(complianceData);
     const [filteredData, setFilteredData] = useState(complianceData);
     const [search, setSearch] = useState('');
     const [loading] = useState(false);
     const [selectedRows, setSelectedRows] = useState([]);
+    const navigate = useNavigate();
     /* ================= SEARCH ================= */
 
     useEffect(() => {
@@ -199,22 +201,28 @@ const SalarySlip = () => {
             sortable: true,
         },
 
-        {
-            name: 'Actions',
-            cell: row => (
-                <div className="d-flex gap-2">
-                    <Button size="sm" variant="outline-primary">
-                        <IoEyeOutline />
-                    </Button>
-                    <Button size="sm" variant="outline-info">
-                        <BsSend />
-                    </Button>
-                    <Button size="sm" variant="outline-warning">
-                        <SlRefresh />
-                    </Button>
-                </div>
-            ),
-        },
+       {
+  name: 'Actions',
+  cell: row => (
+    <div className="d-flex gap-2">
+      <Button
+        size="sm"
+        variant="outline-primary"
+        onClick={() => navigate('/payroll/employee-payslip')}
+      >
+        <IoEyeOutline />
+      </Button>
+
+      <Button size="sm" variant="outline-info">
+        <BsSend />
+      </Button>
+
+      <Button size="sm" variant="outline-warning">
+        <SlRefresh />
+      </Button>
+    </div>
+  ),
+}
     ], []);
     //Selected rows
     const handleSelectedRows = ({ selectedRows }) => {
@@ -299,4 +307,4 @@ const SalarySlip = () => {
     );
 };
 
-export default SalarySlip;
+export default SalarySlipDistribution;

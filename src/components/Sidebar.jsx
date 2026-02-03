@@ -49,10 +49,12 @@ const Sidebar = () => {
       items: [
         { label: "Staff Directory", path: "/employees" },
         { label: "Add New Staff", path: "/employees/add" },
-        { label: "Staff Onboarding", path: "/employees/onboarding" },
+        // { label: "Staff Onboarding", path: "/employees/onboarding" },
         { label: "Shift Roster", path: "/employees/shift-roster" },
-        { label: "Employee Exit", path: "/employees/exit" },
+        { label: "Employee Payroll Summary", path: "/employees/payroll-summary" },
         { label: "Employee Payroll History", path: "/employees/payroll-history" },
+        { label: "Employee Exit", path: "/employees/exit" },
+        { label: "Employee Final Settlement", path: "/employees/full-final-settlement" },
       ],
     },
     {
@@ -72,9 +74,11 @@ const Sidebar = () => {
         { label: "Salary Structure & Revision", path: "/payroll/salary-structure" },
         { label: "Overtime Rules", path: "/payroll/overtime" },
         { label: "Payroll Processing", path: "/payroll/process" },
-        { label: "Payroll History", path: "/payroll-history" },
+        { label: "Payroll History", path: "/employees/payroll-history" },
+        { label: "Payroll Finalization", path: "/payroll/finalization" },
         { label: "Salary Slip Distribution", path: "/payroll/slips" },
         { label: "Statutory Compliance", path: "/payroll/statutory" },
+        { label: "Statutory Benefits", path: "/payroll/statutory-benefits" },
         { label: "Document Templates", path: "/payroll/templates" },
       ],
     },
@@ -113,12 +117,12 @@ const Sidebar = () => {
       >
         {/* LOGO (FIXED HEIGHT) */}
         <div className="sidebar-brand">
-            <Link to="/" className="logo d-none d-md-block">
-                <img src={logo} alt="Hotlr"/>
-            </Link>
-            <Link to="/" className="logo d-block d-md-none">
-                <img src={logofull} alt="Hotlr"/>
-            </Link>
+          <Link to="/" className="logo d-none d-md-block">
+            <img src={logo} alt="Hotlr" />
+          </Link>
+          <Link to="/" className="logo d-block d-md-none">
+            <img src={logofull} alt="Hotlr" />
+          </Link>
         </div>
 
         <div className="sidebar-content">
@@ -179,18 +183,18 @@ const Sidebar = () => {
       {/* ================= HEADER ================= */}
       <main>
         <header className="header fixed-top">
-          <div className="bars d-block d-sm-none">
+          {/* Toggle Sidebar Button */}
+          <div style={{ marginLeft: isOpen ? "180px" : "0px" }} className="bars d-block d-sm-none">
             <HiOutlineMenuAlt1 onClick={toggle} />
           </div>
-
           <div className="header-items">
+            {/* Header Actions */}
             <ul className="header-actions">
-              {/* ADD */}
               <li>
                 <Dropdown
-                  show={showAdd}
                   onMouseEnter={() => setShowAdd(true)}
                   onMouseLeave={() => setShowAdd(false)}
+                  show={showAdd}
                   align="end"
                 >
                   <Dropdown.Toggle as="div" className="custom-toggle">
@@ -199,114 +203,52 @@ const Sidebar = () => {
                     </div>
                   </Dropdown.Toggle>
                   <Dropdown.Menu>
-                    <Dropdown.Item>Action</Dropdown.Item>
-                    <Dropdown.Item>Another Action</Dropdown.Item>
+                    <div className='header-profile-actions'>
+                      <Dropdown.Item href="#">Action</Dropdown.Item>
+                      <Dropdown.Item href="#">Another Action</Dropdown.Item>
+                      <Dropdown.Item href="#">Something Else</Dropdown.Item>
+                    </div>
                   </Dropdown.Menu>
                 </Dropdown>
+
               </li>
 
-              {/* PROFILE */}
+              {/* User Settings Dropdown */}
               <li>
+
                 <Dropdown
-                  show={showProfile}
                   onMouseEnter={() => setShowProfile(true)}
                   onMouseLeave={() => setShowProfile(false)}
+                  show={showProfile}
                   align="end"
                 >
                   <Dropdown.Toggle as="div" className="custom-toggle">
-                    <div className="user-settings">
+                    <div id="userSettings" className="user-settings">
                       <span className="avatar">
-                        <img
-                          src="https://app.masonrygroup.com/assets/app.masonrygroup.com/img/amit_1722580135.jpg"
-                          alt="User"
-                        />
+                        <img src="https://app.masonrygroup.com/assets/app.masonrygroup.com/img/amit_1722580135.jpg" alt="Amit Kumar" />
                       </span>
                     </div>
                   </Dropdown.Toggle>
                   <Dropdown.Menu>
-                    <Dropdown.Item>
-                      <BiRefresh /> User Dashboard
-                    </Dropdown.Item>
-                    <Dropdown.Item>
-                      <FaRegUser /> My Profile
-                    </Dropdown.Item>
-                    <Dropdown.Item>
-                      <MdOutlineLogout /> Sign Out
-                    </Dropdown.Item>
+                    <div className='header-profile-actions'>
+                      <div className="header-user-profile">
+                        <h5 className='mt-2 mb-0 fw-normal'>Amit Kumar</h5>
+                        <p className='mb-1'>Admin</p>
+                      </div>
+                      <Dropdown.Item href="#"><span><BiRefresh /></span> User Dashboard</Dropdown.Item>
+                      <Dropdown.Item href="#"><span><FaRegUser /></span>My Profile</Dropdown.Item>
+                      <Dropdown.Item href="#"><span><MdOutlineLogout /></span>Sign Out</Dropdown.Item>
+                    </div>
                   </Dropdown.Menu>
                 </Dropdown>
               </li>
             </ul>
           </div>
         </header>
-      </main> <main>
-                          <header className="header fixed-top">
-                              {/* Toggle Sidebar Button */}
-                              <div style={{marginLeft: isOpen ? "180px" : "0px"}} className="bars d-block d-sm-none">
-                                  <HiOutlineMenuAlt1 onClick={toggle}/>
-                              </div>
-                              <div className="header-items">
-                              {/* Header Actions */}
-                              <ul className="header-actions">
-                                  <li>
-                                  <Dropdown
-                                      onMouseEnter={() => setShowAdd(true)}
-                                      onMouseLeave={() => setShowAdd(false)}
-                                      show={showAdd}
-                                      align="end"
-                                  >
-                                      <Dropdown.Toggle as="div" className="custom-toggle">
-                                          <div  className="add-generic">
-                                              <GoPlusCircle/>
-                                          </div>
-                                      </Dropdown.Toggle>
-                                      <Dropdown.Menu>
-                                          <div className='header-profile-actions'>
-                                              <Dropdown.Item href="#">Action</Dropdown.Item>
-                                              <Dropdown.Item href="#">Another Action</Dropdown.Item>
-                                              <Dropdown.Item href="#">Something Else</Dropdown.Item>
-                                          </div>
-                                      </Dropdown.Menu>
-                                  </Dropdown>
-                                  
-                                  </li>
-                                  
-                                  {/* User Settings Dropdown */}
-                                  <li>
-                                 
-                                  <Dropdown
-                                      onMouseEnter={() => setShowProfile(true)}
-                                      onMouseLeave={() => setShowProfile(false)}
-                                      show={showProfile}
-                                      align="end"
-                                  >
-                                      <Dropdown.Toggle as="div" className="custom-toggle">
-                                          <div id="userSettings" className="user-settings">
-                                              <span className="avatar">
-                                                  <img src="https://app.masonrygroup.com/assets/app.masonrygroup.com/img/amit_1722580135.jpg" alt="Amit Kumar" />
-                                              </span>
-                                          </div>
-                                      </Dropdown.Toggle>
-                                      <Dropdown.Menu>
-                                          <div className='header-profile-actions'>
-                                              <div className="header-user-profile">
-                                                  <h5 className='mt-2 mb-0 fw-normal'>Amit Kumar</h5>
-                                                  <p className='mb-1'>Admin</p>
-                                              </div>
-                                              <Dropdown.Item href="#"><span><BiRefresh/></span> User Dashboard</Dropdown.Item>
-                                              <Dropdown.Item href="#"><span><FaRegUser /></span>My Profile</Dropdown.Item>
-                                              <Dropdown.Item href="#"><span><MdOutlineLogout /></span>Sign Out</Dropdown.Item>
-                                          </div>
-                                      </Dropdown.Menu>
-                                  </Dropdown>
-                                  </li>
-                              </ul>
-                              </div>
-                          </header>
-                          {/* <div className="main-container">
-                              {children}
-                          </div> */}
-                      </main>
+        {/* <div className="main-container">
+              {children}
+          </div> */}
+      </main>
     </div>
   );
 };

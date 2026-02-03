@@ -17,10 +17,14 @@ import Login from './pages/Auth/Login/Login.jsx';
 import MainLayout from './Layouts/MainLayout.jsx';
 import AddEmployee from './pages/Employees/AddEmployee.jsx';
 import PayrollSummary from './pages/Payroll/PayrollSummary.jsx';
-import SalarySlip from './pages/SalarySlip/SalarySlip.JSX';
+import SalarySlipDistribution from './pages/SalarySlip/SalarySlipDistribution.jsx/';
 import PayrollHistory from './pages/Payroll/PayrollHistory.jsx';
 import EmployeeExit from './pages/Employees/EmployeeExit.jsx';
 import EmployeeFinalSettlement from './pages/Employees/EmployeeFinalSettlement.jsx';
+import StatutoryCompliance from './pages/Statutory/StatutoryCompliance.jsx';
+import StatutoryBenefits from './pages/Statutory/StatutoryBenefits.jsx';
+import Payslip from './pages/SalarySlip/PaySlip.jsx';
+import PayrollFinalization from './pages/Payroll/PayrollFinalization.jsx';
 
 const App = () => {
   return (
@@ -38,9 +42,13 @@ const App = () => {
           <Route path="/attendance" element={<Attendance />} />
           <Route path="/employees" element={<Employees />} />
           <Route path="/employees/add" element={<AddEmployee />} />
-          <Route path="/payroll-summary" element={<PayrollSummary />} />
+          <Route path="/employees/payroll-summary" element={<PayrollSummary />} />
           <Route path="/employees/payroll-history" element={<PayrollHistory />} />
-          <Route path="payroll/slips" element={<SalarySlip />} />
+          <Route path="/payroll/slips" element={<SalarySlipDistribution />} />
+          <Route path="/payroll/employee-payslip" element={<Payslip />} />
+          <Route path="/payroll/statutory" element={<StatutoryCompliance />} />
+          <Route path="/payroll/statutory-benefits" element={<StatutoryBenefits />} />
+          <Route path="/payroll/finalization" element={<PayrollFinalization />} />
           <Route path="/employees/full-final-settlement" element={<EmployeeFinalSettlement />} />
           <Route path="/employees/exit" element={<EmployeeExit />} />
           <Route path="/users" element={<User />} />

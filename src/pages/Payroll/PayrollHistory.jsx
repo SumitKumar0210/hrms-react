@@ -272,22 +272,22 @@ const PayrollHistory = () => {
               <Alert variant="warning-subtle" className="small" style={{ backgroundColor: '#fffde6' }}>
                <ul className="mb-0 list-unstyled small verification-checklist">
                     <li className="mb-2">
-                        <Form.Check type="checkbox" label="Attendance verified & approved" defaultChecked />
+                        <Form.Check className="border-0" type="checkbox" label="Attendance verified & approved" defaultChecked />
                     </li>
                     <li className="mb-2">
-                        <Form.Check type="checkbox" label="PF contribution calculated" />
+                        <Form.Check className="border-0" type="checkbox" label="PF contribution calculated" />
                     </li>
                     <li className="mb-2">
-                        <Form.Check type="checkbox" label="ESIC contribution calculated" />
+                        <Form.Check className="border-0"type="checkbox" label="ESIC contribution calculated" />
                     </li>
                     <li className="mb-2">
-                        <Form.Check type="checkbox" label="Salary slips generated" />
+                        <Form.Check className="border-0" type="checkbox" label="Salary slips generated" />
                     </li>
                     <li className="mb-2">
-                        <Form.Check type="checkbox" label="Compliance Requirement" />
+                        <Form.Check className="border-0" type="checkbox" label="Compliance Requirement" />
                     </li>
                     <li className="mb-2">
-                        <Form.Check type="checkbox" label="Management approval received" />
+                        <Form.Check className="border-0" type="checkbox" label="Management approval received" />
                     </li>
                 </ul>
 

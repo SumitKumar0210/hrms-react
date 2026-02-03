@@ -901,7 +901,7 @@ main{
 
 .sidebar-popover .popover-arrow {
   bottom: auto !important;
-  top: 10px;
+  top: 7px !important;
 }
 
 .popover-item {
@@ -919,4 +919,7 @@ main{
 .popover-header {
     border-top-left-radius: 10px;
     border-top-right-radius: 10px;
+    padding: 5px 10px;
+    font-size: 14px;
+    border-bottom-width: 0 !important;
 }

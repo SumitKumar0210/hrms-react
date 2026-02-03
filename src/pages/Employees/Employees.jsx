@@ -160,7 +160,7 @@ const Employees = () => {
                     <h5 className="mb-0">Employee Directory</h5>
                     <small>{filteredEmployees.length} Employees</small>
                 </div>
-                <Button size="sm" onClick={() => navigate('/add-employee')}>Add New Employee</Button>
+                <Button size="sm" onClick={() => navigate('/employees/add')}>Add New Employee</Button>
             </div>
 
             {/* Filters */}
