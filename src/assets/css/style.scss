@@ -923,3 +923,27 @@ main{
     font-size: 14px;
     border-bottom-width: 0 !important;
 }
+
+
+.warning-tabs .nav-link {
+  color: #333; /* muted for inactive */
+  font-weight: 500;
+  margin-right: 10px;
+  border: 1px solid #dee2e6 !important;
+}
+
+.warning-tabs .nav-link.active {
+  color: #b36a00 !important; /* Bootstrap warning */
+  border-bottom: 2px solid #b36a00 !important;
+  border-color:#b36a00 !important;
+}
+.warning-tabs .nav-link:hover{
+ border-color:#b36a00;
+  color:#b36a00 !important
+}
+.react-datepicker__current-month, .react-datepicker-time__header, .react-datepicker-year-header{
+  font-weight: 500 !important;
+}
+.react-datepicker__day--today, .react-datepicker__month-text--today, .react-datepicker__quarter-text--today, .react-datepicker__year-text--today {
+    font-weight: 500;
+}

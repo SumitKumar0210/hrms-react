@@ -128,11 +128,9 @@ const Payslip = () => {
                     </div>
                 </div>
 
-
                 <div className="text-center small fs-12 text-muted mt-4">
                     This document is optimized for printing on A4 paper
                 </div>
-
             </Card>
         </Container>
     );

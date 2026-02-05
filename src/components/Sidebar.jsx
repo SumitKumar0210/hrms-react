@@ -39,7 +39,7 @@ const Sidebar = () => {
       items: [
         { label: "Attendance & Time Tracking", path: "/attendance" },
         { label: "Manual Attendance Correction", path: "/attendance/manual" },
-        { label: "Attendance Reports", path: "/attendance/reports" },
+        // { label: "Attendance Reports", path: "/attendance/reports" },
       ],
     },
     {
@@ -74,7 +74,7 @@ const Sidebar = () => {
         { label: "Salary Structure & Revision", path: "/payroll/salary-structure" },
         { label: "Overtime Rules", path: "/payroll/overtime" },
         { label: "Payroll Processing", path: "/payroll/process" },
-        { label: "Payroll History", path: "/employees/payroll-history" },
+        { label: "Payroll History", path: "/payroll/payroll-history" },
         { label: "Payroll Finalization", path: "/payroll/finalization" },
         { label: "Salary Slip Distribution", path: "/payroll/slips" },
         { label: "Statutory Compliance", path: "/payroll/statutory" },
