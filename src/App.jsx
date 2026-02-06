@@ -1,5 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
+import { AuthProvider } from './context/AuthContext';
 
 import AuthLayout from './layouts/AuthLayout.jsx';
 import Dashboard from './pages/Dashboard/Dashboard.jsx';
@@ -32,48 +34,109 @@ import SalaryStructure from './pages/Payroll/SalaryStructure.jsx';
 import DocumentTemplates from './pages/Payroll/DocumentTemplates.jsx';
 import OvertimeRules from './pages/Payroll/OvertimeRules.jsx';
 
+// Protected Route Component
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated, checking } = useAuth();
+
+  // Show loading while checking authentication
+  if (checking) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // If not authenticated, redirect to login
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // User is authenticated, render the protected component
+  return children;
+};
+
+// Login Route Component (redirect if already logged in)
+const LoginRoute = () => {
+  const { isAuthenticated, checking } = useAuth();
+
+  if (checking) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <Login />;
+};
+
+const AppRoutes = () => {
+  return (
+    <Routes>
+      {/* Auth Routes */}
+      <Route element={<AuthLayout />}>
+        <Route path="/login" element={<LoginRoute />} />
+      </Route>
+
+      {/* Protected Routes with Sidebar */}
+      <Route
+        element={
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/attendance" element={<Attendance />} />
+        <Route path="/attendance/manual" element={<ManualAttendanceCorrection />} />
+        <Route path="/employees" element={<Employees />} />
+        <Route path="/employees/add" element={<AddEmployee />} />
+        <Route path="/employees/payroll-summary" element={<PayrollSummary />} />
+        <Route path="/employees/payroll-history" element={<EmployeePayrollHistory />} />
+        <Route path="/employees/shift-roster" element={<ShiftRoster />} />
+        <Route path="/payroll/payroll-history" element={<PayrollHistory />} />
+        <Route path="/payroll/slips" element={<SalarySlipDistribution />} />
+        <Route path="/payroll/employee-payslip" element={<Payslip />} />
+        <Route path="/payroll/statutory" element={<StatutoryCompliance />} />
+        <Route path="/payroll/statutory-benefits" element={<StatutoryBenefits />} />
+        <Route path="/payroll/finalization" element={<PayrollFinalization />} />
+        <Route path="/payroll/salary-structure" element={<SalaryStructure />} />
+        <Route path="/payroll/overtime" element={<OvertimeRules />} />
+        <Route path="/employees/full-final-settlement" element={<EmployeeFinalSettlement />} />
+        <Route path="/payroll/templates" element={<DocumentTemplates />} />
+        <Route path="/employees/exit" element={<EmployeeExit />} />
+        <Route path="/users" element={<User />} />
+        <Route path="/reports" element={<Report />} />
+        <Route path="/leave" element={<LeaveManagement />} />
+        <Route path="/payroll" element={<Payroll />} />
+        <Route path="/settings" element={<Setting />} />
+        <Route path="/archived-users" element={<Archive />} />
+        <Route path="/test" element={<Test />} />
+        <Route path="/test2" element={<Test2 />} />
+      </Route>
+
+      {/* Catch all - redirect to dashboard if authenticated, login if not */}
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+    </Routes>
+  );
+};
+
 const App = () => {
   return (
     <BrowserRouter>
-      <Routes>
-        {/* Auth Routes */}
-        <Route element={<AuthLayout />}>
-       
-          <Route path="/login" element={<Login />} />
-        </Route>
-        {/* Protected Routes with Sidebar */}
-        <Route element={<MainLayout />}>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/attendance" element={<Attendance />} />
-          <Route path="/attendance/manual" element={<ManualAttendanceCorrection />} />
-          <Route path="/employees" element={<Employees />} />
-          <Route path="/employees/add" element={<AddEmployee />} />
-          <Route path="/employees/payroll-summary" element={<PayrollSummary />} />
-          <Route path="/employees/payroll-history" element={<EmployeePayrollHistory />} />
-          <Route path="/employees/shift-roster" element={<ShiftRoster />} />
-          <Route path="/payroll/payroll-history" element={<PayrollHistory />} />
-          <Route path="/payroll/slips" element={<SalarySlipDistribution />} />
-          <Route path="/payroll/employee-payslip" element={<Payslip />} />
-          <Route path="/payroll/statutory" element={<StatutoryCompliance />} />
-          <Route path="/payroll/statutory-benefits" element={<StatutoryBenefits />} />
-          <Route path="/payroll/finalization" element={<PayrollFinalization />} />
-          <Route path="/payroll/salary-structure" element={<SalaryStructure />} />
-          <Route path="/payroll/overtime" element={<OvertimeRules />} />
-          <Route path="/employees/full-final-settlement" element={<EmployeeFinalSettlement />} />
-          <Route path="/payroll/templates" element={<DocumentTemplates />} />
-          <Route path="/employees/exit" element={<EmployeeExit />} />
-          <Route path="/users" element={<User />} />
-          <Route path="/reports" element={<Report />} />
-          <Route path="/leave" element={<LeaveManagement />} />
-          <Route path="/payroll" element={<Payroll />} />
-          <Route path="/settings" element={<Setting />} />
-          <Route path="/archived-users" element={<Archive />} />
-          <Route path="/test" element={<Test />} />
-          <Route path="/test2" element={<Test2 />} />
-         
-        </Route>
-      </Routes>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
     </BrowserRouter>
   );
 };

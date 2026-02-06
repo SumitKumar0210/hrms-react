@@ -1,39 +1,48 @@
 import React, { useState } from 'react';
 import { Card, Form, Button, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-
+import { useDispatch, useSelector } from 'react-redux';
+import { authLogin } from '../authSlice';
+import { useAuth } from '../../../context/AuthContext';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [localError, setLocalError] = useState('');
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { login: authContextLogin } = useAuth();
+
+  // Get loading and error state from Redux
+  const { loading, error } = useSelector((state) => state.auth || { loading: false, error: null });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
+    setLocalError(''); // Clear any previous errors
 
     try {
-      // Add your authentication logic here
-      // Example:
-      // const response = await loginAPI(email, password);
-      
-      // Simulated login
-      if (email && password) {
-        setTimeout(() => {
-          navigate('/dashboard');
-        }, 1000);
-      } else {
-        setError('Please enter valid credentials');
+      // Dispatch login action and get the result
+      const result = await dispatch(authLogin({ email, password })).unwrap();
+
+      // If login successful, trigger AuthContext to validate and fetch user details
+      if (result.access_token) {
+        await authContextLogin(result.access_token);
+        
+        // Get redirect path or default to dashboard
+        const redirectPath = sessionStorage.getItem('redirectAfterLogin') || '/dashboard';
+        sessionStorage.removeItem('redirectAfterLogin');
+        
+        navigate(redirectPath, { replace: true });
       }
     } catch (err) {
-      setError('Login failed. Please try again.');
-    } finally {
-      setLoading(false);
+      // Handle error - it might not be in Redux state yet
+      setLocalError(err || 'Login failed. Please try again.');
+      console.error('Login error:', err);
     }
   };
+
+  // Use local error or Redux error
+  const displayError = localError || error;
 
   return (
     <Card className="shadow-lg login-card">
@@ -43,7 +52,7 @@ const Login = () => {
           <p className="text-muted">Sign in to your account</p>
         </div>
 
-        {error && <Alert variant="danger">{error}</Alert>}
+        {displayError && <Alert variant="danger">{displayError}</Alert>}
 
         <Form onSubmit={handleSubmit}>
           <Form.Group className="mb-3" controlId="formEmail">
@@ -55,6 +64,7 @@ const Login = () => {
               onChange={(e) => setEmail(e.target.value)}
               required
               size="lg"
+              disabled={loading}
             />
           </Form.Group>
 
@@ -67,11 +77,16 @@ const Login = () => {
               onChange={(e) => setPassword(e.target.value)}
               required
               size="lg"
+              disabled={loading}
             />
           </Form.Group>
 
           <Form.Group className="mb-3" controlId="formCheckbox">
-            <Form.Check type="checkbox" label="Remember me" />
+            <Form.Check 
+              type="checkbox" 
+              label="Remember me"
+              disabled={loading}
+            />
           </Form.Group>
 
           <Button
@@ -85,7 +100,7 @@ const Login = () => {
           </Button>
 
           <div className="text-center mt-3">
-            <a href="#forgot" className="text-decoration-none">
+            <a href="/forgot-password" className="text-decoration-none">
               Forgot password?
             </a>
           </div>
