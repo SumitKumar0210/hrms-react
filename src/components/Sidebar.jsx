@@ -3,7 +3,6 @@ import {
   RiDashboardLine,
   RiSettings2Line,
   RiArchiveLine,
-  RiLogoutCircleRLine,
   RiMoneyRupeeCircleLine,
 } from "react-icons/ri";
 import { TbUsersGroup } from "react-icons/tb";
@@ -15,6 +14,7 @@ import { GoPlusCircle } from "react-icons/go";
 import { BiRefresh } from "react-icons/bi";
 import { FaRegUser } from "react-icons/fa";
 import { MdOutlineLogout } from "react-icons/md";
+import { FiLogOut } from "react-icons/fi";
 
 import { Link, NavLink } from "react-router-dom";
 import { OverlayTrigger, Popover, Dropdown } from "react-bootstrap";
@@ -29,7 +29,7 @@ const Sidebar = () => {
 
   const toggle = () => setIsOpen(!isOpen);
 
-  /* ================= POPOVER MENUS ONLY ================= */
+  /* ================= POPOVER MENUS ================= */
 
   const popoverMenus = [
     {
@@ -39,7 +39,6 @@ const Sidebar = () => {
       items: [
         { label: "Attendance & Time Tracking", path: "/attendance" },
         { label: "Manual Attendance Correction", path: "/attendance/manual" },
-        // { label: "Attendance Reports", path: "/attendance/reports" },
       ],
     },
     {
@@ -49,7 +48,6 @@ const Sidebar = () => {
       items: [
         { label: "Staff Directory", path: "/employees" },
         { label: "Add New Staff", path: "/employees/add" },
-        // { label: "Staff Onboarding", path: "/employees/onboarding" },
         { label: "Shift Roster", path: "/employees/shift-roster" },
         { label: "Employee Payroll Summary", path: "/employees/payroll-summary" },
         { label: "Employee Payroll History", path: "/employees/payroll-history" },
@@ -115,7 +113,7 @@ const Sidebar = () => {
         className="sidebar-wrapper"
         style={{ width: isOpen ? "200px" : "65px" }}
       >
-        {/* LOGO (FIXED HEIGHT) */}
+        {/* LOGO */}
         <div className="sidebar-brand">
           <Link to="/" className="logo d-none d-md-block">
             <img src={logo} alt="Hotlr" />
@@ -126,11 +124,19 @@ const Sidebar = () => {
         </div>
 
         <div className="sidebar-content">
-          {/* DASHBOARD (NO POPOVER) */}
+          {/* DASHBOARD */}
           <NavLink to="/" className="nav-link">
             <div className="nav-icon">
               <RiDashboardLine />
               <span className="menu-item d-none d-sm-block">Dashboard</span>
+            </div>
+          </NavLink>
+
+          {/* USERS – CLICKABLE (NO POPOVER) */}
+          <NavLink to="/users" className="nav-link">
+            <div className="nav-icon">
+              <LuUsers />
+              <span className="menu-item d-none d-sm-block">Users</span>
             </div>
           </NavLink>
 
@@ -154,7 +160,7 @@ const Sidebar = () => {
             </OverlayTrigger>
           ))}
 
-          {/* ===== BOTTOM MENU (ALWAYS VISIBLE) ===== */}
+          {/* BOTTOM MENU */}
           <div className="last-item">
             <NavLink to="/settings" className="nav-link">
               <div className="nav-icon">
@@ -172,7 +178,7 @@ const Sidebar = () => {
 
             <NavLink to="/logout" className="nav-link">
               <div className="nav-icon">
-                <RiLogoutCircleRLine />
+                <FiLogOut className="text-danger" />
                 <span className="menu-item d-none d-sm-block">Logout</span>
               </div>
             </NavLink>
@@ -183,13 +189,16 @@ const Sidebar = () => {
       {/* ================= HEADER ================= */}
       <main>
         <header className="header fixed-top">
-          {/* Toggle Sidebar Button */}
-          <div style={{ marginLeft: isOpen ? "180px" : "0px" }} className="bars d-block d-sm-none">
+          <div
+            style={{ marginLeft: isOpen ? "180px" : "0px" }}
+            className="bars d-block d-sm-none"
+          >
             <HiOutlineMenuAlt1 onClick={toggle} />
           </div>
+
           <div className="header-items">
-            {/* Header Actions */}
             <ul className="header-actions">
+              {/* ADD MENU */}
               <li>
                 <Dropdown
                   onMouseEnter={() => setShowAdd(true)}
@@ -203,19 +212,17 @@ const Sidebar = () => {
                     </div>
                   </Dropdown.Toggle>
                   <Dropdown.Menu>
-                    <div className='header-profile-actions'>
-                      <Dropdown.Item href="#">Action</Dropdown.Item>
-                      <Dropdown.Item href="#">Another Action</Dropdown.Item>
-                      <Dropdown.Item href="#">Something Else</Dropdown.Item>
+                    <div className="header-profile-actions">
+                      <Dropdown.Item>Action</Dropdown.Item>
+                      <Dropdown.Item>Another Action</Dropdown.Item>
+                      <Dropdown.Item>Something Else</Dropdown.Item>
                     </div>
                   </Dropdown.Menu>
                 </Dropdown>
-
               </li>
 
-              {/* User Settings Dropdown */}
+              {/* USER PROFILE */}
               <li>
-
                 <Dropdown
                   onMouseEnter={() => setShowProfile(true)}
                   onMouseLeave={() => setShowProfile(false)}
@@ -223,21 +230,30 @@ const Sidebar = () => {
                   align="end"
                 >
                   <Dropdown.Toggle as="div" className="custom-toggle">
-                    <div id="userSettings" className="user-settings">
+                    <div className="user-settings">
                       <span className="avatar">
-                        <img src="https://app.masonrygroup.com/assets/app.masonrygroup.com/img/amit_1722580135.jpg" alt="Amit Kumar" />
+                        <img
+                          src="https://app.masonrygroup.com/assets/app.masonrygroup.com/img/amit_1722580135.jpg"
+                          alt="Amit Kumar"
+                        />
                       </span>
                     </div>
                   </Dropdown.Toggle>
                   <Dropdown.Menu>
-                    <div className='header-profile-actions'>
+                    <div className="header-profile-actions">
                       <div className="header-user-profile">
-                        <h5 className='mt-2 mb-0 fw-normal'>Amit Kumar</h5>
-                        <p className='mb-1'>Admin</p>
+                        <h5 className="mt-2 mb-0 fw-normal">Amit Kumar</h5>
+                        <p className="mb-1">Admin</p>
                       </div>
-                      <Dropdown.Item href="#"><span><BiRefresh /></span> User Dashboard</Dropdown.Item>
-                      <Dropdown.Item href="#"><span><FaRegUser /></span>My Profile</Dropdown.Item>
-                      <Dropdown.Item href="#"><span><MdOutlineLogout /></span>Sign Out</Dropdown.Item>
+                      <Dropdown.Item>
+                        <BiRefresh /> User Dashboard
+                      </Dropdown.Item>
+                      <Dropdown.Item>
+                        <FaRegUser /> My Profile
+                      </Dropdown.Item>
+                      <Dropdown.Item>
+                        <MdOutlineLogout /> Sign Out
+                      </Dropdown.Item>
                     </div>
                   </Dropdown.Menu>
                 </Dropdown>
@@ -245,9 +261,6 @@ const Sidebar = () => {
             </ul>
           </div>
         </header>
-        {/* <div className="main-container">
-              {children}
-          </div> */}
       </main>
     </div>
   );

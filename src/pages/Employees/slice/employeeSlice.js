@@ -25,6 +25,26 @@ export const fetchEmployees = createAsyncThunk(
     }
 );
 
+export const fetchAllEmployees = createAsyncThunk(
+    "employee/fetchAllEmployees",
+    async (params = {}, { rejectWithValue }) => {
+        try {
+            const {search = "", status = "" } = params;
+            const queryParams = new URLSearchParams({
+                ...(search && { search }),
+                ...(status && { status }),
+            });
+
+            const res = await api.get(`/employees?${queryParams}`);
+            return res.data;
+        } catch (error) {
+            const errMsg = getErrorMessage(error);
+            errorMessage(errMsg);
+            return rejectWithValue(errMsg);
+        }
+    }
+);
+
 // Fetch single employee by ID
 export const fetchEmployeeById = createAsyncThunk(
     "employee/fetchEmployeeById",
@@ -178,6 +198,21 @@ const employeeSlice = createSlice({
             })
             .addCase(fetchEmployees.rejected, (state, action) => {
                 state.loading = false;
+                state.error = action.payload;
+            })
+
+            // Fetch all employees
+            .addCase(fetchAllEmployees.pending, (state) => {
+                state.searchLoading = true;
+                state.error = null;
+            })
+            .addCase(fetchAllEmployees.fulfilled, (state, action) => {
+                state.searchLoading = false;
+                state.employees = action.payload.data || action.payload.employees || [];
+              
+            })
+            .addCase(fetchAllEmployees.rejected, (state, action) => {
+                state.searchLoading = false;
                 state.error = action.payload;
             })
 

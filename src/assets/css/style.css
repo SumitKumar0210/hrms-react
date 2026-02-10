@@ -674,6 +674,10 @@ main {
   float: right;
 }
 
+.custom-status.form-switch .form-check-input {
+  float: right;
+}
+
 .item-wrapper {
   max-height: calc(100vh - 206px);
   overflow: hidden;
@@ -864,4 +868,8 @@ main {
 
 .react-datepicker__day--today, .react-datepicker__month-text--today, .react-datepicker__quarter-text--today, .react-datepicker__year-text--today {
   font-weight: 500;
+}
+
+.rdt_Pagination {
+  margin-top: 15px;
 }/*# sourceMappingURL=style.css.map */

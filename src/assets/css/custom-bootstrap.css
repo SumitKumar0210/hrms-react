@@ -249,11 +249,6 @@ label {
   border-radius: 2px;
 }
 
-.form-check {
-  border: 1px solid #dee2e6;
-  padding: 8px 10px;
-}
-
 .form-check-input:checked {
   background-color: hsl(227, 87%, 64%);
   border-color: hsl(227, 87%, 64%);

@@ -170,10 +170,7 @@ const User = () => {
         <Col>
           <div className='d-flex justify-content-between align-items-center py-2'>
             <div className="page-header w-100">
-              <ol className="breadcrumb">
-                <li className="breadcrumb-item">Home</li>
-                <li className="breadcrumb-item active">Users</li>
-              </ol>
+              <h5 className='mb-0'>Users</h5>
             </div>
             <Dropdown show={show} onToggle={(isOpen) => setShow(isOpen)} onSelect={handleSelect}>
               <Dropdown.Toggle id="layout-dropdown" className='border bg-transparent text-dark'>
