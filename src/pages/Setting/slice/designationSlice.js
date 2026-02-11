@@ -17,6 +17,20 @@ export const fetchDesignation = createAsyncThunk(
   }
 );
 
+export const fetchAllActiveDesignation = createAsyncThunk(
+  "designation/fetchAllActiveDesignation",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await api.get("/designation/active");
+      return res.data.data;
+    } catch (error) {
+      const errMsg = getErrorMessage(error);
+      errorMessage(errMsg);
+      return rejectWithValue(errMsg);
+    }
+  }
+);
+
 /* ================= STORE ================= */
 export const storeDesignation = createAsyncThunk(
   "designation/storeDesignation",
@@ -38,7 +52,7 @@ export const updateDesignation = createAsyncThunk(
   "designation/updateDesignation",
   async ({ id, ...values }, { rejectWithValue }) => {
     try {
-      const res = await api.put(`/designation/${id}`, values);
+      const res = await api.post(`/designation/${id}`, values);
       successMessage("Designation updated successfully!");
       return res.data.data;
     } catch (error) {
@@ -92,6 +106,19 @@ const designationSlice = createSlice({
         state.data = action.payload;
       })
       .addCase(fetchDesignation.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      /* ===== FETCH ===== */
+      .addCase(fetchAllActiveDesignation.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchAllActiveDesignation.fulfilled, (state, action) => {
+        state.loading = false;
+        state.data = action.payload;
+      })
+      .addCase(fetchAllActiveDesignation.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })

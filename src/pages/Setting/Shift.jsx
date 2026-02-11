@@ -74,13 +74,13 @@ const Shift = () => {
       {
         name: "Timing",
         selector: (row) =>
-          `${row.check_in_timing} – ${row.check_out_timing}`,
+          `${row.sign_in} – ${row.sign_out}`,
       },
       {
         name: "Type",
         cell: (row) => (
           <Badge bg="info-subtle" className="border text-info">
-            {row.default_time ? "Rotational" : "Fixed"}
+            {row.rotational_time ? "Rotational" : "Fixed"}
           </Badge>
         ),
       },
@@ -196,7 +196,7 @@ const Shift = () => {
             name: editRow?.name || "",
             check_in_timing: editRow?.check_in_timing || "",
             check_out_timing: editRow?.check_out_timing || "",
-            default_time: editRow?.default_time ?? true,
+            default_time: editRow?.rotational_time ?? true,
             status: editRow ? editRow.status === "active" : true,
           }}
           validationSchema={validationSchema}

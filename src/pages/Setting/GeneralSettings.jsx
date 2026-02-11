@@ -11,6 +11,7 @@ import {
 } from "react-bootstrap";
 import { getSettingData, updateSetting } from "./slice/settingSlice";
 import { useDispatch, useSelector } from "react-redux";
+import { Copyright } from "lucide-react";
 
 /* ================= VALIDATION ================= */
 const validationSchema = Yup.object({
@@ -24,12 +25,12 @@ const validationSchema = Yup.object({
   state: Yup.string().required("State is required"),
   country: Yup.string().required("Country is required"),
   zip: Yup.string().required("ZIP Code is required"),
-  about: Yup.string().required("About Us is required"),
-  shortDescription: Yup.string().required("Short Description is required"),
-  apiKey: Yup.string().required("Google Map API Key is required"),
-  brandColor: Yup.string()
-    .matches(/^#[0-9A-Fa-f]{6}$/, "Invalid color format")
-    .required("Brand Color is required"),
+  // about: Yup.string().required("About Us is required"),
+  // shortDescription: Yup.string().required("Short Description is required"),
+  // apiKey: Yup.string().required("Google Map API Key is required"),
+  // brandColor: Yup.string()
+  //   .matches(/^#[0-9A-Fa-f]{6}$/, "Invalid color format")
+  //   .required("Brand Color is required"),
 });
 
 /* ================= REUSABLE FORM FIELD ================= */
@@ -85,6 +86,8 @@ const GeneralSettings = () => {
       about: data?.about || "",
       shortDescription: data?.short_description || "",
       apiKey: data?.api_key || "",
+      copyright: data?.copyright || "",
+      powered_by: data?.powered_by || "",
       brandColor: data?.theme_color || "#27a348",
     }),
     [data]
@@ -241,6 +244,26 @@ const GeneralSettings = () => {
                   touched={touched}
                   errors={errors}
                 />
+                <Row>
+                  <Col xl={6}>
+                    <FormField
+                      name="powered_by"
+                      label="Powered By"
+                      placeholder="Enter Powered By"
+                      touched={touched}
+                      errors={errors}
+                    />
+                  </Col>
+                  <Col xl={6}>
+                    <FormField
+                      name="copyright"
+                      label="Copyright"
+                      placeholder="Enter Copyright"
+                      touched={touched}
+                      errors={errors}
+                    />
+                  </Col>
+                </Row>
 
                 <FormField
                   name="apiKey"

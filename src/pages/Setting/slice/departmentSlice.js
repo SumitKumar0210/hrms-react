@@ -19,6 +19,20 @@ export const getDepartment = createAsyncThunk(
     }
 );
 
+export const fetchAllActiveDepartment = createAsyncThunk(
+    "department/fetchAllActiveDepartment",
+    async (_, { rejectWithValue }) => {
+        try {
+            const res = await api.get("/departments/active");
+            return res.data.data;
+        } catch (error) {
+            const errMsg = getErrorMessage(error);
+            errorMessage(errMsg);
+            return rejectWithValue(errMsg);
+        }
+    }
+);
+
 /* STORE */
 export const storeDepartment = createAsyncThunk(
     "department/store",
@@ -126,6 +140,20 @@ const departmentSlice = createSlice({
                 state.data = action.payload;
             })
             .addCase(getDepartment.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+
+            /* GET */
+            .addCase(fetchAllActiveDepartment.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(fetchAllActiveDepartment.fulfilled, (state, action) => {
+                state.loading = false;
+                state.data = action.payload;
+            })
+            .addCase(fetchAllActiveDepartment.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             })

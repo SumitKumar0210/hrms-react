@@ -76,6 +76,8 @@ const Employees = () => {
         });
     }, [employees, filters]);
 
+    console.log(filteredEmployees);
+
     // Get unique departments
     const departments = useMemo(() => {
         if (!employees) return [];
@@ -124,8 +126,7 @@ const Employees = () => {
                         {loading ? (
                             'Loading...'
                         ) : (
-                            `${filteredEmployees.length} Employee${
-                                filteredEmployees.length !== 1 ? 's' : ''
+                            `${filteredEmployees.length} Employee${filteredEmployees.length !== 1 ? 's' : ''
                             }`
                         )}
                     </small>
@@ -148,7 +149,7 @@ const Employees = () => {
                     <Formik
                         initialValues={filters}
                         validationSchema={filterSchema}
-                        onSubmit={() => {}}
+                        onSubmit={() => { }}
                     >
                         {({ resetForm }) => (
                             <Form className="d-flex flex-wrap align-items-end gap-3">
@@ -309,13 +310,13 @@ const Employees = () => {
                                             />
                                             <div className="lh-1">
                                                 <div className="fw-semibold mb-1 fs-14">
-                                                    {emp.first_name +' '+ emp.last_name || 'N/A'}
+                                                    {emp.first_name + ' ' + emp.last_name || 'N/A'}
                                                 </div>
                                                 <p className="text-muted mb-1 fs-12">
-                                                    { emp.designation || 'N/A'}
+                                                    {emp.designation?.name || 'N/A'}
                                                 </p>
                                                 <p className="text-muted mb-1 fs-12">
-                                                    { emp.employee_code || 'N/A'}
+                                                    {emp.employee_code || 'N/A'}
                                                 </p>
                                             </div>
                                         </div>
@@ -345,7 +346,15 @@ const Employees = () => {
 
                                     <div className="small text-muted mt-2">
                                         <div>{emp.department.name || 'N/A'}</div>
-                                        <div>{emp.shift || emp.shift_timing || 'N/A'}</div>
+                                        <div>
+                                            {emp?.shift?.name || "N/A"} (
+                                            {emp?.shift?.employee_shift[0].sign_in
+                                                ? `${emp.shift.employee_shift[0].sign_in} - ${emp.shift.employee_shift[0].sign_out}`
+                                                : `${emp?.shift?.sign_in} - ${emp?.shift?.sign_out}`
+                                            }
+                                            )
+                                        </div>
+
                                         <div>
                                             DOJ:{' '}
                                             {emp.date_of_joining
@@ -361,8 +370,8 @@ const Employees = () => {
                                             emp.status === 'On Duty'
                                                 ? 'success-subtle text-success'
                                                 : emp.status === 'Leave'
-                                                ? 'warning-subtle text-warning'
-                                                : 'secondary-subtle text-dark'
+                                                    ? 'warning-subtle text-warning'
+                                                    : 'secondary-subtle text-dark'
                                         }
                                         className="fw-semibold rounded-4"
                                         style={{ cursor: 'pointer' }}

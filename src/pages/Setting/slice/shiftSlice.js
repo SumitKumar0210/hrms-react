@@ -17,6 +17,20 @@ export const getShift = createAsyncThunk(
     }
 );
 
+export const fetchAllActiveShift = createAsyncThunk(
+    "shift/fetchAllActiveShift",
+    async (_, { rejectWithValue }) => {
+        try {
+            const res = await api.get("/shifts/active");
+            return res.data.data;
+        } catch (error) {
+            const errMsg = getErrorMessage(error);
+            errorMessage(errMsg);
+            return rejectWithValue(errMsg);
+        }
+    }
+);
+
 /* ================= STORE SHIFT ================= */
 export const storeShift = createAsyncThunk(
     "shift/store",
@@ -95,6 +109,19 @@ const shiftSlice = createSlice({
                 state.data = action.payload;
             })
             .addCase(getShift.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+
+            .addCase(fetchAllActiveShift.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(fetchAllActiveShift.fulfilled, (state, action) => {
+                state.loading = false;
+                state.data = action.payload;
+            })
+            .addCase(fetchAllActiveShift.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             })
