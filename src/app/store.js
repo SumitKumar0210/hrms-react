@@ -7,6 +7,7 @@ import departmentReducer from '../pages/Setting/slice/departmentSlice';
 import shiftReducer from '../pages/Setting/slice/shiftSlice';
 import settingReducer from '../pages/Setting/slice/settingSlice';
 import designationReducer from '../pages/Setting/slice/designationSlice';
+import overtimeReducer from '../pages/Payroll/slice/overtimeSlice';
 
 export const store = configureStore({
   reducer: {
@@ -18,6 +19,7 @@ export const store = configureStore({
     shift: shiftReducer,
     setting: settingReducer,
     designation: designationReducer,
+    overtime: overtimeReducer,
   },
 });
 

@@ -33,6 +33,7 @@ import ShiftRoster from './pages/Employees/ShiftRoster.jsx';
 import SalaryStructure from './pages/Payroll/SalaryStructure.jsx';
 import DocumentTemplates from './pages/Payroll/DocumentTemplates.jsx';
 import OvertimeRules from './pages/Payroll/OvertimeRules.jsx';
+import EditEmployee from './pages/Employees/EditEmployee.jsx';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -101,6 +102,7 @@ const AppRoutes = () => {
         <Route path="/attendance/manual" element={<ManualAttendanceCorrection />} />
         <Route path="/employees" element={<Employees />} />
         <Route path="/employees/add" element={<AddEmployee />} />
+        <Route path="/employees/edit/:id" element={<EditEmployee />} />
         <Route path="/employees/payroll-summary" element={<PayrollSummary />} />
         <Route path="/employees/payroll-history" element={<EmployeePayrollHistory />} />
         <Route path="/employees/shift-roster" element={<ShiftRoster />} />

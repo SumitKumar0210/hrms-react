@@ -25,13 +25,13 @@ const validationSchema = Yup.object({
         .max(50, "First name must not exceed 50 characters")
         .matches(/^[a-zA-Z\s]+$/, "First name can only contain letters")
         .required("First name is required"),
-    
+
     lastName: Yup.string()
         .min(2, "Last name must be at least 2 characters")
         .max(50, "Last name must not exceed 50 characters")
         .matches(/^[a-zA-Z\s]+$/, "Last name can only contain letters")
         .required("Last name is required"),
-    
+
     email: Yup.string()
         .email("Invalid email")
         .required("Email is required")
@@ -39,7 +39,7 @@ const validationSchema = Yup.object({
             if (!value) return false;
             return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
         }),
-    
+
     phone: Yup.string()
         .matches(/^[6-9][0-9]{9}$/, "Phone number must be a valid 10-digit Indian mobile number")
         .required("Phone number is required"),
@@ -49,22 +49,22 @@ const validationSchema = Yup.object({
         .min(10, "Address must be at least 10 characters")
         .max(200, "Address must not exceed 200 characters")
         .required("Address is required"),
-    
+
     city: Yup.string()
         .min(2, "City name must be at least 2 characters")
         .required("City is required"),
-    
+
     state: Yup.string()
         .min(2, "State name must be at least 2 characters")
         .required("State is required"),
-    
+
     pinCode: Yup.string()
         .matches(/^[1-9][0-9]{5}$/, "Enter valid 6 digit PIN code")
         .required("PIN code is required"),
 
     // Personal details
     bloodGroup: Yup.string().required("Blood group is required"),
-    
+
     aadharNo: Yup.string()
         .matches(/^[2-9][0-9]{11}$/, "Aadhaar must be 12 digits")
         .required("Aadhaar number is required"),
@@ -74,11 +74,11 @@ const validationSchema = Yup.object({
     jobRole: Yup.string().required("Job role is required"),
     department: Yup.string().required("Department is required"),
     shiftType: Yup.string().required("Shift type is required"),
-    
+
     // Conditional validation for rotational shifts
     shiftCheckInTiming: Yup.string(),
     shiftCheckOutTiming: Yup.string()
-        .test('after-checkin', 'Check-out must be after check-in', function(value) {
+        .test('after-checkin', 'Check-out must be after check-in', function (value) {
             const { shiftCheckInTiming } = this.parent;
             if (!value || !shiftCheckInTiming) return true;
             return value > shiftCheckInTiming;
@@ -96,10 +96,10 @@ const documents = [
 const AddEmployee = () => {
     const [selectedShift, setSelectedShift] = useState(null);
     const [fileErrors, setFileErrors] = useState({});
-    
+
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    
+
     const { loading, success, error } = useSelector((state) => state.employee);
     const {
         data: departments = [],
@@ -149,7 +149,7 @@ const AddEmployee = () => {
         if (!file) return null;
 
         const maxSize = docName === 'profileImage' ? 5 * 1024 * 1024 : 10 * 1024 * 1024;
-        
+
         if (file.size > maxSize) {
             return `File size must not exceed ${maxSize / (1024 * 1024)}MB`;
         }
@@ -160,7 +160,7 @@ const AddEmployee = () => {
     // Handle shift change with validation
     const handleShiftChange = useCallback((shift, setFieldValue) => {
         setSelectedShift(shift);
-        
+
         // Reset timing fields if not rotational
         if (shift?.rotational_time !== 1) {
             setFieldValue('shiftCheckInTiming', '');
@@ -171,7 +171,7 @@ const AddEmployee = () => {
     // Handle file upload with validation
     const handleFileUpload = useCallback((file, docName, setFieldValue) => {
         const error = validateFile(file, docName);
-        
+
         if (error) {
             setFileErrors(prev => ({ ...prev, [docName]: error }));
             return;
@@ -182,17 +182,21 @@ const AddEmployee = () => {
             delete newErrors[docName];
             return newErrors;
         });
-        
+
         setFieldValue(docName, file);
     }, [validateFile]);
 
     // Submit handler with proper validation
     const handleSubmit = async (values, { setSubmitting, setErrors }) => {
+        console.log('Form getting submitted with values:', values);
+        console.log('Selected shift:', selectedShift);
+        
         try {
             // Validate rotational shift timings
             if (selectedShift?.rotational_time === 1) {
                 if (!values.shiftCheckInTiming || !values.shiftCheckOutTiming) {
-                    setErrors({ 
+                    console.log('Shift timing validation failed');
+                    setErrors({
                         shiftCheckInTiming: !values.shiftCheckInTiming ? 'Required for rotational shift' : undefined,
                         shiftCheckOutTiming: !values.shiftCheckOutTiming ? 'Required for rotational shift' : undefined
                     });
@@ -224,7 +228,11 @@ const AddEmployee = () => {
             formData.append("job_role", values.jobRole);
             formData.append("department", values.department);
             formData.append("shift_id", values.shiftType);
-            
+            formData.append(
+                "is_application_user",
+                values.isApplicationUser ? 1 : 0
+            );
+
             if (selectedShift?.rotational_time === 1) {
                 formData.append("shift_check_in_timing", values.shiftCheckInTiming);
                 formData.append("shift_check_out_timing", values.shiftCheckOutTiming);
@@ -237,7 +245,9 @@ const AddEmployee = () => {
                 }
             });
 
+            console.log("Dispatching createEmployee action");
             await dispatch(createEmployee(formData)).unwrap();
+            console.log("Employee created successfully");
         } catch (err) {
             console.error("Failed to create employee:", err);
         } finally {
@@ -278,6 +288,7 @@ const AddEmployee = () => {
                     bankDetails: null,
                     contractLetter: null,
                     profileImage: null,
+                    isApplicationUser: false,
                 }}
                 validationSchema={validationSchema}
                 onSubmit={handleSubmit}
@@ -291,7 +302,11 @@ const AddEmployee = () => {
                     touched,
                     errors,
                     isSubmitting,
+                    isValid,
                 }) => {
+                    console.log('Current errors:', errors);
+                    console.log('Form is valid:', isValid);
+                    
                     const uploadedCount = documents.filter((d) => values[d.name]).length;
                     const progress = Math.round((uploadedCount / documents.length) * 100);
                     const isFormDisabled = loading || isSubmitting;
@@ -623,9 +638,8 @@ const AddEmployee = () => {
                                         {documents.map((doc) => (
                                             <Col md={6} lg={4} className="mb-3" key={doc.name}>
                                                 <div
-                                                    className={`rounded p-3 border ${
-                                                        values[doc.name] ? "border-success" : "border"
-                                                    }`}
+                                                    className={`rounded p-3 border ${values[doc.name] ? "border-success" : "border"
+                                                        }`}
                                                 >
                                                     <div className="d-flex justify-content-between align-items-center">
                                                         <div>
@@ -698,6 +712,22 @@ const AddEmployee = () => {
                                             </Col>
                                         ))}
                                     </Row>
+                                    <Row className="px-2">
+                                        <Col md={6} lg={4} className="mb-3">
+                                            <div className="rounded p-3 border">
+                                                <Form.Check
+                                                    type="checkbox"
+                                                    id="applicationUser"
+                                                    label="Is Application User"
+                                                    checked={values.isApplicationUser}
+                                                    onChange={(e) =>
+                                                        setFieldValue("isApplicationUser", e.target.checked)
+                                                    }
+                                                    disabled={isFormDisabled}
+                                                />
+                                            </div>
+                                        </Col>
+                                    </Row>
 
                                     {/* Error Display */}
                                     {error && (
@@ -720,6 +750,11 @@ const AddEmployee = () => {
                                             type="submit"
                                             variant="primary"
                                             disabled={isFormDisabled}
+                                            onClick={() => {
+                                                console.log("Submit button clicked");
+                                                console.log("Current errors:", errors);
+                                                console.log("Current values:", values);
+                                            }}
                                         >
                                             {isFormDisabled ? (
                                                 <>

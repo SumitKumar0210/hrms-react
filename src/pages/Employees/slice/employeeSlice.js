@@ -85,7 +85,7 @@ export const updateEmployee = createAsyncThunk(
     "employee/updateEmployee",
     async ({ id, employeeData }, { rejectWithValue }) => {
         try {
-            const res = await api.put(`/employees/${id}`, employeeData);
+            const res = await api.post(`/employees/${id}`, employeeData);
             successMessage(res.data.message || "Employee updated successfully");
             return res.data;
         } catch (error) {

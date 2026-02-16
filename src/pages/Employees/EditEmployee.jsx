@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
     Card,
     Button,
@@ -8,207 +8,385 @@ import {
     Col,
     Image,
     Spinner,
+    Alert,
+    Badge,
 } from "react-bootstrap";
 import { Formik } from "formik";
 import * as Yup from "yup";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { createEmployee, clearSuccess, clearError } from "./slice/employeeSlice";
-import { fetchAllActiveDepartment, resetDepartmentState } from "../Setting/slice/departmentSlice";
-import { fetchAllActiveDesignation, resetDesignationState } from "../Setting/slice/designationSlice";
-import { fetchAllActiveShift, resetShiftState } from "../Setting/slice/shiftSlice";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+    updateEmployee,
+    fetchEmployeeById,
+    clearSuccess,
+    clearError,
+    clearCurrentEmployee
+} from "./slice/employeeSlice";
+import {
+    fetchAllActiveDepartment,
+    resetDepartmentState
+} from "../Setting/slice/departmentSlice";
+import {
+    fetchAllActiveDesignation,
+    resetDesignationState
+} from "../Setting/slice/designationSlice";
+import {
+    fetchAllActiveShift,
+    resetShiftState
+} from "../Setting/slice/shiftSlice";
 
+// Enhanced validation schema
 const validationSchema = Yup.object({
-    firstName: Yup.string().required("First name is required"),
-    lastName: Yup.string().required("Last name is required"),
-    email: Yup.string().email("Invalid email").required("Email is required"),
+    firstName: Yup.string()
+        .min(2, "First name must be at least 2 characters")
+        .max(50, "First name must not exceed 50 characters")
+        .matches(/^[a-zA-Z\s]+$/, "First name can only contain letters")
+        .required("First name is required"),
+
+    lastName: Yup.string()
+        .min(2, "Last name must be at least 2 characters")
+        .max(50, "Last name must not exceed 50 characters")
+        .matches(/^[a-zA-Z\s]+$/, "Last name can only contain letters")
+        .required("Last name is required"),
+
+    email: Yup.string()
+        .email("Invalid email")
+        .required("Email is required")
+        .test('email-format', 'Invalid email format', (value) => {
+            if (!value) return false;
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+        }),
+
     phone: Yup.string()
-        .matches(/^[0-9]{10}$/, "Phone number must be 10 digits")
+        .matches(/^[6-9][0-9]{9}$/, "Phone number must be a valid 10-digit Indian mobile number")
         .required("Phone number is required"),
 
-    // Address fields
-    address: Yup.string().required("Address is required"),
-    city: Yup.string().required("City is required"),
-    state: Yup.string().required("State is required"),
+    address: Yup.string()
+        .min(10, "Address must be at least 10 characters")
+        .max(200, "Address must not exceed 200 characters")
+        .required("Address is required"),
+
+    city: Yup.string()
+        .min(2, "City name must be at least 2 characters")
+        .required("City is required"),
+
+    state: Yup.string()
+        .min(2, "State name must be at least 2 characters")
+        .required("State is required"),
+
     pinCode: Yup.string()
-        .matches(/^[0-9]{6}$/, "Enter valid 6 digit PIN code")
+        .matches(/^[1-9][0-9]{5}$/, "Enter valid 6 digit PIN code")
         .required("PIN code is required"),
 
-    // Personal details
     bloodGroup: Yup.string().required("Blood group is required"),
+
     aadharNo: Yup.string()
-        .matches(/^[0-9]{12}$/, "Aadhaar must be 12 digits")
+        .matches(/^[2-9][0-9]{11}$/, "Aadhaar must be 12 digits")
         .required("Aadhaar number is required"),
 
-    // Work details
     source: Yup.string().required("Source is required"),
     jobRole: Yup.string().required("Job role is required"),
     department: Yup.string().required("Department is required"),
     shiftType: Yup.string().required("Shift type is required"),
-    // shiftTiming: Yup.string().required("Shift timing is required"), // optional
+
+    shiftCheckInTiming: Yup.string(),
+    shiftCheckOutTiming: Yup.string()
+        .test('after-checkin', 'Check-out must be after check-in', function (value) {
+            const { shiftCheckInTiming } = this.parent;
+            if (!value || !shiftCheckInTiming) return true;
+            return value > shiftCheckInTiming;
+        }),
 });
 
 const documents = [
-    { label: "ID Proof", desc: "Passport, Driving License or National ID", name: "idProof" },
-    { label: "Address Proof", desc: "Utility bill or Rental agreement", name: "addressProof" },
-    { label: "Bank Details", desc: "Cancelled Cheque or Bank statement", name: "bankDetails" },
-    { label: "Contract Letter", desc: "Signed employment contract", name: "contractLetter" },
-    { label: "Profile Image", desc: "Employee photo", name: "profileImage" },
+    { label: "ID Proof", desc: "Passport, Driving License or National ID", name: "idProof", type: "id_proof" },
+    { label: "Address Proof", desc: "Utility bill or Rental agreement", name: "addressProof", type: "address_proof" },
+    { label: "Bank Details", desc: "Cancelled Cheque or Bank statement", name: "bankDetails", type: "bank_details" },
+    { label: "Contract Letter", desc: "Signed employment contract", name: "contractLetter", type: "contract_letter" },
+    { label: "Profile Image", desc: "Employee photo", name: "profileImage", type: "profile_image" },
 ];
 
-const AddEmployee = () => {
-    const [selectedShift, setSelectedShift] = useState();
+const EditEmployee = () => {
+    const [selectedShift, setSelectedShift] = useState(null);
+    const [fileErrors, setFileErrors] = useState({});
+    const [initialLoading, setInitialLoading] = useState(true);
+    const [existingDocuments, setExistingDocuments] = useState({});
+
+    const { id } = useParams();
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const { loading, success, error } = useSelector((state) => state.employee);
-    // Department State
-    const {
-        data: departments,
-        loading: departmentLoading,
-        error: departmentError,
-    } = useSelector((state) => state.department);
 
-    // Designation State
-    const {
-        data: designations,
-        loading: designationLoading,
-        error: designationError,
-    } = useSelector((state) => state.designation);
+    const { loading, success, error, currentEmployee } = useSelector((state) => state.employee);
+    const { data: departments = [] } = useSelector((state) => state.department);
+    const { data: designations = [] } = useSelector((state) => state.designation);
+    const { data: shifts = [] } = useSelector((state) => state.shift);
 
-    // Shift State
-    const {
-        data: shifts,
-        loading: shiftLoading,
-        error: shiftError,
-    } = useSelector((state) => state.shift);
-
+    // Fetch employee data and dropdown options
     useEffect(() => {
-        // Redirect after successful creation
+        const fetchData = async () => {
+            try {
+                await Promise.all([
+                    dispatch(fetchEmployeeById(id)),
+                    dispatch(fetchAllActiveDepartment()),
+                    dispatch(fetchAllActiveDesignation()),
+                    dispatch(fetchAllActiveShift()),
+                ]);
+            } catch (err) {
+                console.error("Error fetching data:", err);
+            } finally {
+                setInitialLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [dispatch, id]);
+
+    // Set existing documents from API response
+    useEffect(() => {
+        if (currentEmployee?.documents) {
+            const docsMap = {};
+            currentEmployee.documents.forEach(doc => {
+                docsMap[doc.document_type] = doc.file_path;
+            });
+            setExistingDocuments(docsMap);
+        }
+    }, [currentEmployee]);
+
+    // Set selected shift when employee data loads
+    useEffect(() => {
+        if (currentEmployee?.shift_id && shifts.length > 0) {
+            const shift = shifts.find((s) => s.id == currentEmployee.shift_id);
+            setSelectedShift(shift);
+        }
+    }, [currentEmployee, shifts]);
+
+    // Handle success redirect
+    useEffect(() => {
         if (success) {
             dispatch(clearSuccess());
             navigate("/employees");
         }
     }, [success, dispatch, navigate]);
 
+    // Cleanup on unmount
     useEffect(() => {
-        // Clear error when component unmounts
         return () => {
             dispatch(clearError());
+            dispatch(clearCurrentEmployee());
             dispatch(resetDepartmentState());
             dispatch(resetShiftState());
             dispatch(resetDesignationState());
-            dispatch(fetchAllActiveDepartment());
-            dispatch(fetchAllActiveDesignation());
-            dispatch(fetchAllActiveShift());
         };
     }, [dispatch]);
 
-    const handleSubmit = async (values, { setSubmitting }) => {
+    // Validate file size
+    const validateFile = useCallback((file, docName) => {
+        if (!file) return null;
+
+        const maxSize = docName === 'profileImage' ? 5 * 1024 * 1024 : 10 * 1024 * 1024;
+
+        if (file.size > maxSize) {
+            return `File size must not exceed ${maxSize / (1024 * 1024)}MB`;
+        }
+
+        return null;
+    }, []);
+
+    // Handle shift change
+    const handleShiftChange = useCallback((shift, setFieldValue) => {
+        setSelectedShift(shift);
+
+        // Reset timing fields if not rotational
+        if (shift?.rotational_time !== 1) {
+            setFieldValue('shiftCheckInTiming', '');
+            setFieldValue('shiftCheckOutTiming', '');
+        }
+    }, []);
+
+    // Handle file upload
+    const handleFileUpload = useCallback((file, docName, setFieldValue) => {
+        const error = validateFile(file, docName);
+
+        if (error) {
+            setFileErrors(prev => ({ ...prev, [docName]: error }));
+            return;
+        }
+
+        setFileErrors(prev => {
+            const newErrors = { ...prev };
+            delete newErrors[docName];
+            return newErrors;
+        });
+
+        setFieldValue(docName, file);
+    }, [validateFile]);
+
+    // Handle preview of existing document
+    const handlePreviewDocument = useCallback((filePath) => {
+        if (!filePath) return;
+
+        // Construct full URL - adjust base URL according to your setup
+        const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+        const fullUrl = `${baseUrl}/storage/${filePath}`;
+
+        // Open in new tab
+        window.open(fullUrl, '_blank');
+    }, []);
+
+    // Submit handler
+    // Submit handler
+    const handleSubmit = async (values, { setSubmitting, setErrors }) => {
+        console.log('Form submitted with values:', values);
+
         try {
-            // Create FormData for file uploads
+            // Validate rotational shift timings
+            if (selectedShift?.rotational_time === 1) {
+                if (!values.shiftCheckInTiming || !values.shiftCheckOutTiming) {
+                    setErrors({
+                        shiftCheckInTiming: !values.shiftCheckInTiming ? 'Required for rotational shift' : undefined,
+                        shiftCheckOutTiming: !values.shiftCheckOutTiming ? 'Required for rotational shift' : undefined
+                    });
+                    setSubmitting(false);
+                    return;
+                }
+            }
+
             const formData = new FormData();
 
-            // Append text fields
-            formData.append("first_name", values.firstName);
-            formData.append("last_name", values.lastName);
-            formData.append("email", values.email);
-            formData.append("phone", values.phone);
+            // Append text fields with proper trimming
+            formData.append("first_name", values.firstName.trim());
+            formData.append("last_name", values.lastName.trim());
+            formData.append("email", values.email.toLowerCase().trim());
+            formData.append("phone", values.phone.trim());
 
-            // Address fields
-            formData.append("address", values.address);
-            formData.append("city", values.city);
-            formData.append("state", values.state);
-            formData.append("pin_code", values.pinCode);
+            // Address fields - Convert to string before trimming
+            formData.append("address", values.address.trim());
+            formData.append("city", values.city.trim());
+            formData.append("state", values.state.trim());
+            formData.append("pin_code", String(values.pinCode).trim()); // Convert to string first
 
             // Personal details
             formData.append("blood_group", values.bloodGroup);
-            formData.append("aadhar_no", values.aadharNo);
+            formData.append("aadhar_no", String(values.aadharNo).trim()); // Convert to string first
 
             // Work details
             formData.append("source", values.source);
             formData.append("job_role", values.jobRole);
             formData.append("department", values.department);
             formData.append("shift_id", values.shiftType);
-            formData.append("shift_check_in_timing", values.shiftCheckInTiming);
-            formData.append("shift_check_out_timing", values.shiftCheckOutTiming);
 
-            // Append files if they exist
+            if (selectedShift?.rotational_time === 1) {
+                formData.append("shift_check_in_timing", values.shiftCheckInTiming);
+                formData.append("shift_check_out_timing", values.shiftCheckOutTiming);
+            }
+
+            // Append files (only if new files are uploaded)
             documents.forEach((doc) => {
-                if (values[doc.name]) {
+                if (values[doc.name] && values[doc.name] instanceof File) {
                     formData.append(doc.name, values[doc.name]);
                 }
             });
 
-            // Dispatch create employee action
-            await dispatch(createEmployee(formData)).unwrap();
+            console.log("Dispatching updateEmployee action");
+            await dispatch(updateEmployee({ id, employeeData: formData })).unwrap();
+            console.log("Employee updated successfully");
         } catch (err) {
-            console.error("Failed to create employee:", err);
+            console.error("Failed to update employee:", err);
         } finally {
             setSubmitting(false);
         }
     };
 
-    const handleShiftChange = (selectedData) => {
-        if (!selectedData) {
-            return;
-        }
-        setSelectedShift(selectedData)
+    // Show loading spinner while fetching initial data
+    if (initialLoading) {
+        return (
+            <div className="container-fluid g-0 d-flex justify-content-center align-items-center" style={{ minHeight: "400px" }}>
+                <Spinner animation="border" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                </Spinner>
+            </div>
+        );
     }
+
+    // Show error if employee not found
+    if (!currentEmployee) {
+        return (
+            <div className="container-fluid g-0">
+                <Alert variant="danger" className="mt-3">
+                    Employee not found or failed to load.
+                    <Button
+                        variant="link"
+                        onClick={() => navigate("/employees")}
+                        className="ms-2"
+                    >
+                        Go back to employees list
+                    </Button>
+                </Alert>
+            </div>
+        );
+    }
+
+    // Get shift timing from employee_shift array
+    const employeeShiftLog = currentEmployee.shift?.employee_shift?.find(
+        log => log.employee_id == currentEmployee.id
+    );
+
+    // Prepare initial values from currentEmployee with correct field mapping
+    const initialValues = {
+        firstName: currentEmployee.first_name || "",
+        lastName: currentEmployee.last_name || "",
+        email: currentEmployee.email || "",
+        phone: currentEmployee.mobile || "",
+        address: currentEmployee.address || "",
+        city: currentEmployee.city || "",
+        state: currentEmployee.state || "",
+        pinCode: currentEmployee.zip_code || "",
+        bloodGroup: currentEmployee.blood_group || "",
+        aadharNo: currentEmployee.aadhar_number || "",
+        source: currentEmployee.source || "",
+        jobRole: currentEmployee.designation_id || "",
+        department: currentEmployee.department_id || "",
+        shiftType: currentEmployee.shift_id || "",
+        shiftCheckInTiming: employeeShiftLog?.sign_in || "",
+        shiftCheckOutTiming: employeeShiftLog?.sign_out || "",
+        idProof: null,
+        addressProof: null,
+        bankDetails: null,
+        contractLetter: null,
+        profileImage: null,
+    };
 
     return (
         <div className="container-fluid g-0">
             <div className="mt-3">
-                <h5 className="mb-0">Staff Onboarding</h5>
-                <small>Complete all fields to add a new team member</small>
+                <h5 className="mb-0">Edit Employee</h5>
+                <small>Update employee information</small>
             </div>
 
             <Formik
-                initialValues={{
-                    firstName: "",
-                    lastName: "",
-                    email: "",
-                    phone: "",
-
-                    // Address
-                    address: "",
-                    city: "",
-                    state: "",
-                    pinCode: "",
-
-                    // Personal details
-                    bloodGroup: "",
-                    aadharNo: "",
-
-                    // Work details
-                    source: "",
-                    jobRole: "",
-                    department: "",
-                    shiftType: "",
-                    shiftCheckInTiming: "",
-                    shiftCheckOutTiming: "",
-
-                    // Documents
-                    idProof: null,
-                    addressProof: null,
-                    bankDetails: null,
-                    contractLetter: null,
-                    profileImage: null,
-                }}
+                initialValues={initialValues}
                 validationSchema={validationSchema}
                 onSubmit={handleSubmit}
+                enableReinitialize={true}
             >
                 {({
                     handleSubmit,
                     handleChange,
+                    handleBlur,
                     setFieldValue,
                     values,
                     touched,
                     errors,
                     isSubmitting,
+                    isValid,
                 }) => {
+                    console.log('Current errors:', errors);
+                    console.log('Form is valid:', isValid);
+                    console.log('Current values:', values);
+
                     const uploadedCount = documents.filter((d) => values[d.name]).length;
                     const progress = Math.round((uploadedCount / documents.length) * 100);
+                    const isFormDisabled = loading || isSubmitting;
 
                     return (
                         <Form onSubmit={handleSubmit}>
@@ -235,8 +413,9 @@ const AddEmployee = () => {
                                                         value={values[f.name]}
                                                         placeholder={`Enter ${f.label.toLowerCase()}`}
                                                         onChange={handleChange}
+                                                        onBlur={handleBlur}
                                                         isInvalid={touched[f.name] && errors[f.name]}
-                                                        disabled={loading || isSubmitting}
+                                                        disabled={isFormDisabled}
                                                     />
                                                     <Form.Control.Feedback type="invalid">
                                                         {errors[f.name]}
@@ -259,9 +438,10 @@ const AddEmployee = () => {
                                                     name="address"
                                                     value={values.address}
                                                     onChange={handleChange}
+                                                    onBlur={handleBlur}
                                                     isInvalid={touched.address && errors.address}
                                                     placeholder="Enter full address"
-                                                    disabled={loading || isSubmitting}
+                                                    disabled={isFormDisabled}
                                                 />
                                                 <Form.Control.Feedback type="invalid">
                                                     {errors.address}
@@ -276,9 +456,10 @@ const AddEmployee = () => {
                                                     name="city"
                                                     value={values.city}
                                                     onChange={handleChange}
+                                                    onBlur={handleBlur}
                                                     isInvalid={touched.city && errors.city}
                                                     placeholder="Enter city"
-                                                    disabled={loading || isSubmitting}
+                                                    disabled={isFormDisabled}
                                                 />
                                                 <Form.Control.Feedback type="invalid">
                                                     {errors.city}
@@ -293,9 +474,10 @@ const AddEmployee = () => {
                                                     name="state"
                                                     value={values.state}
                                                     onChange={handleChange}
+                                                    onBlur={handleBlur}
                                                     isInvalid={touched.state && errors.state}
                                                     placeholder="Enter state"
-                                                    disabled={loading || isSubmitting}
+                                                    disabled={isFormDisabled}
                                                 />
                                                 <Form.Control.Feedback type="invalid">
                                                     {errors.state}
@@ -312,9 +494,10 @@ const AddEmployee = () => {
                                                     name="pinCode"
                                                     value={values.pinCode}
                                                     onChange={handleChange}
+                                                    onBlur={handleBlur}
                                                     isInvalid={touched.pinCode && errors.pinCode}
                                                     placeholder="6 digit PIN"
-                                                    disabled={loading || isSubmitting}
+                                                    disabled={isFormDisabled}
                                                 />
                                                 <Form.Control.Feedback type="invalid">
                                                     {errors.pinCode}
@@ -329,8 +512,9 @@ const AddEmployee = () => {
                                                     name="bloodGroup"
                                                     value={values.bloodGroup}
                                                     onChange={handleChange}
+                                                    onBlur={handleBlur}
                                                     isInvalid={touched.bloodGroup && errors.bloodGroup}
-                                                    disabled={loading || isSubmitting}
+                                                    disabled={isFormDisabled}
                                                 >
                                                     <option value="">Select blood group</option>
                                                     <option>A+</option>
@@ -355,9 +539,10 @@ const AddEmployee = () => {
                                                     name="aadharNo"
                                                     value={values.aadharNo}
                                                     onChange={handleChange}
+                                                    onBlur={handleBlur}
                                                     isInvalid={touched.aadharNo && errors.aadharNo}
                                                     placeholder="12 digit Aadhaar number"
-                                                    disabled={loading || isSubmitting}
+                                                    disabled={isFormDisabled}
                                                 />
                                                 <Form.Control.Feedback type="invalid">
                                                     {errors.aadharNo}
@@ -372,8 +557,9 @@ const AddEmployee = () => {
                                                     name="source"
                                                     value={values.source}
                                                     onChange={handleChange}
+                                                    onBlur={handleBlur}
                                                     isInvalid={touched.source && errors.source}
-                                                    disabled={loading || isSubmitting}
+                                                    disabled={isFormDisabled}
                                                 >
                                                     <option value="">Select source</option>
                                                     <option value="referral">Referral</option>
@@ -400,8 +586,9 @@ const AddEmployee = () => {
                                                     name="jobRole"
                                                     value={values.jobRole}
                                                     onChange={handleChange}
+                                                    onBlur={handleBlur}
                                                     isInvalid={touched.jobRole && errors.jobRole}
-                                                    disabled={loading || isSubmitting}
+                                                    disabled={isFormDisabled}
                                                 >
                                                     <option value="">Select role</option>
                                                     {designations.map((designation) => (
@@ -409,9 +596,6 @@ const AddEmployee = () => {
                                                             {designation.name}
                                                         </option>
                                                     ))}
-                                                    {/* <option value="manager">Manager</option>
-                                                    <option value="supervisor">Supervisor</option>
-                                                    <option value="staff">Staff</option> */}
                                                 </Form.Select>
                                                 <Form.Control.Feedback type="invalid">
                                                     {errors.jobRole}
@@ -426,8 +610,9 @@ const AddEmployee = () => {
                                                     name="department"
                                                     value={values.department}
                                                     onChange={handleChange}
+                                                    onBlur={handleBlur}
                                                     isInvalid={touched.department && errors.department}
-                                                    disabled={loading || isSubmitting}
+                                                    disabled={isFormDisabled}
                                                 >
                                                     <option value="">Select department</option>
                                                     {departments.map((department) => (
@@ -435,9 +620,6 @@ const AddEmployee = () => {
                                                             {department.name}
                                                         </option>
                                                     ))}
-                                                    {/* <option value="hr">HR</option>
-                                                    <option value="operations">Operations</option>
-                                                    <option value="front-desk">Front Desk</option> */}
                                                 </Form.Select>
                                                 <Form.Control.Feedback type="invalid">
                                                     {errors.department}
@@ -453,15 +635,14 @@ const AddEmployee = () => {
                                                     value={values.shiftType}
                                                     onChange={(e) => {
                                                         handleChange(e);
-
-                                                        const selectedShift = shifts.find(
-                                                            (shift) => shift.id == e.target.value
+                                                        const shift = shifts.find(
+                                                            (s) => s.id == e.target.value
                                                         );
-
-                                                        handleShiftChange(selectedShift);
+                                                        handleShiftChange(shift, setFieldValue);
                                                     }}
+                                                    onBlur={handleBlur}
                                                     isInvalid={touched.shiftType && errors.shiftType}
-                                                    disabled={loading || isSubmitting}
+                                                    disabled={isFormDisabled}
                                                 >
                                                     <option value="">Select type</option>
                                                     {shifts.map((shift) => (
@@ -469,9 +650,6 @@ const AddEmployee = () => {
                                                             {shift.name} ({shift.sign_in} - {shift.sign_out})
                                                         </option>
                                                     ))}
-                                                    {/* <option value="day">Day</option>
-                                                    <option value="night">Night</option>
-                                                    <option value="rotational">Rotational</option> */}
                                                 </Form.Select>
                                                 <Form.Control.Feedback type="invalid">
                                                     {errors.shiftType}
@@ -489,8 +667,9 @@ const AddEmployee = () => {
                                                             name="shiftCheckInTiming"
                                                             value={values.shiftCheckInTiming}
                                                             onChange={handleChange}
+                                                            onBlur={handleBlur}
                                                             isInvalid={touched.shiftCheckInTiming && errors.shiftCheckInTiming}
-                                                            disabled={loading || isSubmitting}
+                                                            disabled={isFormDisabled}
                                                         />
                                                         <Form.Control.Feedback type="invalid">
                                                             {errors.shiftCheckInTiming}
@@ -506,8 +685,9 @@ const AddEmployee = () => {
                                                             name="shiftCheckOutTiming"
                                                             value={values.shiftCheckOutTiming}
                                                             onChange={handleChange}
+                                                            onBlur={handleBlur}
                                                             isInvalid={touched.shiftCheckOutTiming && errors.shiftCheckOutTiming}
-                                                            disabled={loading || isSubmitting}
+                                                            disabled={isFormDisabled}
                                                         />
                                                         <Form.Control.Feedback type="invalid">
                                                             {errors.shiftCheckOutTiming}
@@ -516,74 +696,106 @@ const AddEmployee = () => {
                                                 </Col>
                                             </>
                                         )}
-
-
                                     </Row>
 
                                     {/* ===== DOCUMENT UPLOAD ===== */}
                                     <div className="my-3 p-3 bg-light rounded">
-                                        <h6 className="mb-0">Document Upload</h6>
+                                        <h6 className="mb-0">Document Management</h6>
+                                        <small className="text-muted">View existing documents or upload new ones</small>
                                     </div>
 
-                                    <div className="mb-4 p-3 border rounded mx-2">
+                                    {/* <div className="mb-4 p-3 border rounded mx-2">
                                         <div className="d-flex justify-content-between mb-1">
-                                            <small>Completion Progress</small>
+                                            <small>New Documents Progress</small>
                                             <small>{progress}%</small>
                                         </div>
                                         <ProgressBar now={progress} style={{ height: "6px" }} />
-                                    </div>
+                                    </div> */}
 
                                     <Row className="px-2">
-                                        {documents.map((doc) => (
-                                            <Col md={6} lg={4} className="mb-3" key={doc.name}>
-                                                <div
-                                                    className={`rounded p-3 border ${values[doc.name] ? "border-success" : "border"
-                                                        }`}
-                                                >
-                                                    <div className="d-flex justify-content-between align-items-center">
-                                                        <div>
-                                                            <div className="fw-semibold">{doc.label}</div>
+                                        {documents.map((doc) => {
+                                            const existingDoc = existingDocuments[doc.type];
+                                            const hasNewFile = values[doc.name] instanceof File;
+
+                                            return (
+                                                <Col md={6} lg={4} className="mb-3" key={doc.name}>
+                                                    <div
+                                                        className={`rounded p-3 border ${hasNewFile ? "border-success" :
+                                                            existingDoc ? "border-primary" : "border"
+                                                            }`}
+                                                    >
+                                                        <div className="mb-2">
+                                                            <div className="fw-semibold d-flex justify-content-between align-items-center">
+                                                                <span>{doc.label}</span>
+                                                                {existingDoc && !hasNewFile && (
+                                                                    <Badge bg="primary" className="ms-2">Uploaded</Badge>
+                                                                )}
+                                                                {hasNewFile && (
+                                                                    <Badge bg="success" className="ms-2">New</Badge>
+                                                                )}
+                                                            </div>
                                                             <small className="text-muted">{doc.desc}</small>
                                                         </div>
-                                                        <div className="d-flex align-items-center gap-2 flex-wrap">
-                                                            {values[doc.name] && (
-                                                                <>
-                                                                    {doc.name === "profileImage" ? (
-                                                                        <Image
-                                                                            src={URL.createObjectURL(
-                                                                                values[doc.name]
-                                                                            )}
-                                                                            roundedCircle
-                                                                            width={40}
-                                                                            height={40}
-                                                                            className="object-fit-cover border"
-                                                                        />
-                                                                    ) : (
-                                                                        <div
-                                                                            className="small text-truncate text-success"
-                                                                            style={{ maxWidth: "80px" }}
-                                                                            title={values[doc.name].name}
-                                                                        >
-                                                                            ✓ {values[doc.name].name}
-                                                                        </div>
-                                                                    )}
-                                                                </>
+
+                                                        {/* Display new file preview */}
+                                                        {hasNewFile && (
+                                                            <div className="mb-2">
+                                                                {doc.name === "profileImage" ? (
+                                                                    <Image
+                                                                        src={URL.createObjectURL(values[doc.name])}
+                                                                        roundedCircle
+                                                                        width={60}
+                                                                        height={60}
+                                                                        className="object-fit-cover border"
+                                                                    />
+                                                                ) : (
+                                                                    <div className="small text-success">
+                                                                        ✓ {values[doc.name].name}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )}
+
+                                                        {/* Action buttons */}
+                                                        <div className="d-flex gap-2 flex-wrap">
+                                                            {/* Preview existing document button */}
+                                                            {existingDoc && !hasNewFile && (
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline-primary"
+                                                                    onClick={() => handlePreviewDocument(existingDoc)}
+                                                                    disabled={isFormDisabled}
+                                                                >
+                                                                    <i className="bi bi-eye me-1"></i>
+                                                                    Preview
+                                                                </Button>
                                                             )}
 
+                                                            {/* Upload/Replace button */}
                                                             <Button
                                                                 size="sm"
-                                                                variant={
-                                                                    values[doc.name] ? "success" : "secondary"
-                                                                }
-                                                                onClick={() =>
-                                                                    document.getElementById(doc.name).click()
-                                                                }
-                                                                disabled={loading || isSubmitting}
+                                                                variant={hasNewFile ? "success" : "secondary"}
+                                                                onClick={() => document.getElementById(doc.name).click()}
+                                                                disabled={isFormDisabled}
                                                             >
-                                                                {values[doc.name] ? "Replace" : "Upload"}
+                                                                <i className={`bi ${hasNewFile ? 'bi-arrow-repeat' : 'bi-upload'} me-1`}></i>
+                                                                {hasNewFile ? "Replace" : existingDoc ? "Update" : "Upload"}
                                                             </Button>
+
+                                                            {/* Remove new file button */}
+                                                            {hasNewFile && (
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline-danger"
+                                                                    onClick={() => setFieldValue(doc.name, null)}
+                                                                    disabled={isFormDisabled}
+                                                                >
+                                                                    <i className="bi bi-x-lg"></i>
+                                                                </Button>
+                                                            )}
                                                         </div>
 
+                                                        {/* File input */}
                                                         <input
                                                             hidden
                                                             type="file"
@@ -596,21 +808,29 @@ const AddEmployee = () => {
                                                             onChange={(e) => {
                                                                 const file = e.target.files[0];
                                                                 if (file) {
-                                                                    setFieldValue(doc.name, file);
+                                                                    handleFileUpload(file, doc.name, setFieldValue);
                                                                 }
+                                                                e.target.value = ''; // Reset input
                                                             }}
                                                         />
+
+                                                        {/* File error message */}
+                                                        {fileErrors[doc.name] && (
+                                                            <div className="small text-danger mt-2">
+                                                                {fileErrors[doc.name]}
+                                                            </div>
+                                                        )}
                                                     </div>
-                                                </div>
-                                            </Col>
-                                        ))}
+                                                </Col>
+                                            );
+                                        })}
                                     </Row>
 
                                     {/* Error Display */}
                                     {error && (
-                                        <div className="alert alert-danger mt-3" role="alert">
+                                        <Alert variant="danger" className="mt-3">
                                             {error}
-                                        </div>
+                                        </Alert>
                                     )}
 
                                     <div className="text-end mt-4">
@@ -618,7 +838,7 @@ const AddEmployee = () => {
                                             variant="outline-secondary"
                                             className="me-3"
                                             onClick={() => navigate("/employees")}
-                                            disabled={loading || isSubmitting}
+                                            disabled={isFormDisabled}
                                         >
                                             Cancel
                                         </Button>
@@ -626,9 +846,9 @@ const AddEmployee = () => {
                                         <Button
                                             type="submit"
                                             variant="primary"
-                                            disabled={loading || isSubmitting}
+                                            disabled={isFormDisabled}
                                         >
-                                            {loading || isSubmitting ? (
+                                            {isFormDisabled ? (
                                                 <>
                                                     <Spinner
                                                         as="span"
@@ -638,10 +858,10 @@ const AddEmployee = () => {
                                                         aria-hidden="true"
                                                         className="me-2"
                                                     />
-                                                    Saving...
+                                                    Updating...
                                                 </>
                                             ) : (
-                                                "Save Employee"
+                                                "Update Employee"
                                             )}
                                         </Button>
                                     </div>
@@ -655,4 +875,4 @@ const AddEmployee = () => {
     );
 };
 
-export default AddEmployee;
+export default EditEmployee;

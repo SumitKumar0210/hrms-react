@@ -2,6 +2,8 @@ import { Card, Alert, Tabs, Tab, Form, Container, InputGroup } from "react-boots
 import GlobalSettings from "../../components/Overtime/GlobalSettings";
 import EmployeeOTConfig from "../../components/Overtime/EmployeeOTConfig";
 import { IoSearchOutline } from "react-icons/io5";
+import { fetchAllEmployees } from "../Employees/slice/employeeSlice";
+import { createOvertime, updateOvertime, fetchAllOvertime } from "./slice/overtimeSlice";
 
 const OvertimeRules = () => {
   return (
