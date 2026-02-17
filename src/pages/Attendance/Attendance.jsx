@@ -20,6 +20,8 @@ import DatePicker from "react-datepicker";
 import { Formik } from "formik";
 import * as Yup from "yup";
 import AttendanceDownload from "../../components/Attendance/AttendanceDownload";
+import { getAttendance } from "./slice/attendanceSlice";
+import { useDispatch, useSelector } from "react-redux";
 
 /* ================= CUSTOM DATE INPUT ================= */
 
@@ -51,44 +53,44 @@ const filterSchema = Yup.object({
 
 /* ================= MOCK DATA ================= */
 
-const mockData = [
-  {
-    id: 1,
-    employeeId: "EMP-001",
-    name: "Amit Kumar",
-    shift: "Morning",
-    shiftTime: "(9 AM - 6 PM)",
-    role: "Admin",
-    status: "Active",
-    checkIn: "09:00 AM",
-    checkOut: "06:00 PM",
-    totalHours: 8.1,
-  },
-  {
-    id: 2,
-    employeeId: "EMP-002",
-    name: "Ravi Sharma",
-    shift: "Afternoon",
-    shiftTime: "(10 AM - 7 PM)",
-    role: "User",
-    status: "Inactive",
-    checkIn: "09:15 AM",
-    checkOut: "06:00 PM",
-    totalHours: 7.75,
-  },
-  {
-    id: 3,
-    employeeId: "EMP-003",
-    name: "Pooja Singh",
-    shift: "Evening",
-    shiftTime: "(5 PM - 1 AM)",
-    role: "Manager",
-    status: "Active",
-    checkIn: "08:50 AM",
-    checkOut: "05:50 PM",
-    totalHours: 8,
-  },
-];
+// const mockData = [
+//   {
+//     id: 1,
+//     employeeId: "EMP-001",
+//     name: "Amit Kumar",
+//     shift: "Morning",
+//     shiftTime: "(9 AM - 6 PM)",
+//     role: "Admin",
+//     status: "Active",
+//     checkIn: "09:00 AM",
+//     checkOut: "06:00 PM",
+//     totalHours: 8.1,
+//   },
+//   {
+//     id: 2,
+//     employeeId: "EMP-002",
+//     name: "Ravi Sharma",
+//     shift: "Afternoon",
+//     shiftTime: "(10 AM - 7 PM)",
+//     role: "User",
+//     status: "Inactive",
+//     checkIn: "09:15 AM",
+//     checkOut: "06:00 PM",
+//     totalHours: 7.75,
+//   },
+//   {
+//     id: 3,
+//     employeeId: "EMP-003",
+//     name: "Pooja Singh",
+//     shift: "Evening",
+//     shiftTime: "(5 PM - 1 AM)",
+//     role: "Manager",
+//     status: "Active",
+//     checkIn: "08:50 AM",
+//     checkOut: "05:50 PM",
+//     totalHours: 8,
+//   },
+// ];
 
 const stats = [
   { title: "Total Employees", value: 150, color: "primary", bg: "rgba(13,110,253,.08)" },
@@ -101,11 +103,17 @@ const stats = [
 /* ================= COMPONENT ================= */
 
 const Attendance = () => {
+  const {data:mockData = [], error:error, loading = false } = useSelector( (state) => state.attendance);
+  
+  const dispatch = useDispatch();
   const [data] = useState(mockData);
   const [filteredData, setFilteredData] = useState(mockData);
   const [search, setSearch] = useState("");
-  const [loading] = useState(false);
+  console.log(mockData);
 
+  useEffect( ()=> {
+    dispatch(getAttendance());
+  },[]);
   /* Filter State */
   const [filters, setFilters] = useState({
     startDate: null,

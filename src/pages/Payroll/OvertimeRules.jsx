@@ -27,7 +27,7 @@ const OvertimeRules = () => {
       </Alert>
 
       {/* Search (used mainly for Employee tab) */}
-      <Card className="mb-3 border-0 shadow-sm">
+      {/* <Card className="mb-3 border-0 shadow-sm">
         <Card.Body>
           <h6 className="fw-semibold mb-3">Select Employee</h6>
 
@@ -52,7 +52,7 @@ const OvertimeRules = () => {
           </div>
 
         </Card.Body>
-      </Card>
+      </Card> */}
 
 
       {/* Main Container */}

@@ -15,7 +15,7 @@ export const fetchAllOvertime = createAsyncThunk(
                 ...(employee_id && { employee_id }),
             });
 
-            const res = await api.get(`/overtime?${queryParams}`);
+            const res = await api.get(`/emp-config?${queryParams}`);
             return res.data;
         } catch (error) {
             const errMsg = getErrorMessage(error);
@@ -45,7 +45,7 @@ export const createOvertime = createAsyncThunk(
     'overtime/create',
     async (overtimeData, { rejectWithValue }) => {
         try {
-            const res = await api.post('/overtime/store', overtimeData);
+            const res = await api.post('/emp-config', overtimeData);
             successMessage(res.data.message || "Overtime record created successfully");
             return res.data;
         } catch (error) {
@@ -61,7 +61,7 @@ export const updateOvertime = createAsyncThunk(
     'overtime/update',
     async ({ id, overtimeData }, { rejectWithValue }) => {
         try {
-            const res = await api.put(`/overtime/${id}`, overtimeData);
+            const res = await api.post(`/emp-config/${id}`, overtimeData);
             successMessage(res.data.message || "Overtime record updated successfully");
             return res.data;
         } catch (error) {
