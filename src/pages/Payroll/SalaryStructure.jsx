@@ -228,14 +228,19 @@ const SalaryStructure = () => {
         console.log("Is Edit Mode:", isEditMode);
 
         try {
-            if (isEditMode && selectedEmployee.salaries && selectedEmployee.salaries.length > 0) {
-                // Update existing salary
-                const salaryId = selectedEmployee.salaries[0].id;
-                await dispatch(updateSalary({ id: salaryId, values: salaryData })).unwrap();
-            } else {
+            // if (isEditMode && selectedEmployee.salaries && selectedEmployee.salaries.length > 0) {
+            //     // Update existing salary
+            //     const salaryId = selectedEmployee.salaries[0].id;
+            //     await dispatch(updateSalary({ id: salaryId, values: salaryData })).unwrap();
+            // } else {
+            //     // Create new salary
+            //     await dispatch(createSalaryStructure(salaryData)).unwrap();
+            // }
+           
+               
                 // Create new salary
                 await dispatch(createSalaryStructure(salaryData)).unwrap();
-            }
+            
             
             // Clear selection after successful save
             setFormData({

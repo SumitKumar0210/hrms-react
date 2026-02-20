@@ -51,46 +51,7 @@ const filterSchema = Yup.object({
   status: Yup.string(),
 });
 
-/* ================= MOCK DATA ================= */
 
-// const mockData = [
-//   {
-//     id: 1,
-//     employeeId: "EMP-001",
-//     name: "Amit Kumar",
-//     shift: "Morning",
-//     shiftTime: "(9 AM - 6 PM)",
-//     role: "Admin",
-//     status: "Active",
-//     checkIn: "09:00 AM",
-//     checkOut: "06:00 PM",
-//     totalHours: 8.1,
-//   },
-//   {
-//     id: 2,
-//     employeeId: "EMP-002",
-//     name: "Ravi Sharma",
-//     shift: "Afternoon",
-//     shiftTime: "(10 AM - 7 PM)",
-//     role: "User",
-//     status: "Inactive",
-//     checkIn: "09:15 AM",
-//     checkOut: "06:00 PM",
-//     totalHours: 7.75,
-//   },
-//   {
-//     id: 3,
-//     employeeId: "EMP-003",
-//     name: "Pooja Singh",
-//     shift: "Evening",
-//     shiftTime: "(5 PM - 1 AM)",
-//     role: "Manager",
-//     status: "Active",
-//     checkIn: "08:50 AM",
-//     checkOut: "05:50 PM",
-//     totalHours: 8,
-//   },
-// ];
 
 const stats = [
   { title: "Total Employees", value: 150, color: "primary", bg: "rgba(13,110,253,.08)" },
@@ -103,18 +64,54 @@ const stats = [
 /* ================= COMPONENT ================= */
 
 const Attendance = () => {
-  const {data:mockData = [], error:error, loading = false } = useSelector( (state) => state.attendance);
-  
   const dispatch = useDispatch();
-  const [data] = useState(mockData);
-  const [filteredData, setFilteredData] = useState(mockData);
-  const [search, setSearch] = useState("");
-  console.log(mockData);
 
-  useEffect( ()=> {
+  const {
+    data: attendanceData = [],
+    error,
+    loading = false,
+  } = useSelector((state) => state.attendance);
+
+  const [filteredData, setFilteredData] = useState([]);
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
     dispatch(getAttendance());
-  },[]);
-  /* Filter State */
+  }, [dispatch]);
+
+  /* ================= MAP API DATA ================= */
+  const formatDate = (dateString) => {
+    if (!dateString) return "-";
+
+    const date = new Date(dateString);
+    if (isNaN(date)) return "-";
+
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+
+    return `${day}-${month}-${year}`;
+  };
+
+  const data = useMemo(() => {
+    return attendanceData.map((item) => ({
+      id: item.id,
+      employeeId: item.employees?.employee_code || "-",
+      name: `${item.employees?.first_name || ""} ${item.employees?.last_name || ""}`,
+      role: item.employees?.department?.name || "-",
+      shift: item.employees?.shift?.name || "-",
+      shiftTime: "",
+      rawDate: item.date, // 🔥 keep original date for filtering
+      date: formatDate(item.date), // 🔥 formatted for display
+      checkIn: item.sign_in || "-",
+      checkOut: item.sign_out || "-",
+      totalHours: item.total_hours || "0",
+      status: item.status === "present" ? "Active" : "Inactive",
+    }));
+  }, [attendanceData]);
+
+  /* ================= FILTER ================= */
+
   const [filters, setFilters] = useState({
     startDate: null,
     endDate: null,
@@ -123,46 +120,36 @@ const Attendance = () => {
     status: "",
   });
 
-  /* Independent Download Date */
-  const downloadDateRef = useRef(null);
-  const [downloadDate, setDownloadDate] = useState(null);
-
-  /* ================= FILTER + SEARCH ================= */
-
   useEffect(() => {
-    const timer = setTimeout(() => {
-      let result = [...data];
+    let result = [...data];
 
-      if (filters.department) {
-        result = result.filter(r => r.role === filters.department);
-      }
+    if (filters.department) {
+      result = result.filter((r) => r.role === filters.department);
+    }
 
-      if (filters.staff) {
-        result = result.filter(r => r.name === filters.staff);
-      }
+    if (filters.status) {
+      result = result.filter((r) => r.status === filters.status);
+    }
 
-      if (filters.status) {
-        result = result.filter(r => r.status === filters.status);
-      }
+    if (filters.startDate && filters.endDate) {
+      result = result.filter((r) => {
+        const rowDate = new Date(r.rawDate);
+        return (
+          rowDate >= filters.startDate &&
+          rowDate <= filters.endDate
+        );
+      });
+    }
 
-      if (filters.startDate && filters.endDate) {
-        result = result.filter(() => {
-          const rowDate = new Date("2026-01-22"); // replace with real date
-          return rowDate >= filters.startDate && rowDate <= filters.endDate;
-        });
-      }
-
-      if (search) {
-        result = result.filter(r =>
+    if (search) {
+      result = result.filter(
+        (r) =>
           r.name.toLowerCase().includes(search.toLowerCase()) ||
           r.employeeId.toLowerCase().includes(search.toLowerCase())
-        );
-      }
+      );
+    }
 
-      setFilteredData(result);
-    }, 400);
-
-    return () => clearTimeout(timer);
+    setFilteredData(result);
   }, [filters, search, data]);
 
   /* ================= TABLE COLUMNS ================= */
@@ -195,6 +182,14 @@ const Attendance = () => {
         </div>
       ),
     },
+    {
+      name: "Date",
+      selector: row => row.date,
+      sortable: true,
+      cell: row => (
+        <div>{row.date}</div>
+      ),
+    },
     { name: "Check-In", selector: row => row.checkIn, sortable: true },
     { name: "Check-Out", selector: row => row.checkOut, sortable: true },
     { name: "Total Hours", selector: row => row.totalHours, sortable: true },
@@ -207,19 +202,19 @@ const Attendance = () => {
         </span>
       ),
     },
-    {
-      name: "Actions",
-      cell: row => (
-        <Button
-          size="sm"
-          className="rounded-circle bg-primary-subtle border-0 text-primary"
-          style={{ width: 32, height: 32 }}
-          onClick={() => alert(`Edit user: ${row.name}`)}
-        >
-          <BiEditAlt size={18} />
-        </Button>
-      ),
-    },
+    // {
+    //   name: "Actions",
+    //   cell: row => (
+    //     <Button
+    //       size="sm"
+    //       className="rounded-circle bg-primary-subtle border-0 text-primary"
+    //       style={{ width: 32, height: 32 }}
+    //       onClick={() => alert(`Edit user: ${row.name}`)}
+    //     >
+    //       <BiEditAlt size={18} />
+    //     </Button>
+    //   ),
+    // },
   ], []);
 
   /* ================= UI ================= */

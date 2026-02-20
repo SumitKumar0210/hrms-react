@@ -8,7 +8,7 @@ import { FiClock, FiAlertCircle } from "react-icons/fi";
 import { IoSearchOutline } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
 import {
-    fetchAttendanceWithHistory,
+    searchAttendance,
     correctAttendance,
     clearCurrentRecord,
     clearSuccess,
@@ -60,14 +60,13 @@ const ManualAttendanceCorrection = () => {
     const { employees = [], searchLoading } = useSelector((s) => s.employee);
     const { currentRecord, history, searching, saving, error, success } =
         useSelector((s) => s.manualAttendance);
-    console.log(history);
 
     // ── Search state ─────────────────────────────────────────────────────────
-    const [searchTerm, setSearchTerm] = useState("");
+    const [searchTerm, setSearchTerm]             = useState("");
     const [selectedEmployee, setSelectedEmployee] = useState(null);
     const [filteredEmployees, setFilteredEmployees] = useState([]);
-    const [showDropdown, setShowDropdown] = useState(false);
-    const [searchDate, setSearchDate] = useState(new Date());
+    const [showDropdown, setShowDropdown]         = useState(false);
+    const [searchDate, setSearchDate]             = useState(new Date());
 
     // ── Correction form ──────────────────────────────────────────────────────
     const [form, setForm] = useState(EMPTY_FORM);
@@ -106,10 +105,10 @@ const ManualAttendanceCorrection = () => {
     useEffect(() => {
         if (currentRecord) {
             setForm({
-                checkIn: timeStrToDate(currentRecord.sign_in),
+                checkIn:  timeStrToDate(currentRecord.sign_in),
                 checkOut: timeStrToDate(currentRecord.sign_out),
-                status: currentRecord.status || "",
-                reason: "",
+                status:   currentRecord.status || "",
+                reason:   "",
             });
         } else {
             setForm(EMPTY_FORM);
@@ -141,7 +140,7 @@ const ManualAttendanceCorrection = () => {
             alert("Please select an employee.");
             return;
         }
-        dispatch(fetchAttendanceWithHistory({
+        dispatch(searchAttendance({
             employee_id: selectedEmployee.id,
             date: formatDate(searchDate),
         }));
@@ -154,17 +153,16 @@ const ManualAttendanceCorrection = () => {
 
     const handleSave = () => {
         if (!currentRecord) return;
-        if (!form.status) { alert("Status is required."); return; }
+        if (!form.status)        { alert("Status is required.");               return; }
         if (!form.reason.trim()) { alert("Please provide a correction reason."); return; }
 
         dispatch(correctAttendance({
+            id: currentRecord.id,
             correctionData: {
-                employee_id: selectedEmployee.id,
-                sign_in: dateToTimeStr(form.checkIn),
+                sign_in:  dateToTimeStr(form.checkIn),
                 sign_out: dateToTimeStr(form.checkOut),
-                date: formatDate(searchDate),
-                status: form.status.toLowerCase(),
-                reason: form.reason.trim(),
+                status:   form.status.toLowerCase(),
+                reason:   form.reason.trim(),
             },
         }));
     };
@@ -333,7 +331,7 @@ const ManualAttendanceCorrection = () => {
                                                 </div>
 
                                                 {[
-                                                    { label: "CHECK-IN TIME", field: "checkIn", value: form.checkIn, setter: handleFormChange("checkIn") },
+                                                    { label: "CHECK-IN TIME",  field: "checkIn",  value: form.checkIn,  setter: handleFormChange("checkIn") },
                                                     { label: "CHECK-OUT TIME", field: "checkOut", value: form.checkOut, setter: handleFormChange("checkOut") },
                                                 ].map(({ label, field, value, setter }) => (
                                                     <Form.Group key={field} className="py-2 border-bottom">
@@ -372,25 +370,9 @@ const ManualAttendanceCorrection = () => {
                                                                 onChange={handleFormChange("status")}
                                                             >
                                                                 <option value="">Select</option>
-                                                                {[
-                                                                    'absent',
-                                                                    'casual_leave',
-                                                                    'compensatory_off',
-                                                                    'earned_leave',
-                                                                    'half_day',
-                                                                    'leave_without_pay',
-                                                                    'maternity_leave',
-                                                                    'paternity_leave',
-                                                                    'present',
-                                                                    'public_holiday',
-                                                                    'sick_leave',
-                                                                ].map((s) => (
+                                                                {["present", "absent", "late", "halfday"].map((s) => (
                                                                     <option key={s} value={s}>
-                                                                        {s
-                                                                            .split("_")
-                                                                            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                                                                            .join(" ")
-                                                                        }
+                                                                        {s.charAt(0).toUpperCase() + s.slice(1)}
                                                                     </option>
                                                                 ))}
                                                             </Form.Select>
@@ -460,7 +442,7 @@ const ManualAttendanceCorrection = () => {
                                             <Card.Body className="py-2">
                                                 <div className="d-flex justify-content-between align-items-start mb-1">
                                                     <small className="text-muted fw-semibold">
-                                                        {fmtDateTime(entry.updated_at)}
+                                                        {fmtDateTime(entry.created_at)}
                                                     </small>
                                                     <Badge bg="warning" text="dark" pill>
                                                         Correction #{history.length - idx}
@@ -469,12 +451,12 @@ const ManualAttendanceCorrection = () => {
                                                 <div className="small">
                                                     <strong>Reason:</strong> {entry.reason || "—"}
                                                 </div>
-                                                {/* <div className="small text-muted mt-1">
+                                                <div className="small text-muted mt-1">
                                                     <strong>Changes:</strong> {entry.changes_summary || "—"}
-                                                </div> */}
-                                                {entry.user && (
+                                                </div>
+                                                {entry.corrected_by && (
                                                     <div className="small text-muted mt-1">
-                                                        <strong>By:</strong> {entry.user.name}
+                                                        <strong>By:</strong> {entry.corrected_by}
                                                     </div>
                                                 )}
                                             </Card.Body>

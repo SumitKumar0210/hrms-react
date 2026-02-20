@@ -84,7 +84,7 @@ const validationSchema = Yup.object({
         .matches(/^[2-9][0-9]{11}$/, "Aadhaar must be 12 digits")
         .required("Aadhaar number is required"),
 
-    source: Yup.string().required("Source is required"),
+    // source: Yup.string().required("Source is required"),
     jobRole: Yup.string().required("Job role is required"),
     department: Yup.string().required("Department is required"),
     shiftType: Yup.string().required("Shift type is required"),
@@ -270,7 +270,7 @@ const EditEmployee = () => {
             formData.append("aadhar_no", String(values.aadharNo).trim()); // Convert to string first
 
             // Work details
-            formData.append("source", values.source);
+            // formData.append("source", values.source);
             formData.append("job_role", values.jobRole);
             formData.append("department", values.department);
             formData.append("shift_id", values.shiftType);
@@ -550,7 +550,7 @@ const EditEmployee = () => {
                                             </Form.Group>
                                         </Col>
 
-                                        <Col md={3} className="mb-3">
+                                        {/* <Col md={3} className="mb-3">
                                             <Form.Group>
                                                 <Form.Label>Source</Form.Label>
                                                 <Form.Select
@@ -570,7 +570,7 @@ const EditEmployee = () => {
                                                     {errors.source}
                                                 </Form.Control.Feedback>
                                             </Form.Group>
-                                        </Col>
+                                        </Col> */}
                                     </Row>
 
                                     {/* ===== ROLE & DEPARTMENT ===== */}

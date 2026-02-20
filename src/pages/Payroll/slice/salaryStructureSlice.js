@@ -23,7 +23,7 @@ export const updateSalary = createAsyncThunk(
     "salaryStructure/updateSalary",
     async ({ id, values }, { rejectWithValue }) => {
         try {
-            const res = await api.put(`/salary/${id}`, values);
+            const res = await api.post(`/salary/${id}`, values);
             successMessage(res.data.message || "Salary structure updated successfully");
             return res.data;
         } catch (error) {

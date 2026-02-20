@@ -9,7 +9,9 @@ import settingReducer from '../pages/Setting/slice/settingSlice';
 import designationReducer from '../pages/Setting/slice/designationSlice';
 import overtimeReducer from '../pages/Payroll/slice/overtimeSlice';
 import payrollReducer from '../pages/Payroll/slice/payrollSlice';
-
+import manualAttendanceReducer from '../pages/Attendance/slice/manualAttendanceSlice';
+import templateVariableReducer from '../pages/Payroll/slice/templateVariableSlice';
+import documentTemplateReducer from '../pages/Payroll/slice/documentTemplateSlice';
 export const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -22,6 +24,9 @@ export const store = configureStore({
     designation: designationReducer,
     overtime: overtimeReducer,
     payroll: payrollReducer,
+    manualAttendance: manualAttendanceReducer,
+    templateVariable: templateVariableReducer,
+    documentTemplate: documentTemplateReducer,
   },
 });
 
