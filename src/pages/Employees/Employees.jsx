@@ -7,6 +7,7 @@ import DatePicker from 'react-datepicker';
 import { BsCalendar3 } from 'react-icons/bs';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
+import { Modal } from "react-bootstrap";
 import {
     fetchEmployees,
     deleteEmployee,
@@ -35,6 +36,10 @@ const filterSchema = Yup.object({
 const Employees = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
+
+    const [showDelete, setShowDelete] = useState(false);
+    const [deleteRow, setDeleteRow] = useState(null);
+    const [deleting, setDeleting] = useState(false);
 
     // Redux state
     const { employees, loading, error, pagination } = useSelector((state) => state.employee);
@@ -91,13 +96,23 @@ const Employees = () => {
     }, [employees]);
 
     // Handle delete
-    const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this employee?')) {
-            try {
-                await dispatch(deleteEmployee(id)).unwrap();
-            } catch (err) {
-                console.error('Delete failed:', err);
-            }
+    const handleDelete = (employee) => {
+        setDeleteRow(employee);
+        setShowDelete(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteRow) return;
+
+        try {
+            setDeleting(true);
+            await dispatch(deleteEmployee(deleteRow.id)).unwrap();
+            setShowDelete(false);
+            setDeleteRow(null);
+        } catch (err) {
+            console.error('Delete failed:', err);
+        } finally {
+            setDeleting(false);
         }
     };
 
@@ -336,7 +351,7 @@ const Employees = () => {
                                                 variant="light"
                                                 className="rounded-circle p-1"
                                                 style={{ width: 32, height: 32 }}
-                                                onClick={() => handleDelete(emp.id)}
+                                                onClick={() => handleDelete(emp)}
                                                 title="Delete"
                                             >
                                                 <Trash2 size={14} className="text-danger" />
@@ -345,12 +360,14 @@ const Employees = () => {
                                     </div>
 
                                     <div className="small text-muted mt-2">
-                                        <div>{emp.department.name || 'N/A'}</div>
+                                        <div>{emp?.department?.name || 'N/A'}</div>
                                         <div>
                                             {emp?.shift?.name || "N/A"} (
-                                            {emp?.shift?.employee_shift[0].sign_in
+                                            {emp?.shift?.employee_shift?.[0]?.sign_in
                                                 ? `${emp.shift.employee_shift[0].sign_in} - ${emp.shift.employee_shift[0].sign_out}`
-                                                : `${emp?.shift?.sign_in} - ${emp?.shift?.sign_out}`
+                                                : emp?.shift?.sign_in
+                                                    ? `${emp.shift.sign_in} - ${emp?.shift?.sign_out ?? 'N/A'}`
+                                                    : 'N/A'
                                             }
                                             )
                                         </div>
@@ -380,18 +397,57 @@ const Employees = () => {
                                     >
                                         {emp.status || 'Inactive'}
                                     </Badge>
-                                    <Badge
+                                    {/* <Badge
                                         bg="primary-subtle text-primary"
                                         className="mb-0 fw-semibold rounded-4"
                                     >
                                         {emp.type || emp.employment_type || 'N/A'}
-                                    </Badge>
+                                    </Badge> */}
                                 </Card.Footer>
                             </Card>
                         </div>
                     ))}
                 </div>
             )}
+            {/* ================= DELETE CONFIRM MODAL ================= */}
+            <Modal show={showDelete} onHide={() => setShowDelete(false)} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title className="h6 fw-bold text-dark">
+                        Confirm Delete
+                    </Modal.Title>
+                </Modal.Header>
+
+                <Modal.Body>
+                    <p className="mb-0">
+                        Are you sure you want to delete employee{" "}
+                        <strong>
+                            {deleteRow?.first_name} {deleteRow?.last_name}
+                        </strong>?
+                        <br />
+                        <small className="text-muted">
+                            This action cannot be undone.
+                        </small>
+                    </p>
+                </Modal.Body>
+
+                <Modal.Footer>
+                    <Button
+                        variant="secondary"
+                        onClick={() => setShowDelete(false)}
+                        disabled={deleting}
+                    >
+                        Cancel
+                    </Button>
+
+                    <Button
+                        variant="danger"
+                        onClick={confirmDelete}
+                        disabled={deleting}
+                    >
+                        {deleting ? "Deleting..." : "Delete"}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </div>
     );
 };

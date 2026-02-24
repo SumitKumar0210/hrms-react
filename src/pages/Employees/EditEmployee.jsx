@@ -88,6 +88,7 @@ const validationSchema = Yup.object({
     jobRole: Yup.string().required("Job role is required"),
     department: Yup.string().required("Department is required"),
     shiftType: Yup.string().required("Shift type is required"),
+    dateOfJoining: Yup.date().required("Date of joining is required"),
 
     shiftCheckInTiming: Yup.string(),
     shiftCheckOutTiming: Yup.string()
@@ -274,6 +275,7 @@ const EditEmployee = () => {
             formData.append("job_role", values.jobRole);
             formData.append("department", values.department);
             formData.append("shift_id", values.shiftType);
+            formData.append("date_of_joining", values.dateOfJoining);
 
             if (selectedShift?.rotational_time === 1) {
                 formData.append("shift_check_in_timing", values.shiftCheckInTiming);
@@ -349,6 +351,7 @@ const EditEmployee = () => {
         shiftType: currentEmployee.shift_id || "",
         shiftCheckInTiming: employeeShiftLog?.sign_in || "",
         shiftCheckOutTiming: employeeShiftLog?.sign_out || "",
+        dateOfJoining: currentEmployee.date_of_joining || '',
         idProof: null,
         addressProof: null,
         bankDetails: null,
@@ -691,6 +694,23 @@ const EditEmployee = () => {
                                                         />
                                                         <Form.Control.Feedback type="invalid">
                                                             {errors.shiftCheckOutTiming}
+                                                        </Form.Control.Feedback>
+                                                    </Form.Group>
+                                                </Col>
+                                                <Col md={3} className="mb-3">
+                                                    <Form.Group>
+                                                        <Form.Label>Date of Joining</Form.Label>
+                                                        <Form.Control
+                                                            type="date"
+                                                            name="dateOfJoining"
+                                                            value={values.dateOfJoining}
+                                                            onChange={handleChange}
+                                                            onBlur={handleBlur}
+                                                            isInvalid={touched.dateOfJoining && errors.dateOfJoining}
+                                                            disabled={isFormDisabled}
+                                                        />
+                                                        <Form.Control.Feedback type="invalid">
+                                                            {errors.dateOfJoining}
                                                         </Form.Control.Feedback>
                                                     </Form.Group>
                                                 </Col>

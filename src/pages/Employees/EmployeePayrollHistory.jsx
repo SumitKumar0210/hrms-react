@@ -1,108 +1,110 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import {
     Card,
     Form,
     Button,
     Badge,
     Container,
+    Row,
+    Col,
+    InputGroup,
+    ListGroup,
+    Spinner
 } from "react-bootstrap";
 import DataTable from "react-data-table-component";
-import { IoEyeOutline } from "react-icons/io5";
+import { IoSearchOutline, IoEyeOutline } from "react-icons/io5";
 import { RxDownload } from "react-icons/rx";
-
-const payrollHistoryData = [
-    {
-        id: 1,
-        name: 'Rohit Verma',
-        empId: 'EMP004',
-        payrollMonth: 'January 2026',
-        grossSalary: 18500,
-        deductions: 1200,
-        netPay: 18500,
-        status: 'Paid',
-    },
-    {
-        id: 2,
-        name: 'Rohit Verma',
-        empId: 'EMP004',
-        payrollMonth: 'December 2025',
-        grossSalary: 12000,
-        deductions: 1200,
-        netPay: 12000,
-        status: 'Paid',
-    },
-    {
-        id: 3,
-        name: 'Nikhil Pandey',
-        empId: 'EMP005',
-        payrollMonth: 'November 2025',
-        grossSalary: 12000,
-        deductions: 1200,
-        netPay: 12000,
-        status: 'Paid',
-    },
-    {
-        id: 4,
-        name: 'Nikhil Pandey',
-        empId: 'EMP005',
-        payrollMonth: 'November 2025',
-        grossSalary: 12000,
-        deductions: 1200,
-        netPay: 12000,
-        status: 'Paid',
-    },
-    {
-        id: 5,
-        name: 'Nikhil Pandey',
-        empId: 'EMP005',
-        payrollMonth: 'November 2025',
-        grossSalary: 12000,
-        deductions: 1200,
-        netPay: 12000,
-        status: 'Paid',
-    },
-];
-
+import { fetchAllEmployees } from "./slice/employeeSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { getHistoryWithEmpId, clearHistory } from "../Payroll/slice/payrollSlice";
 
 const EmployeePayrollHistory = () => {
-    const [data] = useState(payrollHistoryData);
-    const [filteredData, setFilteredData] = useState(payrollHistoryData);
-    const [search, setSearch] = useState("");
 
-    /* ================= SEARCH ================= */
+    const dispatch = useDispatch();
 
+    // const { data: employees = [] } = useSelector((state) => state.employee);
+    const { employees = [], searchLoading } = useSelector((s) => s.employee);
+    const { history = [], loading } = useSelector((state) => state.payroll);
+    console.log(history);
+
+    const [searchTerm, setSearchTerm] = useState("");
+    const [filteredEmployees, setFilteredEmployees] = useState([]);
+    const [selectedEmployee, setSelectedEmployee] = useState(null);
+    const [showDropdown, setShowDropdown] = useState(false);
+
+    const dropdownRef = useRef(null);
+
+    /* ================= FETCH EMPLOYEES ================= */
     useEffect(() => {
-        const result = data.filter(row =>
-            row.payrollMonth.toLowerCase().includes(search.toLowerCase()) ||
-            row.name.toLowerCase().includes(search.toLowerCase()) ||
-            row.empId.toLowerCase().includes(search.toLowerCase())
-        );
-        setFilteredData(result);
-    }, [search, data]);
+        dispatch(fetchAllEmployees());
+    }, [dispatch]);
+
+    /* ================= FILTER DROPDOWN ================= */
+    useEffect(() => {
+        if (searchTerm.trim() && !selectedEmployee) {
+            const q = searchTerm.toLowerCase();
+
+            const filtered = employees.filter((emp) =>
+                `${emp.first_name} ${emp.last_name}`.toLowerCase().includes(q) ||
+                emp.employee_code?.toLowerCase().includes(q)
+            );
+
+            setFilteredEmployees(filtered);
+            setShowDropdown(true);
+        } else {
+            setFilteredEmployees([]);
+            setShowDropdown(false);
+        }
+    }, [searchTerm, employees, selectedEmployee]);
+
+    /* ================= SELECT EMPLOYEE ================= */
+    const handleEmployeeSelect = (emp) => {
+        setSelectedEmployee(emp);
+        setSearchTerm(`${emp.first_name} ${emp.last_name}`);
+        setShowDropdown(false);
+
+        dispatch(getHistoryWithEmpId(emp.id));
+    };
+
+    /* ================= CLEAR SELECTION ================= */
+    const clearSelection = () => {
+        setSelectedEmployee(null);
+        setSearchTerm("");
+        dispatch(clearHistory());
+    };
 
     /* ================= TABLE COLUMNS ================= */
-
     const columns = useMemo(() => [
         {
             name: "Payroll Month",
-            selector: row => row.payrollMonth,
+            cell: (row) => {
+                const monthNames = [
+                    "January", "February", "March", "April",
+                    "May", "June", "July", "August",
+                    "September", "October", "November", "December"
+                ];
+
+                const monthName = monthNames[row.month - 1] || "Unknown";
+
+                return `${monthName} ${row.year}`;
+            },
         },
         {
             name: "Gross Salary",
-            cell: row => `₹${row.grossSalary.toLocaleString()}`,
+            cell: row => `₹${Number(row.gross_salary || 0).toLocaleString()}`,
         },
         {
             name: "Deductions",
-            cell: row => `₹${row.deductions.toLocaleString()}`,
+            cell: row => `₹${Number(row.total_deduction || 0).toLocaleString()}`,
         },
         {
             name: "Net Pay",
-            cell: row => `₹${row.netPay.toLocaleString()}`,
+            cell: row => `₹${Number(row.net_salary || 0).toLocaleString()}`,
         },
         {
             name: "Status",
             cell: row => (
-                <Badge bg="success-subtle" text="success" className="fw-semibold border-success rounded-4 px-3 py-1">
+                <Badge bg="success-subtle" text="success" className="fw-semibold rounded-4 px-3 py-1">
                     {row.status}
                 </Badge>
             ),
@@ -110,94 +112,151 @@ const EmployeePayrollHistory = () => {
         {
             name: "Actions",
             center: true,
-            cell: () => (
-                <div className="d-flex gap-3">
-                    <Button
-                        size="sm"
-                        variant="outline-primary"
-                        onClick={() => handleView(row)}
-                    >
+            cell: (row) => (
+                <div className="d-flex gap-2">
+                    <Button size="sm" variant="outline-primary">
                         <IoEyeOutline />
                     </Button>
-
                     <Button size="sm" variant="outline-secondary">
                         <RxDownload />
                     </Button>
                 </div>
-
             ),
         },
     ], []);
 
-    /* ================= UI ================= */
-
     return (
         <Container fluid className="my-3">
+
             {/* HEADER */}
             <div className="mt-3">
                 <h5 className="mb-0">Employee Payroll History</h5>
                 <small>Finalized & Locked Payroll Records</small>
             </div>
-            {/* SEARCH BAR */}
+
+            {/* SEARCH SECTION */}
             <Card className="border-0 shadow-sm my-3">
                 <Card.Body>
-                    <div className="d-flex align-items-center gap-3">
-                        <span className="text-muted fw-semibold">Select Employee:</span>
-                        <Form.Control
-                            placeholder="Search by Employee name or ID"
-                            style={{ maxWidth: 320 }}
-                            value={search}
-                            onChange={e => setSearch(e.target.value)}
-                        />
-                        {/* <Button variant="outline-primary">Search</Button> */}
-                    </div>
+                    <Row className="align-items-center">
+                        <Col md={5}>
+                            <Form.Label className="fw-semibold">
+                                EMPLOYEE <span className="text-danger">*</span>
+                            </Form.Label>
 
-                    {/* TABLE */}
+                            <div ref={dropdownRef} style={{ position: "relative" }}>
+                                <InputGroup>
+                                    <Form.Control
+                                        placeholder="Enter Employee Name or ID"
+                                        value={searchTerm}
+                                        onChange={(e) => {
+                                            setSearchTerm(e.target.value);
+                                            setSelectedEmployee(null);
+                                        }}
+                                        autoComplete="off"
+                                    />
+                                    <InputGroup.Text>
+                                        <IoSearchOutline />
+                                    </InputGroup.Text>
+                                </InputGroup>
+
+                                {/* Dropdown */}
+                                {showDropdown && filteredEmployees.length > 0 && (
+                                    <ListGroup
+                                        className="position-absolute w-100 shadow-lg"
+                                        style={{
+                                            zIndex: 1000,
+                                            maxHeight: "250px",
+                                            overflowY: "auto",
+                                            top: "100%",
+                                            marginTop: "2px"
+                                        }}
+                                    >
+                                        {filteredEmployees.map((emp) => (
+                                            <ListGroup.Item
+                                                key={emp.id}
+                                                action
+                                                onClick={() => handleEmployeeSelect(emp)}
+                                            >
+                                                <div className="fw-semibold">
+                                                    {emp.first_name} {emp.last_name}
+                                                </div>
+                                                <small className="text-muted">
+                                                    {emp.employee_code} | {emp.designation?.name} | {emp.department?.name}
+                                                </small>
+                                            </ListGroup.Item>
+                                        ))}
+                                    </ListGroup>
+                                )}
+
+                                {showDropdown && filteredEmployees.length === 0 && (
+                                    <ListGroup
+                                        className="position-absolute w-100 shadow-lg"
+                                        style={{ zIndex: 1000, top: "100%", marginTop: "2px" }}
+                                    >
+                                        <ListGroup.Item className="text-muted">
+                                            No employees found
+                                        </ListGroup.Item>
+                                    </ListGroup>
+                                )}
+                            </div>
+
+                            {/* Selected Pill */}
+                            {selectedEmployee && (
+                                <div className="mt-2 p-2 bg-light rounded small d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span className="fw-semibold">
+                                            {selectedEmployee.first_name} {selectedEmployee.last_name}
+                                        </span>
+                                        <span className="text-muted ms-2">
+                                            ({selectedEmployee.employee_code})
+                                        </span>
+                                    </div>
+                                    <Button size="sm" variant="outline-danger" onClick={clearSelection}>
+                                        Clear
+                                    </Button>
+                                </div>
+                            )}
+                        </Col>
+                    </Row>
+                </Card.Body>
+            </Card>
+
+            {/* TABLE SECTION */}
+            <Card className="py-2 border-0 shadow-sm">
+                <Card.Body>
+
+                    {!selectedEmployee && (
+                        <div className="text-center text-muted py-5 fs-5">
+                            🔍 Search and select an employee to view payroll history
+                        </div>
+                    )}
+
+                    {selectedEmployee && !loading && history.length === 0 && (
+                        <div className="text-center text-muted py-5 fs-5">
+                            ❌ No payroll records found for this employee
+                        </div>
+                    )}
+
+                    {selectedEmployee && history.length > 0 && (
+                        <DataTable
+                            columns={columns}
+                            data={history}
+                            highlightOnHover
+                            responsive
+                            pagination
+                            noHeader
+                        />
+                    )}
+
+                    {loading && (
+                        <div className="text-center py-4">
+                            <Spinner animation="border" />
+                        </div>
+                    )}
 
                 </Card.Body>
             </Card>
-            {/* TABLE */}
-            {/* TABLE / MESSAGE */}
-<Card className="py-2 border-0 shadow-sm custom-data-table">
-    <Card.Body>
-        {/* No search */}
-        {!search && (
-            <div className="text-center text-muted py-5 fs-5">
-                🔍 Search employee name or ID to view payroll history
-            </div>
-        )}
-
-        {/* Search but no results */}
-        {search && filteredData.length === 0 && (
-            <div className="text-center text-muted py-5 fs-5">
-                ❌ No payroll records found for <strong>"{search}"</strong>
-            </div>
-        )}
-
-        {/* Search with results */}
-        {search && filteredData.length > 0 && (
-            <>
-                <div className="mb-2">
-                    <p className="mb-3 fw-semibold fs-6">
-                        Employee: {filteredData[0].name} ({filteredData[0].empId})
-                    </p>
-                </div>
-
-                <DataTable
-                    columns={columns}
-                    data={filteredData}
-                    highlightOnHover
-                    responsive
-                    pagination
-                    noHeader
-                />
-            </>
-        )}
-    </Card.Body>
-</Card>
-
         </Container>
-
     );
 };
 

@@ -36,6 +36,24 @@ export const getAttendance = createAsyncThunk(
     }
 );
 
+export const updateAttendance = createAsyncThunk(
+    "attendance/updateAttendance",
+    async (rows, { rejectWithValue }) => {
+        try {
+            const res = await api.post("/attendance/update", {
+                rows,
+            });
+            // console.log(res.data.data);
+            successMessage("Attendance updated");
+            return res.data.data; 
+        } catch (error) {
+            const errMsg = getErrorMessage(error);
+            errorMessage(errMsg);
+            return rejectWithValue(errMsg);
+        }
+    }
+);
+
 const attendanceSlice = createSlice({
     name: "attendance",
     initialState: {
@@ -56,6 +74,18 @@ const attendanceSlice = createSlice({
                 state.uploadResult = action.payload;
             })
             .addCase(uploadAttendance.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+            .addCase(updateAttendance.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(updateAttendance.fulfilled, (state, action) => {
+                state.loading = false;
+                state.uploadResult = action.payload;
+            })
+            .addCase(updateAttendance.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             })

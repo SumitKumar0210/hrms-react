@@ -47,7 +47,7 @@ const AttendanceDownload = () => {
         setSelectedDate(date);
 
         let sheetContent =
-            "Employee ID,First Name,Last Name,Date,Sign In,Sign Out\n";
+            "EmployeeID,FirstName,LastName,Date,SignIn,SignOut\n";
 
         data.forEach((emp) => {
             sheetContent += `${emp.employee_code},${emp.first_name},${emp.last_name},${formatDate(
@@ -82,9 +82,9 @@ const AttendanceDownload = () => {
 
             // 🔹 Status logic
             const isValid =
-                rowData["Employee ID"] &&
-                rowData["Sign In"] &&
-                rowData["Sign Out"];
+                rowData["EmployeeID"] &&
+                rowData["SignIn"] &&
+                rowData["SignOut"];
 
             return {
                 rowNo: index + 1,
