@@ -52,6 +52,31 @@ const EMPLOYEE_FIELD_MAP = {
     hra:               (e) => e.salaries?.[0]?.hra,
     special_allowance: (e) => e.salaries?.[0]?.special_allowance,
 };
+const tableVariablesList = [
+    'employee_code',
+    'name',
+    'first_name',
+    'last_name',
+    'blood_group',
+    'aadhar_number',
+    'mobile',
+    'email',
+    'department',
+    'shift',
+    'date_of_joining',
+    'employment_type',
+    'designation',
+    'status',
+    'week_off',
+    'address',
+    'zip_code',
+    'city',
+    'state',
+    'source',
+    'basic_salary',
+    'hra',
+    'special_allowance'
+];
 
 /* ─────────────────────────────────────────────
    PURE HELPERS
@@ -135,7 +160,7 @@ const DocumentTemplates = () => {
         (s) => s.documentTemplate
     );
     const { employees }                                      = useSelector((s) => s.employee);
-    const { data: variables, tableData: tableVariablesList } = useSelector(
+    const { data: variables } = useSelector(
         (s) => s.templateVariable
     );
 
@@ -806,7 +831,7 @@ const DocumentTemplates = () => {
                                 </div>
                             )}
 
-                            <div className="p-3 border rounded bg-white">
+                            <div className="p-3 border rounded bg-white overflow-scroll">
                                 {previewSubject && (
                                     <h6 className="fw-semibold mb-2">{previewSubject}</h6>
                                 )}

@@ -158,43 +158,43 @@ const EmployeePayrollHistory = () => {
             </Card>
             {/* TABLE */}
             {/* TABLE / MESSAGE */}
-<Card className="py-2 border-0 shadow-sm custom-data-table">
-    <Card.Body>
-        {/* No search */}
-        {!search && (
-            <div className="text-center text-muted py-5 fs-5">
-                🔍 Search employee name or ID to view payroll history
-            </div>
-        )}
+            <Card className="py-2 border-0 shadow-sm custom-data-table">
+                <Card.Body>
+                    {/* No search */}
+                    {!search && (
+                        <div className="text-center text-muted py-5 fs-5">
+                            🔍 Search employee name or ID to view payroll history
+                        </div>
+                    )}
 
-        {/* Search but no results */}
-        {search && filteredData.length === 0 && (
-            <div className="text-center text-muted py-5 fs-5">
-                ❌ No payroll records found for <strong>"{search}"</strong>
-            </div>
-        )}
+                    {/* Search but no results */}
+                    {search && filteredData.length === 0 && (
+                        <div className="text-center text-muted py-5 fs-5">
+                            ❌ No payroll records found for <strong>"{search}"</strong>
+                        </div>
+                    )}
 
-        {/* Search with results */}
-        {search && filteredData.length > 0 && (
-            <>
-                <div className="mb-2">
-                    <p className="mb-3 fw-semibold fs-6">
-                        Employee: {filteredData[0].name} ({filteredData[0].empId})
-                    </p>
-                </div>
+                    {/* Search with results */}
+                    {search && filteredData.length > 0 && (
+                        <>
+                            <div className="mb-2">
+                                <p className="mb-3 fw-semibold fs-6">
+                                    Employee: {filteredData[0].name} ({filteredData[0].empId})
+                                </p>
+                            </div>
 
-                <DataTable
-                    columns={columns}
-                    data={filteredData}
-                    highlightOnHover
-                    responsive
-                    pagination
-                    noHeader
-                />
-            </>
-        )}
-    </Card.Body>
-</Card>
+                            <DataTable
+                                columns={columns}
+                                data={filteredData}
+                                highlightOnHover
+                                responsive
+                                pagination
+                                noHeader
+                            />
+                        </>
+                    )}
+                </Card.Body>
+            </Card>
 
         </Container>
 
