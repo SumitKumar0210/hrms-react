@@ -12,6 +12,8 @@ import payrollReducer from '../pages/Payroll/slice/payrollSlice';
 import manualAttendanceReducer from '../pages/Attendance/slice/manualAttendanceSlice';
 import templateVariableReducer from '../pages/Payroll/slice/templateVariableSlice';
 import documentTemplateReducer from '../pages/Payroll/slice/documentTemplateSlice';
+import finalizePayrollReducer from '../pages/Payroll/slice/finalizePayrollSlice';
+import payrollHistoryReducer from '../pages/Payroll/slice/payrollHistorySlice';
 export const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -27,6 +29,8 @@ export const store = configureStore({
     manualAttendance: manualAttendanceReducer,
     templateVariable: templateVariableReducer,
     documentTemplate: documentTemplateReducer,
+    finalizePayroll: finalizePayrollReducer,
+    payrollHistory: payrollHistoryReducer,
   },
 });
 

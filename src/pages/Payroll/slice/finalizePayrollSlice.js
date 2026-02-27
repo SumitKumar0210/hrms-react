@@ -9,8 +9,8 @@ export const finalizePayrollByMonth = createAsyncThunk(
     "finalizePayroll/finalizePayrollByMonth",
     async (month, { rejectWithValue }) => {
         try {
-            const res = await api.get("/finalize-payroll", { month });
-            return res.data.data;
+            const res = await api.post("/finalize-payroll", { month });
+            return res.data;
         } catch (error) {
             const errMsg = getErrorMessage(error);
             return rejectWithValue(errMsg);
@@ -43,12 +43,14 @@ const finalizePayrollSlice = createSlice({
     name: "finalizePayroll",
     initialState: {
         data: [],
+        payroll: [],
         loading: false,
         error: null,
     },
     reducers: {
         clearFinalizePayroll: (state) => {
             state.data = [];
+            state.payroll = [];
             state.error = null;
         },
     },
@@ -56,17 +58,18 @@ const finalizePayrollSlice = createSlice({
         builder
 
             /* ===== FETCH ===== */
-            .addCase(fetchPayrollHistory.pending, (state) => {
+            .addCase(finalizePayrollByMonth.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(fetchPayrollHistory.fulfilled, (state, action) => {
+            .addCase(finalizePayrollByMonth.fulfilled, (state, action) => {
                 state.loading = false;
-                state.data = action.payload;
+                state.data = action.payload.data;
+                state.payroll = action.payload.payroll;
             })
-            .addCase(fetchPayrollHistory.rejected, (state, action) => {
+            .addCase(finalizePayrollByMonth.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.payload;
+                state.error = action.payload.data;
                 errorMessage(action.payload);
             })
 
@@ -88,6 +91,6 @@ const finalizePayrollSlice = createSlice({
     },
 });
 
-export const { clearFinalizePayroll } = payrollHistorySlice.actions;
+export const { clearFinalizePayroll } = finalizePayrollSlice.actions;
 
 export default finalizePayrollSlice.reducer;

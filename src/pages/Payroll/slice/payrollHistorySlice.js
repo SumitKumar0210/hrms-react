@@ -56,15 +56,15 @@ const payrollHistorySlice = createSlice({
         builder
 
             /* ===== FETCH ===== */
-            .addCase(fetchPayrollHistory.pending, (state) => {
+            .addCase(fetchPayrollHistoryByMonth.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(fetchPayrollHistory.fulfilled, (state, action) => {
+            .addCase(fetchPayrollHistoryByMonth.fulfilled, (state, action) => {
                 state.loading = false;
                 state.data = action.payload;
             })
-            .addCase(fetchPayrollHistory.rejected, (state, action) => {
+            .addCase(fetchPayrollHistoryByMonth.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
                 errorMessage(action.payload);
