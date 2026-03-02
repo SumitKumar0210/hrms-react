@@ -62,13 +62,83 @@ export const getHistoryWithEmpId = createAsyncThunk(
   }
 );
 
+// Download payslip thunk - FIXED VERSION
+export const downloadPayslip = createAsyncThunk(
+  'payroll/downloadPayslip',
+  async (id, { rejectWithValue }) => {
+    try {
 
+      const response = await api.post(
+        `/payroll/downloadPayslip/${id}`,
+        {}, // empty body
+        {
+          responseType: 'blob',   // ✅ MUST BE HERE
+          headers: {
+            Accept: 'application/pdf',
+          },
+        }
+      );
+
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = url;
+
+      // Extract filename
+      const contentDisposition = response.headers['content-disposition'];
+      let fileName = `Payslip_${id}.pdf`;
+
+      if (contentDisposition) {
+        const match = contentDisposition.match(/filename="(.+)"/);
+        if (match?.[1]) fileName = match[1];
+      }
+
+      link.setAttribute('download', fileName);
+      document.body.appendChild(link);
+      link.click();
+
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      successMessage('Payslip downloaded successfully');
+
+      return true;
+
+    } catch (error) {
+      errorMessage('Failed to download payslip');
+      return rejectWithValue('Failed to download payslip');
+    }
+  }
+);
+
+export const viewPayslip = async (id) => {
+  try {
+    const response = await api.post(`/payroll/viewPayslip/${id}`);
+
+    const newWindow = window.open('', '_blank');
+
+    if (!newWindow) {
+      alert("Popup blocked! Please allow popups.");
+      return;
+    }
+
+    newWindow.document.open();
+    newWindow.document.write(response.data.html);
+    newWindow.document.close();
+
+  } catch (error) {
+    console.log(error);
+  }
+};
 
 /* ================= SLICE ================= */
 
 const payrollSlice = createSlice({
   name: "payroll",
   initialState: {
+    downloading: false,
+    downloadError: null,
     data: [],
     history: [],
     loading: false,
@@ -76,6 +146,7 @@ const payrollSlice = createSlice({
     // Attendance preview for selected month
     attendanceData: [],
     employeeData: [],
+    isPayrollFinalized: false,
     attendanceLoading: false,
 
     processing: false,
@@ -85,11 +156,15 @@ const payrollSlice = createSlice({
     clearAttendance(state) {
       state.attendanceData = [];
       state.employeeData = [];
+      state.isPayrollFinalized = false;
       state.error = null;
     },
     clearHistory(state) {
       state.history = [];
       state.error = null;
+    },
+    clearDownloadError(state) {
+      state.downloadError = null;
     },
   },
   extraReducers: (builder) => {
@@ -107,6 +182,8 @@ const payrollSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+
+      /* getHistoryWithEmpId */
       .addCase(getHistoryWithEmpId.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -129,6 +206,7 @@ const payrollSlice = createSlice({
         state.attendanceLoading = false;
         state.attendanceData = action.payload.attendace ?? []; // backend typo preserved
         state.employeeData = action.payload.employees ?? [];
+        state.isPayrollFinalized = action.payload.payrollStatus ?? false;
       })
       .addCase(getEmployeeWithAttendanceMonthly.rejected, (state, action) => {
         state.attendanceLoading = false;
@@ -149,9 +227,23 @@ const payrollSlice = createSlice({
       .addCase(processMonthlyPayroll.rejected, (state, action) => {
         state.processing = false;
         state.error = action.payload;
+      })
+
+      /* downloadPayslip */
+      .addCase(downloadPayslip.pending, (state) => {
+        state.downloading = true;
+        state.downloadError = null;
+      })
+      .addCase(downloadPayslip.fulfilled, (state) => {
+        state.downloading = false;
+        state.downloadError = null;
+      })
+      .addCase(downloadPayslip.rejected, (state, action) => {
+        state.downloading = false;
+        state.downloadError = action.payload;
       });
   },
 });
 
-export const { clearAttendance, clearHistory } = payrollSlice.actions;
+export const { clearAttendance, clearHistory, clearDownloadError } = payrollSlice.actions;
 export default payrollSlice.reducer;

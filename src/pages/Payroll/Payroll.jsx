@@ -82,10 +82,12 @@ const Payroll = () => {
   const {
     attendanceData,
     employeeData,
+    isPayrollFinalized,
     attendanceLoading,
     processing,
     error,
   } = useSelector((state) => state.payroll);
+  console.log(isPayrollFinalized);
 
   const [payrollMonth, setPayrollMonth] = useState(null);
   const [search, setSearch] = useState('');
@@ -97,8 +99,8 @@ const Payroll = () => {
   // Tracks whether unsaved edits exist
   const hasEdits = Object.keys(edits).length > 0;
 
-  // Tracks whether attendance was successfully saved (required before processing salary)
-  const [attendanceUpdated, setAttendanceUpdated] = useState(false);
+  // Tracks whether attendance data has been successfully loaded
+  const [attendanceLoaded, setAttendanceLoaded] = useState(false);
 
   // Tracks update-in-progress state
   const [updating, setUpdating] = useState(false);
@@ -108,10 +110,17 @@ const Payroll = () => {
     setPayrollMonth(date);
     setSearch('');
     setEdits({});
-    setAttendanceUpdated(false);
+    setAttendanceLoaded(false);
     dispatch(clearAttendance());
     if (date) {
-      dispatch(getEmployeeWithAttendanceMonthly(toMonthParam(date)));
+      dispatch(getEmployeeWithAttendanceMonthly(toMonthParam(date)))
+        .unwrap()
+        .then(() => {
+          setAttendanceLoaded(true);
+        })
+        .catch(() => {
+          setAttendanceLoaded(false);
+        });
     }
   };
 
@@ -142,8 +151,6 @@ const Payroll = () => {
         [field]: value,
       },
     }));
-    // Any new edit means attendance is no longer "freshly saved"
-    setAttendanceUpdated(false);
   }, []);
 
   /* ---- Get cell value (edits override server data) ---- */
@@ -184,11 +191,10 @@ const Payroll = () => {
 
       await dispatch(updateAttendance(payload)).unwrap();
 
-      // 🔥 THIS LINE FIXES YOUR ISSUE
+      // Refresh attendance data after update
       await dispatch(getEmployeeWithAttendanceMonthly(toMonthParam(payrollMonth)));
 
       setEdits({});
-      setAttendanceUpdated(true);
 
     } catch (err) {
       console.error('Attendance update failed:', err);
@@ -278,21 +284,37 @@ const Payroll = () => {
                 </small>
               )}
 
+              {isPayrollFinalized && (
+                <small className="text-white text-bg-danger d-block mb-1">
+                  ⚠ This month salary is already processed.
+                </small>
+              )}
+
+              {/* Show hint when attendance not loaded yet */}
+              {!attendanceLoaded && payrollMonth && !attendanceLoading && (
+                <small className="text-muted d-block mb-1">
+                  Load attendance data first.
+                </small>
+              )}
+
               <button
                 className="btn btn-primary d-flex align-items-center gap-2"
-                onClick={handleProcessPayroll}
-                disabled={!hasData 
-                  || processing 
-                  || hasEdits 
-                  || !attendanceUpdated 
-                  // || attendanceUpdated
+                onClick={isPayrollFinalized? '': handleProcessPayroll}
+                disabled={
+                  !hasData ||
+                  processing ||
+                  hasEdits ||
+                  !attendanceLoaded ||
+                  isPayrollFinalized
                 }
                 title={
-                  hasEdits
-                    ? 'You have unsaved attendance edits — update attendance first'
-                    : !attendanceUpdated
-                      ? 'Load and save attendance before processing salary'
-                      : ''
+                  !attendanceLoaded && payrollMonth
+                    ? 'Load attendance data first'
+                    : hasEdits
+                      ? 'You have unsaved attendance edits — update attendance first'
+                      : !hasData
+                        ? 'No data available'
+                        : ''
                 }
               >
                 {processing ? (
@@ -522,6 +544,7 @@ const Payroll = () => {
                                     {field === 'status' ? (
                                       <select
                                         value={val}
+                                        disabled={isPayrollFinalized}
                                         onChange={(e) => handleEdit(empId, d.isoDate, 'status', e.target.value)}
                                         style={{
                                           width: '100%',
@@ -547,6 +570,7 @@ const Payroll = () => {
                                       <input
                                         type="time"
                                         value={val}
+                                        disabled={isPayrollFinalized}
                                         onChange={(e) => handleEdit(empId, d.isoDate, field, e.target.value)}
                                         style={{
                                           width: '100%',
@@ -583,8 +607,8 @@ const Payroll = () => {
                 <div className="px-3 py-3 d-flex align-items-center gap-3 border-top">
                   <button
                     className="btn btn-success d-flex align-items-center gap-2"
-                    onClick={handleUpdateAttendance}
-                    disabled={!hasEdits || updating}
+                    onClick={isPayrollFinalized? '':handleUpdateAttendance}
+                    disabled={!hasEdits || updating || isPayrollFinalized}
                     title={!hasEdits ? 'No changes to save' : ''}
                   >
                     {updating ? (
@@ -603,9 +627,9 @@ const Payroll = () => {
                     </small>
                   )}
 
-                  {attendanceUpdated && !hasEdits && (
+                  {!hasEdits && attendanceLoaded && (
                     <small className="text-success fw-semibold">
-                      ✓ Attendance saved — you can now process salary.
+                      ✓ Ready to process salary
                     </small>
                   )}
                 </div>

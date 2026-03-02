@@ -11,26 +11,27 @@ import {
     ListGroup,
     Spinner
 } from "react-bootstrap";
+import { HiDownload } from 'react-icons/hi';
 import DataTable from "react-data-table-component";
 import { IoSearchOutline, IoEyeOutline } from "react-icons/io5";
 import { RxDownload } from "react-icons/rx";
 import { fetchAllEmployees } from "./slice/employeeSlice";
 import { useDispatch, useSelector } from "react-redux";
-import { getHistoryWithEmpId, clearHistory } from "../Payroll/slice/payrollSlice";
+import { getHistoryWithEmpId, clearHistory, downloadPayslip, viewPayslip } from "../Payroll/slice/payrollSlice";
 
 const EmployeePayrollHistory = () => {
 
     const dispatch = useDispatch();
 
-    // const { data: employees = [] } = useSelector((state) => state.employee);
     const { employees = [], searchLoading } = useSelector((s) => s.employee);
-    const { history = [], loading } = useSelector((state) => state.payroll);
+    const { history = [], loading, downloading, downloadError } = useSelector((state) => state.payroll);
     console.log(history);
 
     const [searchTerm, setSearchTerm] = useState("");
     const [filteredEmployees, setFilteredEmployees] = useState([]);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
     const [showDropdown, setShowDropdown] = useState(false);
+    const [downloadingId, setDownloadingId] = useState(null);
 
     const dropdownRef = useRef(null);
 
@@ -64,6 +65,29 @@ const EmployeePayrollHistory = () => {
         setShowDropdown(false);
 
         dispatch(getHistoryWithEmpId(emp.id));
+    };
+
+    /* ================= DOWNLOAD PAYSLIP ================= */
+    const handleDownloadPayslip = async (id) => {
+        try {
+            setDownloadingId(id);
+            await dispatch(downloadPayslip(id)).unwrap();
+        } catch (error) {
+            console.error('Download failed:', error);
+        } finally {
+            setDownloadingId(null);
+        }
+    };
+
+    const handleViewPayslip = async (id) => {
+        try {
+            setDownloadingId(id);
+            await dispatch(viewPayslip(id)).unwrap();
+        } catch (error) {
+            console.error('Download failed:', error);
+        } finally {
+            setDownloadingId(null);
+        }
     };
 
     /* ================= CLEAR SELECTION ================= */
@@ -114,16 +138,29 @@ const EmployeePayrollHistory = () => {
             center: true,
             cell: (row) => (
                 <div className="d-flex gap-2">
-                    <Button size="sm" variant="outline-primary">
+                    <Button size="sm" variant="outline-primary"
+                    onClick={() => handleViewPayslip(row.id)}
+                    >
                         <IoEyeOutline />
                     </Button>
-                    <Button size="sm" variant="outline-secondary">
-                        <RxDownload />
+                    
+                    <Button
+                        variant="outline-secondary"
+                        size="sm"
+                        onClick={() => handleDownloadPayslip(row.id)}
+                        disabled={downloading && downloadingId === row.id}
+                        title="Download Payslip"
+                    >
+                        {downloading && downloadingId === row.id ? (
+                            <Spinner animation="border" size="sm" />
+                        ) : (
+                            <RxDownload />
+                        )}
                     </Button>
                 </div>
             ),
         },
-    ], []);
+    ], [downloading, downloadingId]); // Added dependencies
 
     return (
         <Container fluid className="my-3">
