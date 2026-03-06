@@ -18,16 +18,28 @@ import { FiLogOut } from "react-icons/fi";
 
 import { Link, NavLink } from "react-router-dom";
 import { OverlayTrigger, Popover, Dropdown } from "react-bootstrap";
+import { authLogout } from "../pages/Auth/authSlice";
+import { useDispatch } from "react-redux";
 
 import logo from "../assets/images/logosmall.png";
 import logofull from "../assets/images/logo.svg";
 
 const Sidebar = () => {
+  const dispatch = useDispatch();
   const [isOpen, setIsOpen] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
 
   const toggle = () => setIsOpen(!isOpen);
+
+  const handleLogout = async () => {
+    try {
+      await dispatch(authLogout()).unwrap();
+      window.location.reload();
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
 
   /* ================= POPOVER MENUS ================= */
 
@@ -48,49 +60,49 @@ const Sidebar = () => {
       items: [
         { label: "Staff Directory", path: "/employees" },
         { label: "Add New Staff", path: "/employees/add" },
-        { label: "Shift Roster", path: "/employees/shift-roster" },
-        { label: "Employee Payroll Summary", path: "/employees/payroll-summary" },
+        // { label: "Shift Roster", path: "/employees/shift-roster" },
+        // { label: "Employee Payroll Summary", path: "/employees/payroll-summary" },
         { label: "Employee Payroll History", path: "/employees/payroll-history" },
-        { label: "Employee Exit", path: "/employees/exit" },
-        { label: "Employee Final Settlement", path: "/employees/full-final-settlement" },
+        // { label: "Employee Exit", path: "/employees/exit" },
+        // { label: "Employee Final Settlement", path: "/employees/full-final-settlement" },
       ],
     },
-    {
-      name: "Leave",
-      icon: <MdTimeToLeave />,
-      title: "Leave Management",
-      items: [
-        { label: "Leave Management", path: "/leave" },
-        { label: "Leave Request Details", path: "/leave/requests" },
-      ],
-    },
+    // {
+    //   name: "Leave",
+    //   icon: <MdTimeToLeave />,
+    //   title: "Leave Management",
+    //   items: [
+    //     { label: "Leave Management", path: "/leave" },
+    //     { label: "Leave Request Details", path: "/leave/requests" },
+    //   ],
+    // },
     {
       name: "Payroll",
       icon: <RiMoneyRupeeCircleLine />,
       title: "Payroll",
       items: [
         { label: "Salary Structure & Revision", path: "/payroll/salary-structure" },
-        { label: "Overtime Rules", path: "/payroll/overtime" },
+        // { label: "Overtime Rules", path: "/payroll/overtime" },
         { label: "Payroll Processing", path: "/payroll/process" },
-        { label: "Payroll History", path: "/payroll/payroll-history" },
+        // { label: "Payroll History", path: "/payroll/payroll-history" },
         { label: "Payroll Finalization", path: "/payroll/finalization" },
-        { label: "Salary Slip Distribution", path: "/payroll/slips" },
-        { label: "Statutory Compliance", path: "/payroll/statutory" },
-        { label: "Statutory Benefits", path: "/payroll/statutory-benefits" },
+        // { label: "Salary Slip Distribution", path: "/payroll/slips" },
+        // { label: "Statutory Compliance", path: "/payroll/statutory" },
+        // { label: "Statutory Benefits", path: "/payroll/statutory-benefits" },
         { label: "Document Templates", path: "/payroll/templates" },
       ],
     },
-    {
-      name: "Reports",
-      icon: <ImFileText2 />,
-      title: "Reports",
-      items: [
-        { label: "Attendance Reports", path: "/reports/attendance" },
-        { label: "Payroll Reports", path: "/reports/payroll" },
-        { label: "Statutory Reports", path: "/reports/statutory" },
-        { label: "Employee Reports", path: "/reports/employees" },
-      ],
-    },
+    // {
+    //   name: "Reports",
+    //   icon: <ImFileText2 />,
+    //   title: "Reports",
+    //   items: [
+    //     { label: "Attendance Reports", path: "/reports/attendance" },
+    //     { label: "Payroll Reports", path: "/reports/payroll" },
+    //     { label: "Statutory Reports", path: "/reports/statutory" },
+    //     { label: "Employee Reports", path: "/reports/employees" },
+    //   ],
+    // },
   ];
 
   const renderPopover = (menu) => (
@@ -116,7 +128,7 @@ const Sidebar = () => {
         {/* LOGO */}
         <div className="sidebar-brand">
           <Link to="/" className="logo d-none d-md-block">
-            <img src={logo} alt="Hotlr" />
+            <img src="https://caresoft.margdarshanhospital.com/backend/assets/images/favicon.png" alt="Hotlr" />
           </Link>
           <Link to="/" className="logo d-block d-md-none">
             <img src={logofull} alt="Hotlr" />
@@ -169,14 +181,14 @@ const Sidebar = () => {
               </div>
             </NavLink>
 
-            <NavLink to="/archived-users" className="nav-link">
+            {/* <NavLink to="/archived-users" className="nav-link">
               <div className="nav-icon">
                 <RiArchiveLine />
                 <span className="menu-item d-none d-sm-block">Archived</span>
               </div>
-            </NavLink>
+            </NavLink> */}
 
-            <NavLink to="/logout" className="nav-link">
+            <NavLink onClick={() => handleLogout()} className="nav-link">
               <div className="nav-icon">
                 <FiLogOut className="text-danger" />
                 <span className="menu-item d-none d-sm-block">Logout</span>
@@ -251,7 +263,7 @@ const Sidebar = () => {
                       <Dropdown.Item>
                         <FaRegUser /> My Profile
                       </Dropdown.Item>
-                      <Dropdown.Item>
+                      <Dropdown.Item onClick={() => handleLogout()}>
                         <MdOutlineLogout /> Sign Out
                       </Dropdown.Item>
                     </div>

@@ -1,109 +1,109 @@
 .bg-primary {
-  background-color: hsl(227, 87%, 64%) !important;
+  background-color: #005293 !important;
 }
 
 .text-primary {
-  color: hsl(227, 87%, 64%) !important;
+  color: #005293 !important;
 }
 
 a.text-primary:hover,
 a.text-primary:focus {
-  color: hsl(227, 87%, 57.6%) !important;
+  color: rgb(0, 73.8, 132.3) !important;
 }
 
 .border-primary {
-  border-color: hsl(227, 87%, 64%) !important;
+  border-color: #005293 !important;
 }
 
 .btn-primary {
-  background-color: hsl(227, 87%, 64%);
-  border-color: hsl(227, 87%, 64%);
+  background-color: #005293;
+  border-color: #005293;
 }
 .btn-primary:hover {
-  background-color: hsl(227, 87%, 59.2%);
-  border-color: hsl(227, 87%, 57.6%);
+  background-color: rgb(0, 75.85, 135.975);
+  border-color: rgb(0, 73.8, 132.3);
 }
 .btn-primary:focus, .btn-primary.focus {
-  background-color: hsl(227, 87%, 59.2%);
-  border-color: hsl(227, 87%, 57.6%);
-  box-shadow: 0 0 0 0.2rem rgba(83.334, 117.9426, 243.066, 0.5);
+  background-color: rgb(0, 75.85, 135.975);
+  border-color: rgb(0, 73.8, 132.3);
+  box-shadow: 0 0 0 0.2rem rgba(0, 82, 147, 0.5);
 }
 .btn-primary:active, .btn-primary.active {
-  background-color: hsl(227, 87%, 57.6%);
-  border-color: hsl(227, 87%, 56%);
+  background-color: rgb(0, 73.8, 132.3);
+  border-color: rgb(0, 71.75, 128.625);
 }
 .btn-primary:disabled, .btn-primary.disabled {
-  background-color: hsl(227, 87%, 64%);
-  border-color: hsl(227, 87%, 64%);
+  background-color: #005293;
+  border-color: #005293;
 }
 
 .btn-outline-primary {
-  color: hsl(227, 87%, 64%);
-  border-color: hsl(227, 87%, 64%);
+  color: #005293;
+  border-color: #005293;
 }
 .btn-outline-primary:hover {
   color: #fff;
-  background-color: hsl(227, 87%, 64%);
-  border-color: hsl(227, 87%, 64%);
+  background-color: #005293;
+  border-color: #005293;
 }
 .btn-outline-primary:focus, .btn-outline-primary.focus {
-  box-shadow: 0 0 0 0.2rem rgba(83.334, 117.9426, 243.066, 0.5);
+  box-shadow: 0 0 0 0.2rem rgba(0, 82, 147, 0.5);
 }
 .btn-outline-primary:active, .btn-outline-primary.active {
   color: #fff;
-  background-color: hsl(227, 87%, 64%);
-  border-color: hsl(227, 87%, 64%);
+  background-color: #005293;
+  border-color: #005293;
 }
 .btn-outline-primary:disabled, .btn-outline-primary.disabled {
-  color: hsl(227, 87%, 64%);
+  color: #005293;
   background-color: transparent;
 }
 
 .link-primary {
-  color: hsl(227, 87%, 64%) !important;
+  color: #005293 !important;
 }
 .link-primary:hover, .link-primary:focus {
-  color: hsl(227, 87%, 57.6%) !important;
+  color: rgb(0, 73.8, 132.3) !important;
 }
 
 .alert-primary {
-  background-color: hsl(227, 87%, 76.6%);
-  border-color: hsl(227, 87%, 74.8%);
-  color: hsl(227, 87%, 57.6%);
+  background-color: rgb(19.05, 150.6683673469, 255);
+  border-color: rgb(0.9, 142.6428571429, 255);
+  color: rgb(0, 73.8, 132.3);
 }
 .alert-primary .alert-link {
-  color: hsl(227, 87%, 54.4%);
+  color: rgb(0, 69.7, 124.95);
 }
 
 .badge.bg-primary {
-  background-color: hsl(227, 87%, 64%) !important;
+  background-color: #005293 !important;
 }
 
 .list-group-item-primary {
-  background-color: hsl(227, 87%, 76.6%);
-  color: hsl(227, 87%, 57.6%);
+  background-color: rgb(19.05, 150.6683673469, 255);
+  color: rgb(0, 73.8, 132.3);
 }
 .list-group-item-primary.list-group-item-action:hover, .list-group-item-primary.list-group-item-action:focus {
-  background-color: hsl(227, 87%, 74.8%);
+  background-color: rgb(0.9, 142.6428571429, 255);
 }
 .list-group-item-primary.list-group-item-action.active {
-  background-color: hsl(227, 87%, 57.6%);
-  border-color: hsl(227, 87%, 57.6%);
+  background-color: rgb(0, 73.8, 132.3);
+  border-color: rgb(0, 73.8, 132.3);
   color: #fff;
 }
 
 .progress-bar {
-  background-color: hsl(227, 87%, 64%);
+  background-color: #005293;
 }
 
 .table-primary {
-  background-color: hsl(227, 87%, 76.6%);
+  background-color: rgb(19.05, 150.6683673469, 255);
 }
 .table-primary th,
 .table-primary td,
 .table-primary thead th,
 .table-primary tbody + tbody {
-  border-color: hsl(227, 87%, 73%);
+  border-color: rgb(0, 132.6224489796, 237.75);
 }
 
 .bg-warning {
@@ -235,7 +235,7 @@ td {
 .form-control:focus,
 .form-select:focus {
   box-shadow: none;
-  border-color: hsl(227, 87%, 64%);
+  border-color: #005293;
 }
 
 .form-label,
@@ -250,16 +250,16 @@ label {
 }
 
 .form-check-input:checked {
-  background-color: hsl(227, 87%, 64%);
-  border-color: hsl(227, 87%, 64%);
+  background-color: #005293;
+  border-color: #005293;
 }
 .form-check-input:focus {
   box-shadow: none;
-  border-color: hsl(227, 87%, 64%);
+  border-color: #005293;
 }
 
 .modal .modal-header {
-  background-color: hsl(227, 87%, 64%);
+  background-color: #005293;
   color: #fff;
   border: 0;
   border-radius: 3px 3px 0 0;

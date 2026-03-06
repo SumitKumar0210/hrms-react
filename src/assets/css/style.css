@@ -69,14 +69,14 @@ main {
 }
 .sidebar-wrapper .sidebar-content .nav-link {
   display: flex;
-  color: hsl(227, 87%, 64%);
+  color: #005293;
   padding: 10px 5px;
   gap: 15px;
   transition: all 0.5s;
 }
 .sidebar-wrapper .sidebar-content .nav-link:hover {
   background: hsl(227, 87%, 96%);
-  color: hsl(227, 87%, 64%);
+  color: #005293;
   transition: all 0.5s;
 }
 .sidebar-wrapper .sidebar-content .nav-link .link_text {
@@ -93,7 +93,7 @@ main {
 }
 .sidebar-wrapper .sidebar-brand {
   margin: 0;
-  background: hsl(227, 87%, 64%);
+  background: #005293;
   overflow: hidden;
   max-height: 52px;
 }
@@ -111,7 +111,7 @@ main {
 }
 .sidebar-wrapper .active {
   background: hsl(227, 87%, 96%);
-  color: hsl(227, 87%, 64%);
+  color: #005293;
 }
 
 .header {
@@ -164,7 +164,7 @@ main {
 .header .header-actions li svg {
   width: 34px;
   height: 34px;
-  fill: hsl(227, 87%, 64%) !important;
+  fill: #005293 !important;
 }
 
 .page-header {
@@ -186,7 +186,7 @@ main {
   color: #333333;
 }
 .page-header .breadcrumb .breadcrumb-item.active {
-  color: hsl(227, 87%, 64%);
+  color: #005293;
 }
 
 .dropdown-toggle::after {
@@ -228,7 +228,7 @@ main {
   color: #333333;
 }
 .header-profile-actions a:hover {
-  background: hsl(227, 87%, 64%);
+  background: #005293;
   color: #fff;
 }
 .header-profile-actions a:last-child {
@@ -343,8 +343,8 @@ main {
 }
 
 .switch-checkbox:checked + .switch-label {
-  background: hsl(227, 87%, 64%); /* Green when switch is on */
-  border: 1px solid hsl(227, 87%, 64%);
+  background: #005293; /* Green when switch is on */
+  border: 1px solid #005293;
 }
 
 .switch-checkbox:checked + .switch-label .switch-button {
@@ -413,18 +413,18 @@ main {
 }
 
 .report-filter-btn {
-  border: 1px solid hsl(227, 87%, 64%);
+  border: 1px solid #005293;
   border-radius: 4px;
   margin-right: 15px;
   padding: 6px 15px;
   margin-top: 5px;
 }
 .report-filter-btn:hover {
-  border: 1px solid hsl(227, 87%, 64%);
+  border: 1px solid #005293;
 }
 .report-filter-btn.active {
   color: #fff;
-  background-color: hsl(227, 87%, 64%);
+  background-color: #005293;
 }
 
 .my-select .custom__control {
@@ -436,10 +436,10 @@ main {
   min-width: 155px;
 }
 .my-select .custom__control:hover {
-  border-color: hsl(227, 87%, 64%);
+  border-color: #005293;
 }
 .my-select .custom__control--is-focused {
-  border-color: hsl(227, 87%, 64%);
+  border-color: #005293;
   box-shadow: none;
 }
 .my-select .custom__option {
@@ -447,14 +447,14 @@ main {
   font-size: 14px;
 }
 .my-select .custom__option:hover {
-  background-color: hsl(227, 87%, 64%);
+  background-color: #005293;
   color: white;
 }
 .my-select .custom__option--is-focused {
   background-color: hsl(227, 87%, 96%);
 }
 .my-select .custom__option--is-selected {
-  background-color: hsl(227, 87%, 64%);
+  background-color: #005293;
   color: white;
 }
 .my-select .custom__menu {
@@ -463,7 +463,7 @@ main {
 }
 
 .dropdown-item.active, .dropdown-item:active {
-  background: hsl(227, 87%, 64%);
+  background: #005293;
 }
 
 .lot-status-filter {
@@ -513,7 +513,7 @@ main {
   border: 1px solid #dfdfdf;
   border-radius: 3px;
   font-size: 16px;
-  color: hsl(227, 87%, 64%);
+  color: #005293;
   text-align: center;
   height: 32px;
   width: 32px;
@@ -541,7 +541,7 @@ main {
 }
 .custom-dropdown-menu .dropdown-item:focus, .custom-dropdown-menu .dropdown-item:hover {
   color: #fff !important;
-  background-color: hsl(227, 87%, 64%) !important;
+  background-color: #005293 !important;
 }
 
 .docs-type-container {
@@ -556,7 +556,7 @@ main {
 }
 
 .doc-labels a.active {
-  background: hsl(227, 87%, 64%) !important;
+  background: #005293 !important;
 }
 
 .doc-labels a:hover {
@@ -571,7 +571,7 @@ main {
 }
 
 .nav-pills .nav-link.active, .nav-pills .show > .nav-link {
-  background-color: hsl(227, 87%, 64%) !important;
+  background-color: #005293 !important;
   color: #fff !important;
 }
 
@@ -598,7 +598,7 @@ main {
 }
 .settings-tab .nav-link:hover {
   color: #fff;
-  background-color: hsl(227, 87%, 64%);
+  background-color: #005293;
 }
 
 .item-top {
@@ -620,7 +620,7 @@ main {
 }
 
 .item-actions {
-  background-color: hsl(227, 87%, 64%) !important;
+  background-color: #005293 !important;
   color: #fff;
   width: 24px;
   height: 24px;
@@ -633,7 +633,7 @@ main {
   margin: 0 auto !important;
 }
 .item-actions:focus, .item-actions:active, .item-actions.show {
-  background-color: hsl(227, 87%, 64%) !important;
+  background-color: #005293 !important;
   color: #fff;
   box-shadow: none;
 }
@@ -726,7 +726,7 @@ main {
   bottom: 0;
   right: 0;
   z-index: 1;
-  background: hsl(227, 87%, 64%);
+  background: #005293;
   color: #fff;
   padding: 5px 8px;
   border-radius: 8px 0;
@@ -757,13 +757,6 @@ main {
 }
 
 /* Users table */
-.custom-data-table {
-  /* Header row */
-  /* Header cells */
-  /* Table rows */
-  /* Table cells */
-  /* Pagination */
-}
 .custom-data-table .rdt_Table {
   border: 1px solid #dee2e6;
   border-radius: 6px;
@@ -772,9 +765,15 @@ main {
 .custom-data-table .rdt_Table:last-child {
   border-bottom: 0 !important;
 }
+.custom-data-table {
+  /* Header row */
+}
 .custom-data-table .rdt_TableHeadRow {
   background-color: #f8f9fa;
   border-bottom: 1px solid #dee2e6;
+}
+.custom-data-table {
+  /* Header cells */
 }
 .custom-data-table .rdt_TableCol {
   font-weight: 600;
@@ -785,6 +784,9 @@ main {
 .custom-data-table .rdt_TableCol:last-child {
   border-right: none;
 }
+.custom-data-table {
+  /* Table rows */
+}
 .custom-data-table .rdt_TableRow {
   border-bottom: 1px solid #dee2e6;
 }
@@ -794,12 +796,18 @@ main {
 .custom-data-table .rdt_TableRow.rdt_TableRowSelected {
   background-color: rgba(13, 110, 253, 0.08);
 }
+.custom-data-table {
+  /* Table cells */
+}
 .custom-data-table .rdt_TableCell {
   border-right: 1px solid #dee2e6;
   font-size: 14px;
 }
 .custom-data-table .rdt_TableCell:last-child {
   border-right: none;
+}
+.custom-data-table {
+  /* Pagination */
 }
 .custom-data-table .rdt_Pagination {
   border-top-width: 0 !important;

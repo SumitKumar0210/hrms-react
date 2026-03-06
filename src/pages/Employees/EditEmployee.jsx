@@ -697,7 +697,10 @@ const EditEmployee = () => {
                                                         </Form.Control.Feedback>
                                                     </Form.Group>
                                                 </Col>
-                                                <Col md={3} className="mb-3">
+                                                
+                                            </>
+                                        )}
+                                        <Col md={3} className="mb-3">
                                                     <Form.Group>
                                                         <Form.Label>Date of Joining</Form.Label>
                                                         <Form.Control
@@ -714,8 +717,6 @@ const EditEmployee = () => {
                                                         </Form.Control.Feedback>
                                                     </Form.Group>
                                                 </Col>
-                                            </>
-                                        )}
                                     </Row>
 
                                     {/* ===== DOCUMENT UPLOAD ===== */}

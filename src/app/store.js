@@ -14,6 +14,8 @@ import templateVariableReducer from '../pages/Payroll/slice/templateVariableSlic
 import documentTemplateReducer from '../pages/Payroll/slice/documentTemplateSlice';
 import finalizePayrollReducer from '../pages/Payroll/slice/finalizePayrollSlice';
 import payrollHistoryReducer from '../pages/Payroll/slice/payrollHistorySlice';
+import paymentReducer from '../pages/Payroll/slice/paymentSlice';
+import mailReducer from '../pages/Employees/slice/mailSlice';
 export const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -31,6 +33,8 @@ export const store = configureStore({
     documentTemplate: documentTemplateReducer,
     finalizePayroll: finalizePayrollReducer,
     payrollHistory: payrollHistoryReducer,
+    payment: paymentReducer,
+    mail: mailReducer,
   },
 });
 

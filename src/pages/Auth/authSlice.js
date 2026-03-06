@@ -70,11 +70,11 @@ export const authLogout = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     const token = localStorage.getItem("token");
     try {
-      const res = await axios.post(
-        `${BASE_URL}auth/logout`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      // const res = await axios.post(
+      //   `${BASE_URL}auth/logout`,
+      //   {},
+      //   { headers: { Authorization: `Bearer ${token}` } }
+      // );
 
       localStorage.removeItem("token");
       sessionStorage.removeItem("redirectAfterLogin");
@@ -82,8 +82,9 @@ export const authLogout = createAsyncThunk(
       // Dispatch custom event for AuthContext to listen
       window.dispatchEvent(new Event("auth-logout"));
 
-      successMessage(res.data.message);
-      return res.data;
+      // successMessage(res.data.message);
+      return true;
+      // return res.data;
     } catch (error) {
       // Even if API fails, still logout locally
       localStorage.removeItem("token");
