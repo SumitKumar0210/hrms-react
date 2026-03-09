@@ -16,6 +16,10 @@ import finalizePayrollReducer from '../pages/Payroll/slice/finalizePayrollSlice'
 import payrollHistoryReducer from '../pages/Payroll/slice/payrollHistorySlice';
 import paymentReducer from '../pages/Payroll/slice/paymentSlice';
 import mailReducer from '../pages/Employees/slice/mailSlice';
+import userReducer from '../pages/user/slice/userSlice';
+import userPermissionsReducer from '../pages/User/slice/userPermissionsSlice';
+import roleReducer from '../pages/Setting/slice/roleSlice';
+
 export const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -35,6 +39,9 @@ export const store = configureStore({
     payrollHistory: payrollHistoryReducer,
     payment: paymentReducer,
     mail: mailReducer,
+    user: userReducer,
+    userPermissions: userPermissionsReducer,
+    role: roleReducer,
   },
 });
 

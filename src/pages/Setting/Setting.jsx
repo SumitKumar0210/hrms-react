@@ -21,6 +21,7 @@ import WorkTypeList from './WorkTypeSettings';
 import User from '../user/User';
 import Department from './Department';
 import Designation from './Designation';
+import Roles from './role';
 import Shift from './Shift';
 
 const Setting = () => {
@@ -119,10 +120,7 @@ const Setting = () => {
                                     </Tab.Pane>
                                     <Tab.Pane eventKey="tab6">
                                         <Card className="border-0">
-                                            <Card.Body>
-                                                <h4>Tab 6 Content</h4>
-                                                <p>This is content for Tab 6.</p>
-                                            </Card.Body>
+                                            <Roles />
                                         </Card>
                                     </Tab.Pane>
                                     <Tab.Pane eventKey="tab7">
