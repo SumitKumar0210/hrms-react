@@ -11,7 +11,9 @@ import {
   updateRole,
   deleteRole,
 } from "./slice/roleSlice";
+import { FaUserShield } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 /* ================= VALIDATION ================= */
 const validationSchema = Yup.object({
@@ -28,6 +30,7 @@ const Roles = () => {
   const [editRow, setEditRow] = useState(null);
   const [showDelete, setShowDelete] = useState(false);
   const [deleteRow, setDeleteRow] = useState(null);
+  const navigate = useNavigate()
 
   /* ================= FETCH ================= */
   useEffect(() => {
@@ -64,6 +67,14 @@ const Roles = () => {
             >
               <FiEdit />
             </Button>
+            <Button
+              size="sm"
+              variant="outline-primary"
+              onClick={() => handleNavigation(row.id)}
+            >
+              <FaUserShield />
+            </Button>
+            
 
             <Button
               size="sm"
@@ -100,6 +111,11 @@ const Roles = () => {
     setShowDelete(false);
     setDeleteRow(null);
   };
+  
+  const handleNavigation = (id) => {
+
+    navigate(`/settings/${id}/fetch-permissions`)
+  }
 
   /* ================= UI ================= */
   return (

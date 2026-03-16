@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { getDataByModule, getModulePermission } from "./slice/userPermissionsSlice";
 import { successMessage, errorMessage } from "../../toast";
 import { capitalize } from "lodash";
-import { assignPermission } from "../settings/slices/roleSlice";
+import { assignPermission } from "../Setting/slice/roleSlice";
 import { useParams } from "react-router-dom";
 import { RiArrowDownSLine, RiArrowUpSLine } from "react-icons/ri";
 

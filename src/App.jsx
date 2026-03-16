@@ -35,7 +35,8 @@ import DocumentTemplates from './pages/Payroll/DocumentTemplates.jsx';
 import OvertimeRules from './pages/Payroll/OvertimeRules.jsx';
 import EditEmployee from './pages/Employees/EditEmployee.jsx';
 import Permissions from './pages/User/Permissions.jsx';
-// import PermissionGroupManager from './pages/User/userPermission.jsx';
+import PermissionGroupManager from './pages/User/UserPermission.jsx';
+ 
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -104,6 +105,7 @@ const AppRoutes = () => {
         <Route path="/attendance/manual" element={<ManualAttendanceCorrection />} />
         <Route path="/permissions" element={<Permissions />} />
         {/* <Route path="/user/:id/permissions" element={<PermissionGroupManager />} /> */}
+        <Route path="/settings/:id/fetch-permissions" element={<PermissionGroupManager />} />
         <Route path="/employees" element={<Employees />} />
         <Route path="/employees/add" element={<AddEmployee />} />
         <Route path="/employees/edit/:id" element={<EditEmployee />} />

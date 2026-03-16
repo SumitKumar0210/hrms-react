@@ -17,12 +17,12 @@ export const getRoles = createAsyncThunk(
   }
 );
 
-
+/* ================= GET ACTIVE ROLES ================= */
 export const getactiveRoles = createAsyncThunk(
   "role/getactiveRoles",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await api.get("roles?statue=1");
+      const res = await api.get("roles?status=1");
       return res.data;
     } catch (error) {
       const errMsg = getErrorMessage(error);
@@ -37,8 +37,8 @@ export const storeRole = createAsyncThunk(
   "role/storeRole",
   async (values, { rejectWithValue }) => {
     try {
-      const res = await api.post("roles", values);
-      successMessage("Role created successfully");
+      const res = await api.post("/roles", values);
+      successMessage(res.data.message);
       return res.data;
     } catch (error) {
       const errMsg = getErrorMessage(error);
@@ -53,8 +53,8 @@ export const updateRole = createAsyncThunk(
   "role/updateRole",
   async ({ id, ...values }, { rejectWithValue }) => {
     try {
-      const res = await api.put(`roles/${id}`, values);
-      successMessage("Role updated successfully");
+      const res = await api.put(`/roles/${id}`, values);
+      successMessage(res.data.message);
       return res.data;
     } catch (error) {
       const errMsg = getErrorMessage(error);
@@ -69,8 +69,8 @@ export const deleteRole = createAsyncThunk(
   "role/deleteRole",
   async (id, { rejectWithValue }) => {
     try {
-      await api.delete(`roles/${id}`);
-      successMessage("Role deleted successfully");
+      const res = await api.delete(`/roles/${id}`);
+      successMessage(res.data.message);
       return id;
     } catch (error) {
       const errMsg = getErrorMessage(error);
@@ -80,7 +80,24 @@ export const deleteRole = createAsyncThunk(
   }
 );
 
+/* ================= ASSIGN PERMISSION ================= */
+export const assignPermission = createAsyncThunk(
+  "role/assignPermission",
+  async (values, { rejectWithValue }) => {
+    try {
+      const res = await api.post(`/roles/assign-permissions`, values);
+      successMessage(res.data.message);
+      return res.data;
+    } catch (error) {
+      const errMsg = getErrorMessage(error);
+      errorMessage(errMsg);
+      return rejectWithValue(errMsg);
+    }
+  }
+);
+
 /* ================= SLICE ================= */
+
 const roleSlice = createSlice({
   name: "role",
   initialState: {
@@ -99,7 +116,7 @@ const roleSlice = createSlice({
   extraReducers: (builder) => {
     builder
 
-      /* GET ROLES */
+      /* ================= GET ROLES ================= */
       .addCase(getRoles.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -113,6 +130,7 @@ const roleSlice = createSlice({
         state.error = action.payload;
       })
 
+      /* ================= GET ACTIVE ROLES ================= */
       .addCase(getactiveRoles.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -126,27 +144,66 @@ const roleSlice = createSlice({
         state.error = action.payload;
       })
 
-      /* STORE ROLE */
+      /* ================= STORE ROLE ================= */
+      .addCase(storeRole.pending, (state) => {
+        state.loading = true;
+      })
       .addCase(storeRole.fulfilled, (state, action) => {
-        state.data.push(action.payload.data ?? action.payload);
+        state.loading = false;
+        const newRole = action.payload.data ?? action.payload;
+        state.data.push(newRole);
+      })
+      .addCase(storeRole.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       })
 
-      /* UPDATE ROLE */
+      /* ================= UPDATE ROLE ================= */
+      .addCase(updateRole.pending, (state) => {
+        state.loading = true;
+      })
       .addCase(updateRole.fulfilled, (state, action) => {
+        state.loading = false;
         const updated = action.payload.data ?? action.payload;
 
         const index = state.data.findIndex((item) => item.id === updated.id);
+
         if (index !== -1) {
           state.data[index] = updated;
         }
       })
+      .addCase(updateRole.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
 
-      /* DELETE ROLE */
+      /* ================= DELETE ROLE ================= */
+      .addCase(deleteRole.pending, (state) => {
+        state.loading = true;
+      })
       .addCase(deleteRole.fulfilled, (state, action) => {
+        state.loading = false;
         state.data = state.data.filter((item) => item.id !== action.payload);
+      })
+      .addCase(deleteRole.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      /* ================= ASSIGN PERMISSION ================= */
+      .addCase(assignPermission.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(assignPermission.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(assignPermission.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });
 
 export const { clearRoleData } = roleSlice.actions;
+
 export default roleSlice.reducer;
