@@ -20,6 +20,7 @@ import {
 } from "./slice/documentTemplateSlice";
 import { fetchAllEmployees } from "../Employees/slice/employeeSlice";
 import { useDispatch, useSelector } from "react-redux";
+import { useAuth } from "../../context/AuthContext";
 
 /* ─────────────────────────────────────────────
    EMPLOYEE FIELD MAP
@@ -28,28 +29,28 @@ import { useDispatch, useSelector } from "react-redux";
    Add new fields here only — nothing else needs changing.
 ───────────────────────────────────────────── */
 const EMPLOYEE_FIELD_MAP = {
-    employee_code:     (e) => e.employee_code,
-    name:              (e) => `${e.first_name ?? ""} ${e.last_name ?? ""}`.trim(),
-    first_name:        (e) => e.first_name,
-    last_name:         (e) => e.last_name,
-    blood_group:       (e) => e.blood_group,
-    aadhar_number:     (e) => e.aadhar_number,
-    mobile:            (e) => e.mobile,
-    email:             (e) => e.email,
-    department:        (e) => e.department?.name,
-    shift:             (e) => e.shift?.name,
-    date_of_joining:   (e) => e.date_of_joining,
-    employment_type:   (e) => e.employment_type,
-    designation:       (e) => e.designation?.name,
-    status:            (e) => e.status,
-    week_off:          (e) => e.week_off,
-    address:           (e) => e.address,
-    zip_code:          (e) => e.zip_code,
-    city:              (e) => e.city,
-    state:             (e) => e.state,
-    source:            (e) => e.source,
-    basic_salary:      (e) => e.salaries?.[0]?.basic_salary,
-    hra:               (e) => e.salaries?.[0]?.hra,
+    employee_code: (e) => e.employee_code,
+    name: (e) => `${e.first_name ?? ""} ${e.last_name ?? ""}`.trim(),
+    first_name: (e) => e.first_name,
+    last_name: (e) => e.last_name,
+    blood_group: (e) => e.blood_group,
+    aadhar_number: (e) => e.aadhar_number,
+    mobile: (e) => e.mobile,
+    email: (e) => e.email,
+    department: (e) => e.department?.name,
+    shift: (e) => e.shift?.name,
+    date_of_joining: (e) => e.date_of_joining,
+    employment_type: (e) => e.employment_type,
+    designation: (e) => e.designation?.name,
+    status: (e) => e.status,
+    week_off: (e) => e.week_off,
+    address: (e) => e.address,
+    zip_code: (e) => e.zip_code,
+    city: (e) => e.city,
+    state: (e) => e.state,
+    source: (e) => e.source,
+    basic_salary: (e) => e.salaries?.[0]?.basic_salary,
+    hra: (e) => e.salaries?.[0]?.hra,
     special_allowance: (e) => e.salaries?.[0]?.special_allowance,
 };
 const tableVariablesList = [
@@ -87,7 +88,7 @@ const capitalize = (s) =>
 
 const normalizeTemplate = (t) => ({
     ...t,
-    status:    capitalize(t.status),
+    status: capitalize(t.status),
     updatedAt: t.updated_at ?? t.updatedAt ?? new Date().toISOString(),
 });
 
@@ -110,7 +111,7 @@ const resolveTemplate = (html, variables, employee) => {
     if (!html || !employee) return html ?? "";
     let resolved = html;
     variables?.forEach(({ name, value }) => {
-        const getter   = EMPLOYEE_FIELD_MAP[value];
+        const getter = EMPLOYEE_FIELD_MAP[value];
         const empValue = getter ? (getter(employee) ?? "") : (employee[value] ?? "");
         resolved = resolved.replaceAll(`{{${name}}}`, String(empValue));
     });
@@ -121,7 +122,7 @@ const resolveTemplate = (html, variables, employee) => {
    VALIDATION
 ───────────────────────────────────────────── */
 const variableSchema = Yup.object({
-    name:  Yup.string().required("Variable name is required"),
+    name: Yup.string().required("Variable name is required"),
     value: Yup.string().required("Employee field is required"),
 });
 
@@ -139,11 +140,10 @@ const Avatar = ({ first, last, size = 36 }) => (
 
 const StatusBadge = ({ status }) => (
     <span
-        className={`badge rounded-pill px-2 py-1 fw-semibold border ${
-            status === "Active"
-                ? "bg-success-subtle text-success border-success"
-                : "bg-secondary-subtle text-secondary border-secondary"
-        }`}
+        className={`badge rounded-pill px-2 py-1 fw-semibold border ${status === "Active"
+            ? "bg-success-subtle text-success border-success"
+            : "bg-secondary-subtle text-secondary border-secondary"
+            }`}
         style={{ fontSize: 10 }}
     >
         ● {status}
@@ -155,11 +155,12 @@ const StatusBadge = ({ status }) => (
 ───────────────────────────────────────────── */
 const DocumentTemplates = () => {
     const dispatch = useDispatch();
+    const { hasPermission, hasAnyPermission } = useAuth();
 
     const { data: reduxTemplates, loading: templatesLoading } = useSelector(
         (s) => s.documentTemplate
     );
-    const { employees }                                      = useSelector((s) => s.employee);
+    const { employees } = useSelector((s) => s.employee);
     const { data: variables } = useSelector(
         (s) => s.templateVariable
     );
@@ -167,23 +168,23 @@ const DocumentTemplates = () => {
     const quillRef = useRef(null);
 
     /* ── local state ── */
-    const [drafts,     setDrafts]     = useState({});
+    const [drafts, setDrafts] = useState({});
     const [selectedId, setSelectedId] = useState(null);
-    const [editingId,  setEditingId]  = useState(null);
-    const [tempTitle,  setTempTitle]  = useState("");
-    const [saving,     setSaving]     = useState(false);
+    const [editingId, setEditingId] = useState(null);
+    const [tempTitle, setTempTitle] = useState("");
+    const [saving, setSaving] = useState(false);
 
     const [toast, setToast] = useState({ show: false, msg: "", variant: "success" });
     const showToast = useCallback((msg, variant = "success") =>
         setToast({ show: true, msg, variant }), []);
 
-    const [showPreview,        setShowPreview]        = useState(false);
-    const [previewStep,        setPreviewStep]        = useState("select");
+    const [showPreview, setShowPreview] = useState(false);
+    const [previewStep, setPreviewStep] = useState("select");
     const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
-    const [loadingEmployees,   setLoadingEmployees]   = useState(false);
+    const [loadingEmployees, setLoadingEmployees] = useState(false);
 
     const [showVariableModal, setShowVariableModal] = useState(false);
-    const [editVariable,      setEditVariable]      = useState(null);
+    const [editVariable, setEditVariable] = useState(null);
 
     /* ── bootstrap ── */
     useEffect(() => {
@@ -218,7 +219,7 @@ const DocumentTemplates = () => {
             ...prev,
             [selectedId]: {
                 ...(prev[selectedId] ?? {}),
-                [key]:     value,
+                [key]: value,
                 updatedAt: new Date().toISOString(),
             },
         }));
@@ -267,10 +268,10 @@ const DocumentTemplates = () => {
         try {
             const isNew = !!selectedTemplate._isNew;
             const payload = {
-                title:   selectedTemplate.title,
+                title: selectedTemplate.title,
                 subject: selectedTemplate.subject,
-                body:    selectedTemplate.body,
-                status:  selectedTemplate.status?.toLowerCase() ?? "active",
+                body: selectedTemplate.body,
+                status: selectedTemplate.status?.toLowerCase() ?? "active",
                 ...(isNew ? {} : { template_id: selectedTemplate.id }),
             };
 
@@ -312,7 +313,7 @@ const DocumentTemplates = () => {
     const previewEmployee = employees?.find(
         (e) => String(e.id) === String(selectedEmployeeId)
     );
-    const previewHTML    = resolveTemplate(selectedTemplate?.body,    variables, previewEmployee);
+    const previewHTML = resolveTemplate(selectedTemplate?.body, variables, previewEmployee);
     const previewSubject = resolveTemplate(selectedTemplate?.subject, variables, previewEmployee);
 
     /* ── variable insert into Quill ── */
@@ -320,7 +321,7 @@ const DocumentTemplates = () => {
         const editor = quillRef.current?.getEditor();
         if (!editor) return;
         const range = editor.getSelection(true);
-        const text  = `{{${variableName}}}`;
+        const text = `{{${variableName}}}`;
         editor.insertText(range.index, text);
         editor.setSelection(range.index + text.length);
     }, []);
@@ -331,8 +332,8 @@ const DocumentTemplates = () => {
     const handleVariableSubmit = async (values, actions) => {
         try {
             await dispatch(storeVariable({
-                name:   values.name,
-                value:  values.value,
+                name: values.name,
+                value: values.value,
                 status: values.status ? "active" : "inactive",
                 ...(editVariable ? { id: editVariable.id } : {}),
             }));
@@ -385,9 +386,12 @@ const DocumentTemplates = () => {
 
                             <div className="d-flex justify-content-between align-items-center mb-2 px-1">
                                 <h6 className="mb-0 fw-semibold">Templates</h6>
-                                <Button size="sm" className="rounded-pill px-3" onClick={handleAddTemplate}>
-                                    + Add
-                                </Button>
+                                {hasPermission('document_template.create') && (
+
+                                    <Button size="sm" className="rounded-pill px-3" onClick={handleAddTemplate}>
+                                        + Add
+                                    </Button>
+                                )}
                             </div>
 
                             <div className="overflow-auto flex-grow-1 pe-1">
@@ -399,7 +403,7 @@ const DocumentTemplates = () => {
 
                                 {templates.map((t) => {
                                     const isSelected = selectedTemplate?.id === t.id;
-                                    const hasDraft   = !!drafts[t.id];
+                                    const hasDraft = !!drafts[t.id];
 
                                     return (
                                         <Card
@@ -420,7 +424,7 @@ const DocumentTemplates = () => {
                                                                 onChange={(e) => setTempTitle(e.target.value)}
                                                                 onBlur={() => handleRenameSave(t.id)}
                                                                 onKeyDown={(e) => {
-                                                                    if (e.key === "Enter")  handleRenameSave(t.id);
+                                                                    if (e.key === "Enter") handleRenameSave(t.id);
                                                                     if (e.key === "Escape") setEditingId(null);
                                                                 }}
                                                                 onClick={(e) => e.stopPropagation()}
@@ -456,7 +460,7 @@ const DocumentTemplates = () => {
                                                     <div className="d-flex flex-column align-items-end gap-1 flex-shrink-0">
                                                         <StatusBadge status={t.status} />
                                                         <div className="d-flex gap-2 mt-1">
-                                                            <BsPencil
+                                                            {/* <BsPencil
                                                                 size={11}
                                                                 className="text-secondary"
                                                                 style={{ cursor: "pointer" }}
@@ -466,17 +470,20 @@ const DocumentTemplates = () => {
                                                                     setEditingId(t.id);
                                                                     setTempTitle(t.title);
                                                                 }}
-                                                            />
-                                                            <BsTrash3
-                                                                size={11}
-                                                                className="text-danger"
-                                                                style={{ cursor: "pointer" }}
-                                                                title="Delete"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleDeleteTemplate(t.id);
-                                                                }}
-                                                            />
+                                                            /> */}
+                                                            { hasPermission('document_template.delete') && (
+                                                                <BsTrash3
+                                                                    size={11}
+                                                                    className="text-danger"
+                                                                    style={{ cursor: "pointer" }}
+                                                                    title="Delete"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleDeleteTemplate(t.id);
+                                                                    }}
+                                                                />
+                                                            )}
+
                                                         </div>
                                                     </div>
 
@@ -574,6 +581,7 @@ const DocumentTemplates = () => {
                                                     — click or drag to insert
                                                 </span>
                                             </Form.Label>
+                                            {hasPermission('document_template.create')}
                                             <Button
                                                 size="sm"
                                                 variant="outline-primary"
@@ -637,18 +645,21 @@ const DocumentTemplates = () => {
                                 </Row>
 
                                 {/* Actions */}
-                                <div className="d-flex justify-content-end gap-3 mt-4">
-                                    <Button variant="outline-secondary" onClick={handlePreview}>
-                                        Preview
-                                    </Button>
-                                    <Button onClick={handleSave} disabled={saving}>
-                                        {saving ? (
-                                            <><Spinner size="sm" animation="border" className="me-2" />Saving…</>
-                                        ) : (
-                                            isDirty ? "Save Changes ●" : "Save Template"
-                                        )}
-                                    </Button>
-                                </div>
+                                {hasPermission('document_template.update') && (
+                                    <div className="d-flex justify-content-end gap-3 mt-4">
+                                        <Button variant="outline-secondary" onClick={handlePreview}>
+                                            Preview
+                                        </Button>
+                                        <Button onClick={handleSave} disabled={saving}>
+                                            {saving ? (
+                                                <><Spinner size="sm" animation="border" className="me-2" />Saving…</>
+                                            ) : (
+                                                isDirty ? "Save Changes ●" : "Save Template"
+                                            )}
+                                        </Button>
+                                    </div>
+                                )}
+
 
                             </Card.Body>
                         </Card>
@@ -660,8 +671,8 @@ const DocumentTemplates = () => {
             <Modal show={showVariableModal} onHide={closeVariableModal} centered>
                 <Formik
                     initialValues={{
-                        name:   editVariable?.name  ?? "",
-                        value:  editVariable?.value ?? "",
+                        name: editVariable?.name ?? "",
+                        value: editVariable?.value ?? "",
                         status: editVariable ? editVariable.status === "active" : true,
                     }}
                     validationSchema={variableSchema}

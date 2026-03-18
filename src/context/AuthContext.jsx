@@ -1,3 +1,4 @@
+// ./context/AuthContext.jsx
 import React, {
   createContext,
   useContext,
@@ -5,26 +6,27 @@ import React, {
   useRef,
   useState,
   useCallback,
-  useMemo,
+  useMemo
 } from "react";
 import axios from "axios";
 import { useDispatch } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
-import { logout as reduxLogout, setUser as reduxSetUser } from "../pages/Auth/authSlice";
+import { logout as reduxLogout, setUser as reduxSetUser } from "../pages/auth/authSlice";
+import { capitalize } from "lodash";
 
-const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:8000/api/";
-const MEDIA_URL = import.meta.env.VITE_MEDIA_URL || "http://localhost:8000/storage/";
+const BASE_URL = import.meta.env.VITE_BASE_URL || "/";
+const MEDIA_URL = import.meta.env.VITE_MEDIA_URL || "";
 
-// Frontend routes that don't require authentication
 const PUBLIC_ROUTES = [
   "/login",
   "/forgot-password",
   "/reset-password",
+  "/quotation/",
 ];
 
 const AuthContext = createContext();
 
-export const AuthProvider = ({ children }) => {
+export const AuthProvider = ({ children, eager = true }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -37,84 +39,72 @@ export const AuthProvider = ({ children }) => {
     };
   }, []);
 
-  // Initialize user from cache
-  const [user, setUser] = useState(() => {
+  // cached_user (optional) for optimistic UI
+  let cached = null;
+  try {
+    cached = JSON.parse(localStorage.getItem("cached_user") || "null");
+  } catch (e) {
+    cached = null;
+  }
+
+  const [user, setUser] = useState(cached);
+  const [checking, setChecking] = useState(Boolean(localStorage.getItem("token")));
+  const [fetchingAppDetails, setFetchingAppDetails] = useState(false);
+
+  // appDetails state
+  const [appDetails, setAppDetails] = useState(() => {
     try {
-      const cached = localStorage.getItem("cached_user");
-      return cached ? JSON.parse(cached) : null;
-    } catch {
+      const raw = localStorage.getItem("app_details");
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
       return null;
     }
   });
 
-  const [checking, setChecking] = useState(Boolean(localStorage.getItem("token")));
+  // axios instance
+  const api = axios.create({ baseURL: BASE_URL, withCredentials: false });
 
-  // Create axios instance for auth operations
-  const api = useMemo(() => {
-    const instance = axios.create({
-      baseURL: BASE_URL,
-      withCredentials: false,
-    });
+  api.interceptors.request.use((cfg) => {
+    const t = localStorage.getItem("token");
+    if (t) cfg.headers = { ...cfg.headers, Authorization: `Bearer ${t}` };
+    return cfg;
+  });
 
-    instance.interceptors.request.use((cfg) => {
-      const token = localStorage.getItem("token");
-      if (token) {
-        cfg.headers.Authorization = `Bearer ${token}`;
+  api.interceptors.response.use(
+    (r) => r,
+    (err) => {
+      if (err?.response?.status === 401) {
+        window.dispatchEvent(new Event("auth-logout"));
       }
-      return cfg;
-    });
-
-    instance.interceptors.response.use(
-      (response) => response,
-      (error) => {
-        if (error?.response?.status === 401) {
-          window.dispatchEvent(new Event("auth-logout"));
-        }
-        return Promise.reject(error);
-      }
-    );
-
-    return instance;
-  }, []);
-
-  // Helper function to capitalize first letter
-  const capitalize = (str) => {
-    if (!str) return '';
-    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-  };
+      return Promise.reject(err);
+    }
+  );
 
   // Apply user to context + redux + local cache
   const applyUser = useCallback(
-    (userData) => {
+    (u) => {
       if (!isMountedRef.current) return;
-      setUser(userData);
+      setUser(u);
       try {
-        localStorage.setItem("cached_user", JSON.stringify(userData || {}));
-      } catch (err) {
-        console.error("Failed to cache user:", err);
-      }
-      dispatch(reduxSetUser(userData));
+        localStorage.setItem("cached_user", JSON.stringify(u || {}));
+      } catch (e) {}
+      dispatch(reduxSetUser(u));
     },
     [dispatch]
   );
 
-  // Clear authentication and redirect to login
   const clearAuthAndRedirect = useCallback(() => {
     localStorage.removeItem("token");
     localStorage.removeItem("cached_user");
     dispatch(reduxLogout());
     if (isMountedRef.current) setUser(null);
 
-    const isPublicRoute = PUBLIC_ROUTES.some((route) => 
-      location.pathname.startsWith(route)
-    );
-
-    if (!isPublicRoute) {
+    if (!PUBLIC_ROUTES.some((r) => location.pathname.startsWith(r))) {
       navigate("/login", { replace: true });
     }
   }, [dispatch, location.pathname, navigate]);
 
-  // Validate token and fetch user details
+  // Background token validation
   const validateTokenInBg = useCallback(
     async (overrideToken = null) => {
       const token = overrideToken ?? localStorage.getItem("token");
@@ -131,14 +121,15 @@ export const AuthProvider = ({ children }) => {
           {},
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        
         if (!isMountedRef.current) return null;
 
         const payloadUser = res.data?.user ?? res.data;
         const normalized = {
           name: payloadUser?.name ?? "",
-          email: payloadUser?.email ?? "",
-          profileImage: payloadUser?.image ? MEDIA_URL + payloadUser.image : "",
+          profileImage: payloadUser?.image
+            ? MEDIA_URL + payloadUser.image
+            : "",
+          
           type: capitalize(res.data?.roles?.[0] ?? ""),
           roles: res.data?.roles ?? [],
           permissions: res.data?.permissions ?? [],
@@ -147,13 +138,9 @@ export const AuthProvider = ({ children }) => {
         applyUser(normalized);
         return normalized;
       } catch (err) {
-        console.error("Token validation failed:", err);
         if (isMountedRef.current) {
           applyUser(null);
-          // Don't redirect on mount failure - let the route protection handle it
-          if (overrideToken) {
-            clearAuthAndRedirect();
-          }
+          clearAuthAndRedirect();
         }
         return null;
       } finally {
@@ -163,7 +150,7 @@ export const AuthProvider = ({ children }) => {
     [api, applyUser, clearAuthAndRedirect, user]
   );
 
-  // Initialize auth state and event listeners
+  // Run one-time background validation on mount if token exists
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -173,10 +160,10 @@ export const AuthProvider = ({ children }) => {
     }
 
     const onLogin = (e) => {
-      const token = e?.detail?.token;
-      if (token) {
-        localStorage.setItem("token", token);
-        validateTokenInBg(token);
+      const t = e?.detail?.token;
+      if (t) {
+        localStorage.setItem("token", t);
+        validateTokenInBg(t);
       }
     };
 
@@ -194,69 +181,193 @@ export const AuthProvider = ({ children }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Login function - called after successful authSlice login
   const login = useCallback(
     async (token) => {
       if (!token) return;
       localStorage.setItem("token", token);
-      
-      // Validate token and fetch user details
+      window.dispatchEvent(new CustomEvent("auth-login", { detail: { token } }));
       await validateTokenInBg(token);
     },
     [validateTokenInBg]
   );
 
-  // Logout function
   const logout = useCallback(() => {
     window.dispatchEvent(new Event("auth-logout"));
     clearAuthAndRedirect();
   }, [clearAuthAndRedirect]);
 
-  // Permission helpers
+  // Permissions helpers
   const hasPermission = useCallback(
-    (permission) => {
-      return !!(user?.permissions && user.permissions.includes(permission));
-    },
+    (p) => !!(user?.permissions && user.permissions.includes(p)),
     [user]
   );
 
   const hasAnyPermission = useCallback(
-    (permissions) => {
-      return !!(user?.permissions && permissions.some((p) => user.permissions.includes(p)));
-    },
+    (arr) => !!(user?.permissions && arr.some((p) => user.permissions.includes(p))),
     [user]
   );
 
   const hasAllPermissions = useCallback(
-    (permissions) => {
-      return !!(user?.permissions && permissions.every((p) => user.permissions.includes(p)));
-    },
+    (arr) => !!(user?.permissions && arr.every((p) => user.permissions.includes(p))),
     [user]
   );
 
   const hasRole = useCallback(
-    (role) => {
-      return !!(user?.roles && user.roles.includes(role));
-    },
+    (r) => !!(user?.roles && user.roles.includes(r)),
     [user]
   );
+
+  // Helper: Apply app details to DOM (favicon and title)
+  const applyAppDetailsToDOM = useCallback((details) => {
+    if (!details) return;
+
+    // Set favicon
+    if (details.favicon) {
+      try {
+        let link = document.querySelector("link[rel*='icon']");
+        if (!link) {
+          link = document.createElement("link");
+          link.rel = "shortcut icon";
+          link.type = "image/x-icon";
+          document.getElementsByTagName("head")[0].appendChild(link);
+        }
+        link.href = details.favicon;
+      } catch (e) {
+        // ignore DOM failures
+      }
+    }
+
+    // Set title
+    if (details.application_name) {
+      document.title = details.application_name;
+    }
+  }, []);
+
+  // Helper: Save app details to localStorage
+  const saveAppDetailsToStorage = useCallback((normalized) => {
+    try {
+      localStorage.setItem("app_details", JSON.stringify(normalized));
+      // For backwards compatibility with other places reading separate keys:
+      if (normalized.favicon)
+        localStorage.setItem("favicon", normalized.favicon);
+      if (normalized.logo) localStorage.setItem("logo", normalized.logo);
+      if (normalized.horizontal_logo)
+        localStorage.setItem("horizontalLogo", normalized.horizontal_logo);
+      if (normalized.application_name)
+        localStorage.setItem("application_name", normalized.application_name);
+      if (normalized.company_address)
+        localStorage.setItem("company_address", normalized.company_address);
+      if (normalized.gst_no)
+        localStorage.setItem("gst_no", normalized.gst_no);
+    } catch (e) {
+      // ignore localStorage write errors
+    }
+  }, []);
+
+  // Fetch app details from API
+  const fetchAppDetails = useCallback(
+    async (forceRefresh = false) => {
+      // If not forcing refresh, check cache first
+      if (!forceRefresh) {
+        try {
+          const stored = localStorage.getItem("app_details");
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            if (isMountedRef.current) setAppDetails(parsed);
+            return parsed;
+          }
+        } catch (e) {
+          // ignore parse errors and re-fetch
+        }
+      }
+
+      // Set loading state
+      if (isMountedRef.current) setFetchingAppDetails(true);
+
+      try {
+        const res = await api.get("/app-details");
+        if (!isMountedRef.current) return null;
+
+        const appData = res?.data?.data?.[0] ?? res?.data ?? null;
+        if (!appData) {
+          if (isMountedRef.current) setFetchingAppDetails(false);
+          return null;
+        }
+
+        const normalized = {
+          favicon: appData.favicon ? MEDIA_URL + appData.favicon : "",
+          logo: appData.logo ? MEDIA_URL + appData.logo : "",
+          horizontal_logo: appData.horizontal_logo
+            ? MEDIA_URL + appData.horizontal_logo
+            : "",
+          application_name: appData.app_name ?? "",
+          company_address: appData.address ?? "",
+          gst_no: appData.gst_no ?? "",
+          is_powered_by: appData.is_powered_by ?? "",
+          powered_by_link: appData.powered_by_link ?? "",
+          powered_by_name: appData.powered_by_name ?? "",
+        };
+
+        // Save to storage
+        saveAppDetailsToStorage(normalized);
+
+        if (isMountedRef.current) {
+          setAppDetails(normalized);
+          applyAppDetailsToDOM(normalized);
+        }
+
+        return normalized;
+      } catch (err) {
+        // Network or other error
+        if (err?.name === "CanceledError" || err?.name === "AbortError")
+          return null;
+        console.error("Failed to fetch app details:", err);
+        return null;
+      } finally {
+        if (isMountedRef.current) setFetchingAppDetails(false);
+      }
+    },
+    [api, saveAppDetailsToStorage, applyAppDetailsToDOM]
+  );
+
+  // Public refresh function - always forces re-fetch from server
+  const refreshAppDetails = useCallback(async () => {
+    return await fetchAppDetails(true);
+  }, [fetchAppDetails]);
+
+  // Run fetchAppDetails on mount if appDetails missing
+  useEffect(() => {
+    if (!appDetails) {
+      fetchAppDetails(false);
+    } else {
+      // Ensure document title and favicon reflect cached appDetails
+      applyAppDetailsToDOM(appDetails);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only once on mount
 
   const value = useMemo(
     () => ({
       user,
+      appDetails,
+      fetchingAppDetails,
       login,
       logout,
+      refreshAppDetails,
       checking,
       isAuthenticated: !!localStorage.getItem("token"),
       hasPermission,
       hasAnyPermission,
       hasAllPermissions,
       hasRole,
-    }),
+    }), 
     [
       user,
+      appDetails,
+      fetchingAppDetails,
       login,
       logout,
+      refreshAppDetails,
       checking,
       hasPermission,
       hasAnyPermission,
@@ -270,8 +381,6 @@ export const AuthProvider = ({ children }) => {
 
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
-  if (!ctx) {
-    throw new Error("useAuth must be used inside AuthProvider");
-  }
+  if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
   return ctx;
 };

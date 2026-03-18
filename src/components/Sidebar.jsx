@@ -18,17 +18,21 @@ import { FiLogOut } from "react-icons/fi";
 
 import { Link, NavLink } from "react-router-dom";
 import { OverlayTrigger, Popover, Dropdown } from "react-bootstrap";
-import { authLogout } from "../pages/Auth/authSlice";
+import { authLogout } from "../pages/auth/authSlice";
 import { useDispatch } from "react-redux";
+import { useAuth } from "../context/AuthContext";
 
 import logo from "../assets/images/logosmall.png";
 import logofull from "../assets/images/logo.svg";
 
 const Sidebar = () => {
   const dispatch = useDispatch();
+  const { appDetails, user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+
+  const FILE_MEDIA_URL = import.meta.env.VITE_MEDIA_URL;
 
   const toggle = () => setIsOpen(!isOpen);
 
@@ -128,10 +132,10 @@ const Sidebar = () => {
         {/* LOGO */}
         <div className="sidebar-brand">
           <Link to="/" className="logo d-none d-md-block">
-            <img src="https://caresoft.margdarshanhospital.com/backend/assets/images/favicon.png" alt="Hotlr" />
+            <img src={ appDetails.logo ?? logo } alt="Hotlr" />
           </Link>
           <Link to="/" className="logo d-block d-md-none">
-            <img src={logofull} alt="Hotlr" />
+            <img src={ appDetails.logo ?? logofull} alt="Hotlr" />
           </Link>
         </div>
 
@@ -245,17 +249,18 @@ const Sidebar = () => {
                     <div className="user-settings">
                       <span className="avatar">
                         <img
-                          src="https://app.masonrygroup.com/assets/app.masonrygroup.com/img/amit_1722580135.jpg"
-                          alt="Amit Kumar"
+                          src={(user.profileImage) ? user.profileImage : "https://app.masonrygroup.com/assets/app.masonrygroup.com/img/amit_1722580135.jpg"}
+                          alt={user.name ?? "User"}
                         />
                       </span>
                     </div>
                   </Dropdown.Toggle>
                   <Dropdown.Menu>
+                   
                     <div className="header-profile-actions">
                       <div className="header-user-profile">
-                        <h5 className="mt-2 mb-0 fw-normal">Amit Kumar</h5>
-                        <p className="mb-1">Admin</p>
+                        <h5 className="mt-2 mb-0 fw-normal">{user.name ?? "User"}</h5>
+                        <p className="mb-1">{user.roles[0] ?? "User"}</p>
                       </div>
                       <Dropdown.Item>
                         <BiRefresh /> User Dashboard

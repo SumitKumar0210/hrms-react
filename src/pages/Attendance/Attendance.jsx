@@ -22,6 +22,7 @@ import * as Yup from "yup";
 import AttendanceDownload from "../../components/Attendance/AttendanceDownload";
 import { getAttendance } from "./slice/attendanceSlice";
 import { useDispatch, useSelector } from "react-redux";
+import { useAuth } from "../../context/AuthContext";
 
 /* ================= CUSTOM DATE INPUT ================= */
 
@@ -65,6 +66,8 @@ const stats = [
 
 const Attendance = () => {
   const dispatch = useDispatch();
+
+  const { hasPermission, hasAnyPermission } = useAuth();
 
   const {
     data: attendanceData = [],
@@ -232,13 +235,14 @@ const Attendance = () => {
             </small>
           </div>
         </Col>
-
-        <Col
-          md={6}
-          className="d-flex justify-content-md-end justify-content-start mt-3 mt-md-0"
-        >
-          <AttendanceDownload />
-        </Col>
+        {hasPermission("attendance_correction.create") && (
+          <Col
+            md={6}
+            className="d-flex justify-content-md-end justify-content-start mt-3 mt-md-0"
+          >
+            <AttendanceDownload />
+          </Col>
+        )}
       </Row>
 
       {/* Stats */}

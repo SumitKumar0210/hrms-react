@@ -23,9 +23,10 @@ import Department from './Department';
 import Designation from './Designation';
 import Roles from './role';
 import Shift from './Shift';
+import { useAuth } from '../../context/AuthContext';
 
 const Setting = () => {
-
+    const { hasAnyPermission } = useAuth();
     return (
         <>
             <Container fluid className='gx-0'>
@@ -47,31 +48,42 @@ const Setting = () => {
                                     <Card.Body>
                                         <h6 className="pt-2 mb-2">Settings</h6>
                                         <Nav variant="pills" className="flex-row settings-tab">
-                                            <Nav.Item >
-                                                <Nav.Link eventKey="tab1" className='rounded-1'><span className='me-2'><GoGear /></span>General Settings</Nav.Link>
-                                            </Nav.Item>
-                                            <Nav.Item >
-                                                <Nav.Link eventKey="tab15" className='rounded-1'><span className='me-2'><GoGear /></span>Theme Settings</Nav.Link>
-                                            </Nav.Item>
+                                            {hasAnyPermission(['setting.read', 'setting.update']) && (
+                                                <Nav.Item >
+                                                    <Nav.Link eventKey="tab1" className='rounded-1'><span className='me-2'><GoGear /></span>General Settings</Nav.Link>
+                                                </Nav.Item>
+                                            )}
+                                            {hasAnyPermission(['setting.read', 'setting.update']) && (
+                                                <Nav.Item >
+                                                    <Nav.Link eventKey="tab15" className='rounded-1'><span className='me-2'><GoGear /></span>Theme Settings</Nav.Link>
+                                                </Nav.Item>
+                                            )}
                                             {/* <Nav.Item>
                                         <Nav.Link eventKey="tab2" className='rounded-1'><span className='me-2'><TbCurrencyDollarCanadian/></span>Users</Nav.Link>
                                     </Nav.Item> */}
-                                            <Nav.Item>
-                                                <Nav.Link eventKey="tab3" className='rounded-1'><span className='me-2'><FaRegFileLines /></span>Department</Nav.Link>
-                                            </Nav.Item>
-                                            <Nav.Item>
-                                                <Nav.Link eventKey="tab4" className='rounded-1'><span className='me-2'><CiCalculator1 /></span>Designation</Nav.Link>
-                                            </Nav.Item>
-                                            <Nav.Item>
-                                                <Nav.Link eventKey="tab5" className='rounded-1'><span className='me-2'><AiOutlineFolderAdd /></span>Shift</Nav.Link>
-                                            </Nav.Item>
-
-                                            <Nav.Item>
-                                                <Nav.Link eventKey="tab6" className='rounded-1'><span className='me-2'><FaRegIdBadge /></span>Roles & Permissions</Nav.Link>
-                                            </Nav.Item>
-                                            <Nav.Item>
+                                            {hasAnyPermission(['department.read', 'department.update', 'department.delete', 'department.create']) && (
+                                                <Nav.Item>
+                                                    <Nav.Link eventKey="tab3" className='rounded-1'><span className='me-2'><FaRegFileLines /></span>Department</Nav.Link>
+                                                </Nav.Item>
+                                            )}
+                                            {hasAnyPermission(['designation.read', 'designation.update', 'designation.delete', 'designation.create']) && (
+                                                <Nav.Item>
+                                                    <Nav.Link eventKey="tab4" className='rounded-1'><span className='me-2'><CiCalculator1 /></span>Designation</Nav.Link>
+                                                </Nav.Item>
+                                            )}
+                                            {hasAnyPermission(['shift.read', 'shift.update', 'shift.delete', 'shift.create']) && (
+                                                <Nav.Item>
+                                                    <Nav.Link eventKey="tab5" className='rounded-1'><span className='me-2'><AiOutlineFolderAdd /></span>Shift</Nav.Link>
+                                                </Nav.Item>
+                                            )}
+                                            {hasAnyPermission(['roles_permission.read', 'roles_permission.update', 'roles_permission.delete', 'roles_permission.create']) && (
+                                                <Nav.Item>
+                                                    <Nav.Link eventKey="tab6" className='rounded-1'><span className='me-2'><FaRegIdBadge /></span>Roles & Permissions</Nav.Link>
+                                                </Nav.Item>
+                                            )}
+                                            {/* <Nav.Item>
                                                 <Nav.Link eventKey="tab7" className='rounded-1'><span className='me-2'><ImInfo /></span>Offday Type</Nav.Link>
-                                            </Nav.Item>
+                                            </Nav.Item> */}
                                         </Nav>
                                     </Card.Body>
                                 </Card>

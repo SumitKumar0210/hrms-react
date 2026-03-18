@@ -21,15 +21,20 @@ import { capitalize } from "lodash";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const MODULES = [
-  { value: "add_new_staff", label: "Add New Staff" },
-  { value: "attendance", label: "Attendance" },
-  { value: "document_templates", label: "Document Templates" },
+  { value: "attendance_correction", label: "attendance Correction" },
+  { value: "time_tracking", label: "Attendance & Time Tracking" },
+  { value: "document_template", label: "Document Template" },
+  { value: "department", label: "Department" },
+  { value: "designation", label: "Designation" },
   { value: "employee_payroll_history", label: "Employee Payroll History" },
   { value: "payroll_processing", label: "Payroll Processing" },
   { value: "payroll_finalization", label: "Payroll Finalization" },
-  { value: "salary_structure_revision", label: "Salary Structure & Revision" },
+  { value: "roles_permission", label: "Roles & Permissions" },
   { value: "staff_directory", label: "Staff Directory" },
-  { value: "users", label: "Users" },
+  { value: "salary_structure_revision", label: "Salary Structure & Revision" },
+  { value: "setting", label: "Setting" },
+  { value: "shift", label: "Shift" },
+  { value: "user", label: "User" },
 ];
 
 const ACTION_TYPE = { CRUD: "crud", OTHER: "other" };

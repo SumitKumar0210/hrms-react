@@ -14,6 +14,7 @@ import { ImWarning } from "react-icons/im";
 import "react-datepicker/dist/react-datepicker.css";
 import { finalizePayrollByMonth, storeFinalizedPayroll } from "./slice/finalizePayrollSlice";
 import { useDispatch, useSelector } from "react-redux";
+import { useAuth } from "../../context/AuthContext";
 
 const PayrollFinalization = () => {
   const [payrollMonth, setPayrollMonth] = useState(null);
@@ -28,6 +29,7 @@ const PayrollFinalization = () => {
   const datePickerRef = useRef(null);
   const dispatch = useDispatch();
   const { data, payroll } = useSelector((s) => s.finalizePayroll);
+  const { hasPermission, hasAnyPermission } = useAuth();
 
   // Fetch payroll data when month selected
   useEffect(() => {
@@ -81,32 +83,35 @@ const PayrollFinalization = () => {
 
         <Col md="auto" className="d-flex align-items-center">
 
-          <div className="d-flex align-items-center gap-3 flex-nowrap">
-            <Form.Label className="fw-semibold mb-0 text-nowrap">
-              Payroll Month
-            </Form.Label>
+          {hasPermission('payroll_finalization.read') && (
+            <div className="d-flex align-items-center gap-3 flex-nowrap">
+              <Form.Label className="fw-semibold mb-0 text-nowrap">
+                Payroll Month
+              </Form.Label>
 
-            <InputGroup className="flex-nowrap" style={{ width: 220 }}>
-              <DatePicker
-                ref={datePickerRef}
-                selected={payrollMonth}
-                onChange={(date) => {
-                  setPayrollMonth(date);
-                  setMonthSelected(true);
-                }}
-                dateFormat="MMMM yyyy"
-                showMonthYearPicker
-                className="form-control"
-              />
+              <InputGroup className="flex-nowrap" style={{ width: 220 }}>
+                <DatePicker
+                  ref={datePickerRef}
+                  selected={payrollMonth}
+                  onChange={(date) => {
+                    setPayrollMonth(date);
+                    setMonthSelected(true);
+                  }}
+                  dateFormat="MMMM yyyy"
+                  showMonthYearPicker
+                  className="form-control"
+                />
 
-              <InputGroup.Text
-                role="button"
-                onClick={() => datePickerRef.current.setOpen(true)}
-              >
-                <BsCalendar3 />
-              </InputGroup.Text>
-            </InputGroup>
-          </div>
+                <InputGroup.Text
+                  role="button"
+                  onClick={() => datePickerRef.current.setOpen(true)}
+                >
+                  <BsCalendar3 />
+                </InputGroup.Text>
+              </InputGroup>
+            </div>
+          )}
+
         </Col>
       </Row>
 
@@ -274,17 +279,19 @@ const PayrollFinalization = () => {
                   </Form.Check>
                 </Card>
               </Card>
+              {hasPermission('payroll_finalization.create') && (
+                <Button
+                  className="w-100 mt-3 fw-semibold"
+                  variant={isReadonly ? "secondary" : "primary"}
+                  disabled={isReadonly || !allChecked}
+                  onClick={handleFinalizePayroll}
+                >
+                  {isReadonly
+                    ? "Payroll Already Finalized"
+                    : "Finalize Payroll"}
+                </Button>
+              )}
 
-              <Button
-                className="w-100 mt-3 fw-semibold"
-                variant={isReadonly ? "secondary" : "primary"}
-                disabled={isReadonly || !allChecked}
-                onClick={handleFinalizePayroll}
-              >
-                {isReadonly
-                  ? "Payroll Already Finalized"
-                  : "Finalize Payroll"}
-              </Button>
             </Col>
           </Row>
         </>

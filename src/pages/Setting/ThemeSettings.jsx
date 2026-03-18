@@ -14,7 +14,7 @@ const LOGO_FIELDS = [
 
 const buildPreviews = (data) =>
   LOGO_FIELDS.reduce((acc, { name, apiKey }) => {
-    acc[name] = data?.[apiKey] ? `${FILE_MEDIA_URL}/storage/${data[apiKey]}` : "";
+    acc[name] = data?.[apiKey] ? `${FILE_MEDIA_URL}${data[apiKey]}` : "";
     return acc;
   }, {});
 

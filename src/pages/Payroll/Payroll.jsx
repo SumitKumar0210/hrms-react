@@ -13,6 +13,7 @@ import {
   processMonthlyPayroll,
 } from './slice/payrollSlice';
 import { updateAttendance } from '../Attendance/slice/attendanceSlice';
+import { useAuth } from '../../context/AuthContext';
 
 /* ================= HELPERS ================= */
 
@@ -78,6 +79,7 @@ const getDaysInMonth = (date) => {
 const Payroll = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { hasPermission, hasAnyPermission } = useAuth();
 
   const {
     attendanceData,
@@ -296,41 +298,44 @@ const Payroll = () => {
                   Load attendance data first.
                 </small>
               )}
+              {hasPermission('payroll_processing.create') && (
+                <button
+                  className="btn btn-primary d-flex align-items-center gap-2"
+                  onClick={isPayrollFinalized ? '' : handleProcessPayroll}
+                  disabled={
+                    !hasData ||
+                    processing ||
+                    hasEdits ||
+                    !attendanceLoaded ||
+                    isPayrollFinalized
+                  }
+                  title={
+                    !attendanceLoaded && payrollMonth
+                      ? 'Load attendance data first'
+                      : hasEdits
+                        ? 'You have unsaved attendance edits — update attendance first'
+                        : !hasData
+                          ? 'No data available'
+                          : ''
+                  }
+                >
+                  {processing ? (
+                    <>
+                      <Spinner animation="border" size="sm" aria-hidden="true" />
+                      Processing…
+                    </>
+                  ) : (
+                    <>
+                      <MdOutlinePayments size={17} />
+                      {payrollMonth
+                        ? `Process ${formatMonth(payrollMonth)}`
+                        : 'Process Salary'}
+                    </>
 
-              <button
-                className="btn btn-primary d-flex align-items-center gap-2"
-                onClick={isPayrollFinalized? '': handleProcessPayroll}
-                disabled={
-                  !hasData ||
-                  processing ||
-                  hasEdits ||
-                  !attendanceLoaded ||
-                  isPayrollFinalized
-                }
-                title={
-                  !attendanceLoaded && payrollMonth
-                    ? 'Load attendance data first'
-                    : hasEdits
-                      ? 'You have unsaved attendance edits — update attendance first'
-                      : !hasData
-                        ? 'No data available'
-                        : ''
-                }
-              >
-                {processing ? (
-                  <>
-                    <Spinner animation="border" size="sm" aria-hidden="true" />
-                    Processing…
-                  </>
-                ) : (
-                  <>
-                    <MdOutlinePayments size={17} />
-                    {payrollMonth
-                      ? `Process ${formatMonth(payrollMonth)}`
-                      : 'Process Salary'}
-                  </>
-                )}
-              </button>
+                  )}
+                </button>
+              )}
+
             </Col>
           </Row>
         </Card.Body>
@@ -605,21 +610,24 @@ const Payroll = () => {
 
                 {/* ── UPDATE ATTENDANCE BUTTON ── */}
                 <div className="px-3 py-3 d-flex align-items-center gap-3 border-top">
-                  <button
-                    className="btn btn-success d-flex align-items-center gap-2"
-                    onClick={isPayrollFinalized? '':handleUpdateAttendance}
-                    disabled={!hasEdits || updating || isPayrollFinalized}
-                    title={!hasEdits ? 'No changes to save' : ''}
-                  >
-                    {updating ? (
-                      <>
-                        <Spinner animation="border" size="sm" />
-                        Updating…
-                      </>
-                    ) : (
-                      'Update Attendance'
-                    )}
-                  </button>
+                  {hasPermission('payroll_processing.create') && (
+                    <button
+                      className="btn btn-success d-flex align-items-center gap-2"
+                      onClick={isPayrollFinalized ? '' : handleUpdateAttendance}
+                      disabled={!hasEdits || updating || isPayrollFinalized}
+                      title={!hasEdits ? 'No changes to save' : ''}
+                    >
+                      {updating ? (
+                        <>
+                          <Spinner animation="border" size="sm" />
+                          Updating…
+                        </>
+                      ) : (
+                        'Update Attendance'
+                      )}
+                    </button>
+                  )}
+
 
                   {hasEdits && !updating && (
                     <small className="text-muted">

@@ -20,6 +20,7 @@ import {
   deleteDesignation,
 } from "./slice/designationSlice";
 import { useDispatch, useSelector } from "react-redux";
+import { useAuth } from "../../context/AuthContext";
 
 /* ================= VALIDATION ================= */
 const validationSchema = Yup.object({
@@ -29,6 +30,7 @@ const validationSchema = Yup.object({
 /* ================= COMPONENT ================= */
 const Designation = () => {
   const dispatch = useDispatch();
+  const { hasPermission, hasAnyPermission } = useAuth();
   const { data = [], loading } = useSelector((state) => state.designation);
 
   const [search, setSearch] = useState("");
@@ -51,8 +53,8 @@ const Designation = () => {
   }, [data, search]);
 
   /* ================= TABLE ================= */
-  const columns = useMemo(
-    () => [
+  const columns = useMemo(() => {
+    const baseColumns = [
       {
         name: "Designation Name",
         selector: (row) => row.name,
@@ -64,45 +66,54 @@ const Designation = () => {
         cell: (row) => (
           <Badge
             bg="transparent"
-            className={`rounded-4 px-3 border ${
-              row.status === "active"
+            className={`rounded-4 px-3 border ${row.status === "active"
                 ? "bg-success-subtle text-success border-success"
                 : "bg-secondary-subtle text-secondary border-secondary"
-            }`}
+              }`}
           >
             {row.status}
           </Badge>
         ),
         center: true,
       },
-      {
+    ];
+
+    // ✅ correct condition usage
+    if (hasAnyPermission(['designation.update', 'designation.delete'])) {
+      baseColumns.push({
         name: "Actions",
         cell: (row) => (
           <div className="d-flex gap-2">
-            <Button
-              size="sm"
-              variant="outline-primary"
-              onClick={() => handleEdit(row)}
-              aria-label="Edit designation"
-            >
-              <FiEdit />
-            </Button>
-            <Button
-              size="sm"
-              variant="outline-danger"
-              onClick={() => handleDeleteClick(row)}
-              aria-label="Delete designation"
-            >
-              <LuTrash2 />
-            </Button>
+            {hasPermission('designation.update') && (
+              <Button
+                size="sm"
+                variant="outline-primary"
+                onClick={() => handleEdit(row)}
+                aria-label="Edit designation"
+              >
+                <FiEdit size={16} />
+              </Button>
+            )}
+
+            {hasPermission('designation.delete') && (
+              <Button
+                size="sm"
+                variant="outline-danger"
+                onClick={() => handleDeleteClick(row)}
+                aria-label="Delete designation"
+              >
+                <LuTrash2 size={16} />
+              </Button>
+            )}
           </div>
         ),
         center: true,
         ignoreRowClick: true,
-      },
-    ],
-    []
-  );
+      });
+    }
+
+    return baseColumns;
+  }, [hasAnyPermission, hasPermission]);
 
   /* ================= HANDLERS ================= */
   const handleEdit = (row) => {
@@ -150,7 +161,7 @@ const Designation = () => {
   /* ================= DELETE ================= */
   const confirmDelete = async () => {
     if (!deleteRow) return;
-    
+
     try {
       await dispatch(deleteDesignation(deleteRow.id));
       handleCloseDelete();

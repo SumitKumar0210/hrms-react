@@ -14,6 +14,7 @@ import {
     clearSuccess,
 } from "./slice/manualAttendanceSlice";
 import { fetchAllEmployees } from "../Employees/slice/employeeSlice";
+import { useAuth } from "../../context/AuthContext";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -53,27 +54,34 @@ const EMPTY_FORM = { checkIn: null, checkOut: null, status: "", reason: "" };
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const ManualAttendanceCorrection = () => {
-    const dispatch = useDispatch();
-    const dropdownRef = useRef(null);
+    const dispatch     = useDispatch();
+    const dropdownRef  = useRef(null);
+    const { hasPermission } = useAuth();
 
     // ── Redux ────────────────────────────────────────────────────────────────
     const { employees = [], searchLoading } = useSelector((s) => s.employee);
     const { currentRecord, history, searching, saving, error, success } =
         useSelector((s) => s.manualAttendance);
-    console.log(history);
 
     // ── Search state ─────────────────────────────────────────────────────────
-    const [searchTerm, setSearchTerm] = useState("");
-    const [selectedEmployee, setSelectedEmployee] = useState(null);
+    const [searchTerm,        setSearchTerm]        = useState("");
+    const [selectedEmployee,  setSelectedEmployee]  = useState(null);
     const [filteredEmployees, setFilteredEmployees] = useState([]);
-    const [showDropdown, setShowDropdown] = useState(false);
-    const [searchDate, setSearchDate] = useState(new Date());
+    const [showDropdown,      setShowDropdown]       = useState(false);
+    const [searchDate,        setSearchDate]         = useState(new Date());
+
+    // ── Fix: track whether the user has clicked Search at least once ─────────
+    const [hasSearched, setHasSearched] = useState(false);
 
     // ── Correction form ──────────────────────────────────────────────────────
     const [form, setForm] = useState(EMPTY_FORM);
 
-    // ── Bootstrap ────────────────────────────────────────────────────────────
-    useEffect(() => { dispatch(fetchAllEmployees()); }, [dispatch]);
+    // ── Fetch employees ───────────────────────────────────────────────────────
+    useEffect(() => {
+        if (hasPermission("attendance_correction.update")) {
+            dispatch(fetchAllEmployees());
+        }
+    }, [dispatch]);
 
     // Close dropdown on outside click
     useEffect(() => {
@@ -86,7 +94,7 @@ const ManualAttendanceCorrection = () => {
         return () => document.removeEventListener("mousedown", handler);
     }, []);
 
-    // Filter employees — mirrors SalaryStructure behaviour exactly
+    // Filter employees for dropdown
     useEffect(() => {
         if (searchTerm.trim() && !selectedEmployee) {
             const q = searchTerm.toLowerCase();
@@ -106,10 +114,10 @@ const ManualAttendanceCorrection = () => {
     useEffect(() => {
         if (currentRecord) {
             setForm({
-                checkIn: timeStrToDate(currentRecord.sign_in),
+                checkIn:  timeStrToDate(currentRecord.sign_in),
                 checkOut: timeStrToDate(currentRecord.sign_out),
-                status: currentRecord.status || "",
-                reason: "",
+                status:   currentRecord.status || "",
+                reason:   "",
             });
         } else {
             setForm(EMPTY_FORM);
@@ -129,21 +137,31 @@ const ManualAttendanceCorrection = () => {
         setSelectedEmployee(emp);
         setSearchTerm(`${emp.first_name} ${emp.last_name} (${emp.employee_code})`);
         setShowDropdown(false);
-    }, []);
+        // Reset search state when a new employee is picked
+        setHasSearched(false);
+        dispatch(clearCurrentRecord());
+    }, [dispatch]);
 
     const handleSearchTermChange = useCallback((e) => {
         setSearchTerm(e.target.value);
-        if (selectedEmployee) setSelectedEmployee(null);
-    }, [selectedEmployee]);
+        if (selectedEmployee) {
+            setSelectedEmployee(null);
+            // Reset search state when user clears the employee selection
+            setHasSearched(false);
+            dispatch(clearCurrentRecord());
+        }
+    }, [selectedEmployee, dispatch]);
 
+    // ── Fix: set hasSearched = true when the button is clicked ───────────────
     const handleSearch = () => {
         if (!selectedEmployee) {
             alert("Please select an employee.");
             return;
         }
+        setHasSearched(true);
         dispatch(fetchAttendanceWithHistory({
             employee_id: selectedEmployee.id,
-            date: formatDate(searchDate),
+            date:        formatDate(searchDate),
         }));
     };
 
@@ -154,17 +172,17 @@ const ManualAttendanceCorrection = () => {
 
     const handleSave = () => {
         if (!currentRecord) return;
-        if (!form.status) { alert("Status is required."); return; }
-        if (!form.reason.trim()) { alert("Please provide a correction reason."); return; }
+        if (!form.status)          { alert("Status is required.");               return; }
+        if (!form.reason.trim())   { alert("Please provide a correction reason."); return; }
 
         dispatch(correctAttendance({
             correctionData: {
                 employee_id: selectedEmployee.id,
-                sign_in: dateToTimeStr(form.checkIn),
-                sign_out: dateToTimeStr(form.checkOut),
-                date: formatDate(searchDate),
-                status: form.status.toLowerCase(),
-                reason: form.reason.trim(),
+                sign_in:     dateToTimeStr(form.checkIn),
+                sign_out:    dateToTimeStr(form.checkOut),
+                date:        formatDate(searchDate),
+                status:      form.status.toLowerCase(),
+                reason:      form.reason.trim(),
             },
         }));
     };
@@ -175,9 +193,10 @@ const ManualAttendanceCorrection = () => {
         setSearchTerm("");
         setSearchDate(new Date());
         setForm(EMPTY_FORM);
+        setHasSearched(false);  // reset flag on cancel too
     };
 
-    // ─────────────────────────────────────────────────────────────────────────
+    // ─── Render ───────────────────────────────────────────────────────────────
     return (
         <Container fluid className="py-3">
             {/* Header */}
@@ -193,7 +212,6 @@ const ManualAttendanceCorrection = () => {
                     <FiAlertCircle className="me-1" />{error}
                 </Alert>
             )}
-
             {success && (
                 <Alert variant="success" className="py-2 mb-3">
                     Attendance record corrected successfully.
@@ -209,7 +227,8 @@ const ManualAttendanceCorrection = () => {
 
                             <Form onSubmit={(e) => e.preventDefault()}>
                                 <Row className="align-items-end mb-3 g-3">
-                                    {/* Employee search — same pattern as SalaryStructure */}
+
+                                    {/* Employee search */}
                                     <Col md={5}>
                                         <Form.Label className="fw-semibold">
                                             EMPLOYEE <span className="text-danger">*</span>
@@ -236,14 +255,14 @@ const ManualAttendanceCorrection = () => {
                                             {showDropdown && filteredEmployees.length > 0 && (
                                                 <ListGroup
                                                     className="position-absolute w-100 shadow-lg"
-                                                    style={{ zIndex: 1000, maxHeight: "250px", overflowY: "auto", top: "100%", marginTop: "2px" }}
+                                                    style={{ zIndex: 1000, maxHeight: 250, overflowY: "auto", top: "100%", marginTop: 2 }}
                                                 >
                                                     {filteredEmployees.map((emp) => (
                                                         <ListGroup.Item
                                                             key={emp.id}
                                                             action
                                                             onClick={() => handleEmployeeSelect(emp)}
-                                                            className="cursor-pointer"
+                                                            style={{ cursor: "pointer" }}
                                                         >
                                                             <div className="fw-semibold">
                                                                 {emp.first_name} {emp.last_name}
@@ -260,7 +279,7 @@ const ManualAttendanceCorrection = () => {
                                             {showDropdown && searchTerm && filteredEmployees.length === 0 && !selectedEmployee && (
                                                 <ListGroup
                                                     className="position-absolute w-100 shadow-lg"
-                                                    style={{ zIndex: 1000, top: "100%", marginTop: "2px" }}
+                                                    style={{ zIndex: 1000, top: "100%", marginTop: 2 }}
                                                 >
                                                     <ListGroup.Item className="text-muted">
                                                         No employees found
@@ -269,7 +288,7 @@ const ManualAttendanceCorrection = () => {
                                             )}
                                         </div>
 
-                                        {/* Selected employee info pill */}
+                                        {/* Selected employee pill */}
                                         {selectedEmployee && (
                                             <div className="mt-2 p-2 bg-light rounded small">
                                                 <span className="fw-semibold">
@@ -293,7 +312,12 @@ const ManualAttendanceCorrection = () => {
                                             </Form.Label>
                                             <DatePicker
                                                 selected={searchDate}
-                                                onChange={setSearchDate}
+                                                onChange={(date) => {
+                                                    setSearchDate(date);
+                                                    // Reset search state when date changes
+                                                    setHasSearched(false);
+                                                    dispatch(clearCurrentRecord());
+                                                }}
                                                 dateFormat="dd/MM/yyyy"
                                                 maxDate={new Date()}
                                                 className="form-control"
@@ -309,20 +333,26 @@ const ManualAttendanceCorrection = () => {
                                             onClick={handleSearch}
                                             disabled={searching || !selectedEmployee}
                                         >
-                                            {searching ? <Spinner animation="border" size="sm" /> : "Search"}
+                                            {searching
+                                                ? <Spinner animation="border" size="sm" />
+                                                : "Search"}
                                         </Button>
                                     </Col>
                                 </Row>
 
-                                {/* No record warning */}
-                                {!searching && !currentRecord && selectedEmployee && (
+                                {/* ── Fix: only show "No record" AFTER user has clicked Search ── */}
+                                {hasSearched && !searching && !currentRecord && selectedEmployee && (
                                     <Alert variant="warning" className="py-2 mb-3">
                                         <FiAlertCircle className="me-1" />
-                                        No attendance record found for this employee on {formatDate(searchDate)}.
+                                        No attendance record found for{" "}
+                                        <strong>
+                                            {selectedEmployee.first_name} {selectedEmployee.last_name}
+                                        </strong>{" "}
+                                        on <strong>{formatDate(searchDate)}</strong>.
                                     </Alert>
                                 )}
 
-                                {/* ── Correction Form ── */}
+                                {/* ── Correction Form (shown after successful search) ── */}
                                 {currentRecord && (
                                     <>
                                         <Card className="border rounded-3">
@@ -333,7 +363,7 @@ const ManualAttendanceCorrection = () => {
                                                 </div>
 
                                                 {[
-                                                    { label: "CHECK-IN TIME", field: "checkIn", value: form.checkIn, setter: handleFormChange("checkIn") },
+                                                    { label: "CHECK-IN TIME",  field: "checkIn",  value: form.checkIn,  setter: handleFormChange("checkIn")  },
                                                     { label: "CHECK-OUT TIME", field: "checkOut", value: form.checkOut, setter: handleFormChange("checkOut") },
                                                 ].map(({ label, field, value, setter }) => (
                                                     <Form.Group key={field} className="py-2 border-bottom">
@@ -373,24 +403,20 @@ const ManualAttendanceCorrection = () => {
                                                             >
                                                                 <option value="">Select</option>
                                                                 {[
-                                                                    'absent',
-                                                                    'casual_leave',
-                                                                    'compensatory_off',
-                                                                    'earned_leave',
-                                                                    'half_day',
-                                                                    'leave_without_pay',
-                                                                    'maternity_leave',
-                                                                    'paternity_leave',
-                                                                    'present',
-                                                                    'public_holiday',
-                                                                    'sick_leave',
+                                                                    "absent",
+                                                                    "casual_leave",
+                                                                    "compensatory_off",
+                                                                    "earned_leave",
+                                                                    "half_day",
+                                                                    "leave_without_pay",
+                                                                    "maternity_leave",
+                                                                    "paternity_leave",
+                                                                    "present",
+                                                                    "public_holiday",
+                                                                    "sick_leave",
                                                                 ].map((s) => (
                                                                     <option key={s} value={s}>
-                                                                        {s
-                                                                            .split("_")
-                                                                            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                                                                            .join(" ")
-                                                                        }
+                                                                        {s.split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")}
                                                                     </option>
                                                                 ))}
                                                             </Form.Select>
@@ -417,15 +443,17 @@ const ManualAttendanceCorrection = () => {
                                             <Button variant="outline-secondary" onClick={handleCancel}>
                                                 Cancel
                                             </Button>
-                                            <Button
-                                                variant="warning"
-                                                onClick={handleSave}
-                                                disabled={saving || !form.status || !form.reason.trim()}
-                                            >
-                                                {saving
-                                                    ? <><Spinner animation="border" size="sm" className="me-1" />Saving…</>
-                                                    : "Save Correction"}
-                                            </Button>
+                                            {hasPermission("attendance_correction.update") && (
+                                                <Button
+                                                    variant="warning"
+                                                    onClick={handleSave}
+                                                    disabled={saving || !form.status || !form.reason.trim()}
+                                                >
+                                                    {saving
+                                                        ? <><Spinner animation="border" size="sm" className="me-1" />Saving…</>
+                                                        : "Save Correction"}
+                                                </Button>
+                                            )}
                                         </div>
                                     </>
                                 )}
@@ -469,9 +497,6 @@ const ManualAttendanceCorrection = () => {
                                                 <div className="small">
                                                     <strong>Reason:</strong> {entry.reason || "—"}
                                                 </div>
-                                                {/* <div className="small text-muted mt-1">
-                                                    <strong>Changes:</strong> {entry.changes_summary || "—"}
-                                                </div> */}
                                                 {entry.user && (
                                                     <div className="small text-muted mt-1">
                                                         <strong>By:</strong> {entry.user.name}

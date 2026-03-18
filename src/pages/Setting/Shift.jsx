@@ -22,6 +22,7 @@ import {
   deleteShift,
 } from "./slice/shiftSlice";
 import { useDispatch, useSelector } from "react-redux";
+import { useAuth } from "../../context/AuthContext";
 
 /* ================= VALIDATION ================= */
 const validationSchema = Yup.object({
@@ -43,7 +44,7 @@ const validationSchema = Yup.object({
 const Shift = () => {
   const dispatch = useDispatch();
   const { data = [], loading } = useSelector((state) => state.shift);
-
+  const { hasPermission, hasAnyPermission } = useAuth();
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editRow, setEditRow] = useState(null);
@@ -64,8 +65,8 @@ const Shift = () => {
   }, [data, search]);
 
   /* ================= TABLE COLUMNS ================= */
-  const columns = useMemo(
-    () => [
+  const columns = useMemo(() => {
+    const baseColumn = [
       {
         name: "Shift Name",
         selector: (row) => row.name,
@@ -73,8 +74,7 @@ const Shift = () => {
       },
       {
         name: "Timing",
-        selector: (row) =>
-          `${row.sign_in} – ${row.sign_out}`,
+        selector: (row) => `${row.sign_in} – ${row.sign_out}`,
       },
       {
         name: "Type",
@@ -89,46 +89,62 @@ const Shift = () => {
         cell: (row) => (
           <Badge
             bg="transparent"
-            className={`rounded-4 px-3 border ${
-              row.status === "active"
+            className={`rounded-4 px-3 border ${row.status === "active"
                 ? "bg-success-subtle text-success border-success"
                 : "bg-secondary-subtle text-secondary border-secondary"
-            }`}
+              }`}
           >
             {row.status}
           </Badge>
         ),
       },
-      {
+    ];
+
+    // ✅ Permission check
+    if (hasAnyPermission(['shift.update', 'shift.delete'])) {
+      baseColumn.push({
         name: "Actions",
         cell: (row) => (
           <div className="d-flex gap-2">
-            <Button
-              size="sm"
-              variant="outline-primary"
-              onClick={() => {
-                setEditRow(row);
-                setShowForm(true);
-              }}
-            >
-              <FiEdit />
-            </Button>
-            <Button
-              size="sm"
-              variant="outline-danger"
-              onClick={() => {
-                setDeleteRow(row);
-                setShowDelete(true);
-              }}
-            >
-              <LuTrash2 />
-            </Button>
+
+            {/* EDIT */}
+            {hasPermission('shift.update') && (
+              <Button
+                size="sm"
+                variant="outline-primary"
+                onClick={() => {
+                  setEditRow(row);
+                  setShowForm(true);
+                }}
+              >
+                <FiEdit size={16} />
+              </Button>
+            )}
+
+            {/* DELETE */}
+            {hasPermission('shift.delete') && (
+              <Button
+                size="sm"
+                variant="outline-danger"
+                onClick={() => {
+                  setDeleteRow(row);
+                  setShowDelete(true);
+                }}
+              >
+                <LuTrash2 size={16} />
+              </Button>
+            )}
+
           </div>
         ),
-      },
-    ],
-    []
-  );
+        ignoreRowClick: true,
+        center: true,
+      });
+    }
+
+    return baseColumn;
+
+  }, [hasAnyPermission, hasPermission]);
 
   /* ================= DELETE CONFIRM ================= */
   const confirmDelete = () => {
@@ -144,17 +160,20 @@ const Shift = () => {
         {/* Header */}
         <div className="d-flex justify-content-between align-items-center border-bottom pb-2">
           <h5 className="mb-0 fw-normal fs-6">Shift</h5>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => {
-              setEditRow(null);
-              setShowForm(true);
-            }}
-          >
-            <FiPlusCircle className="me-2" />
-            Create New
-          </Button>
+          {hasPermission('shift.create') && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => {
+                setEditRow(null);
+                setShowForm(true);
+              }}
+            >
+              <FiPlusCircle className="me-2" />
+              Create New
+            </Button>
+          )}
+
         </div>
 
         {/* Search */}

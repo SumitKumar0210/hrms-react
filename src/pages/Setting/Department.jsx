@@ -18,6 +18,7 @@ import {
   deleteDepartment,
 } from "./slice/departmentSlice";
 import { useDispatch, useSelector } from "react-redux";
+import { useAuth } from "../../context/AuthContext";
 
 /* ================= VALIDATION ================= */
 const validationSchema = Yup.object({
@@ -29,6 +30,8 @@ const validationSchema = Yup.object({
 const Department = () => {
   const dispatch = useDispatch();
   const { data = [], loading } = useSelector((state) => state.department);
+
+  const { hasPermission, hasAnyPermission } = useAuth();
 
   const [search, setSearch] = useState("");
   const [show, setShow] = useState(false);
@@ -49,8 +52,8 @@ const Department = () => {
   }, [data, search]);
 
   /* ================= TABLE COLUMNS ================= */
-  const columns = useMemo(
-    () => [
+  const columns = useMemo(() => {
+    const baseColumns = [
       {
         name: "Department Name",
         selector: (row) => row.name,
@@ -70,17 +73,22 @@ const Department = () => {
           </Badge>
         ),
       },
-      {
+    ];
+    if (hasAnyPermission?.(["department.delete", "department.update"])) {
+      baseColumns.push({
         name: "Actions",
         cell: (row) => (
           <div className="d-flex gap-2">
-            <Button
+            {hasPermission('department.update') && (
+              <Button
               size="sm"
               variant="outline-primary"
               onClick={() => handleEdit(row)}
             >
-              <FiEdit />
+              <FiEdit size={16} />
             </Button>
+            )}
+            {hasPermission('department.delete') && (
             <Button
               size="sm"
               variant="outline-danger"
@@ -89,14 +97,16 @@ const Department = () => {
                 setShowDelete(true);
               }}
             >
-              <LuTrash2 />
+              <LuTrash2 size={16} />
             </Button>
+            )}
           </div>
         ),
-      },
-    ],
-    [dispatch]
-  );
+      });
+    }
+
+    return baseColumns;
+  }, [dispatch]);
 
   /* ================= HANDLERS ================= */
   const handleEdit = (row) => {
@@ -125,10 +135,13 @@ const Department = () => {
         {/* Header */}
         <div className="d-flex justify-content-between align-items-center border-bottom pb-2">
           <h5 className="mb-0 fw-normal fs-6">Department</h5>
-          <Button variant="primary" size="sm" onClick={handleAddNew}>
-            <FiPlusCircle className="me-2" />
-            Create New
-          </Button>
+          {hasPermission('dapartment.create') && (
+            <Button variant="primary" size="sm" onClick={handleAddNew}>
+              <FiPlusCircle className="me-2" />
+              Create New
+            </Button>
+          )}
+
         </div>
 
         {/* Search */}

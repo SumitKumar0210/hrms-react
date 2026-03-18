@@ -34,6 +34,7 @@ import {
     fetchAllActiveShift,
     resetShiftState
 } from "../Setting/slice/shiftSlice";
+import { useAuth } from "../../context/AuthContext";
 
 // Enhanced validation schema
 const validationSchema = Yup.object({
@@ -116,6 +117,8 @@ const EditEmployee = () => {
     const { id } = useParams();
     const dispatch = useDispatch();
     const navigate = useNavigate();
+
+    const { hasPermission, hasAnyPermission } = useAuth()
 
     const { loading, success, error, currentEmployee } = useSelector((state) => state.employee);
     const { data: departments = [] } = useSelector((state) => state.department);

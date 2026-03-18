@@ -18,6 +18,7 @@ import { fetchAllActiveDepartment, resetDepartmentState } from "../Setting/slice
 import { fetchAllActiveDesignation, resetDesignationState } from "../Setting/slice/designationSlice";
 import { fetchAllActiveShift, resetShiftState } from "../Setting/slice/shiftSlice";
 import { getactiveRoles } from "../Setting/slice/roleSlice";
+import { useAuth } from "../../context/AuthContext";
 
 // ─── Validation schema ────────────────────────────────────────────────────────
 const validationSchema = Yup.object({
@@ -89,26 +90,27 @@ const validationSchema = Yup.object({
 
 // ─── Document definitions ─────────────────────────────────────────────────────
 const DOCUMENTS = [
-    { label: "ID Proof",       desc: "Passport, Driving License or National ID", name: "idProof"       },
-    { label: "Address Proof",  desc: "Utility bill or Rental agreement",          name: "addressProof"  },
-    { label: "Bank Details",   desc: "Cancelled Cheque or Bank statement",        name: "bankDetails"   },
-    { label: "Contract Letter",desc: "Signed employment contract",                name: "contractLetter"},
-    { label: "Profile Image",  desc: "Employee photo",                            name: "profileImage"  },
+    { label: "ID Proof", desc: "Passport, Driving License or National ID", name: "idProof" },
+    { label: "Address Proof", desc: "Utility bill or Rental agreement", name: "addressProof" },
+    { label: "Bank Details", desc: "Cancelled Cheque or Bank statement", name: "bankDetails" },
+    { label: "Contract Letter", desc: "Signed employment contract", name: "contractLetter" },
+    { label: "Profile Image", desc: "Employee photo", name: "profileImage" },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────
 const AddEmployee = () => {
     const [selectedShift, setSelectedShift] = useState(null);
-    const [fileErrors,    setFileErrors]    = useState({});
+    const [fileErrors, setFileErrors] = useState({});
+    const { hasPermission, hasAnyPermission } = useAuth();
 
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
     const { loading, success, error } = useSelector((state) => state.employee);
 
-    const { data: departments  = [], loading: departmentLoading  } = useSelector((state) => state.department);
+    const { data: departments = [], loading: departmentLoading } = useSelector((state) => state.department);
     const { data: designations = [], loading: designationLoading } = useSelector((state) => state.designation);
-    const { data: shifts       = [], loading: shiftLoading       } = useSelector((state) => state.shift);
+    const { data: shifts = [], loading: shiftLoading } = useSelector((state) => state.shift);
 
     // ── Fix 1: use correct selector key for roles ────────────────────────────
     // Adjust "state.role" to match your actual Redux slice name if different
@@ -168,7 +170,7 @@ const AddEmployee = () => {
     const handleShiftChange = useCallback((shift, setFieldValue) => {
         setSelectedShift(shift);
         if (shift?.rotational_time !== 1) {
-            setFieldValue("shiftCheckInTiming",  "");
+            setFieldValue("shiftCheckInTiming", "");
             setFieldValue("shiftCheckOutTiming", "");
         }
     }, []);
@@ -179,7 +181,7 @@ const AddEmployee = () => {
             // Extra validation for rotational shift timings
             if (selectedShift?.rotational_time === 1) {
                 const timingErrors = {};
-                if (!values.shiftCheckInTiming)  timingErrors.shiftCheckInTiming  = "Required for rotational shift";
+                if (!values.shiftCheckInTiming) timingErrors.shiftCheckInTiming = "Required for rotational shift";
                 if (!values.shiftCheckOutTiming) timingErrors.shiftCheckOutTiming = "Required for rotational shift";
                 if (Object.keys(timingErrors).length) {
                     setErrors(timingErrors);
@@ -188,20 +190,20 @@ const AddEmployee = () => {
             }
 
             const formData = new FormData();
-            formData.append("first_name",  values.firstName.trim());
-            formData.append("last_name",   values.lastName.trim());
-            formData.append("email",       values.email.toLowerCase().trim());
-            formData.append("phone",       values.phone.trim());
-            formData.append("address",     values.address.trim());
-            formData.append("city",        values.city.trim());
-            formData.append("state",       values.state.trim());
-            formData.append("pin_code",    values.pinCode.trim());
+            formData.append("first_name", values.firstName.trim());
+            formData.append("last_name", values.lastName.trim());
+            formData.append("email", values.email.toLowerCase().trim());
+            formData.append("phone", values.phone.trim());
+            formData.append("address", values.address.trim());
+            formData.append("city", values.city.trim());
+            formData.append("state", values.state.trim());
+            formData.append("pin_code", values.pinCode.trim());
             formData.append("blood_group", values.bloodGroup);
-            formData.append("aadhar_no",   values.aadharNo.trim());
-            formData.append("source",      values.source);
-            formData.append("job_role",    values.jobRole);
-            formData.append("department",  values.department);
-            formData.append("shift_id",    values.shiftType);
+            formData.append("aadhar_no", values.aadharNo.trim());
+            formData.append("source", values.source);
+            formData.append("job_role", values.jobRole);
+            formData.append("department", values.department);
+            formData.append("shift_id", values.shiftType);
             formData.append("is_application_user", values.isApplicationUser ? 1 : 0);
 
             // ── Fix 3: only send role when isApplicationUser is true ─────────
@@ -210,7 +212,7 @@ const AddEmployee = () => {
             }
 
             if (selectedShift?.rotational_time === 1) {
-                formData.append("shift_check_in_timing",  values.shiftCheckInTiming);
+                formData.append("shift_check_in_timing", values.shiftCheckInTiming);
                 formData.append("shift_check_out_timing", values.shiftCheckOutTiming);
             }
 
@@ -238,29 +240,29 @@ const AddEmployee = () => {
 
             <Formik
                 initialValues={{
-                    firstName:           "",
-                    lastName:            "",
-                    email:               "",
-                    phone:               "",
-                    address:             "",
-                    city:                "",
-                    state:               "",
-                    pinCode:             "",
-                    bloodGroup:          "",
-                    aadharNo:            "",
-                    source:              "",
-                    jobRole:             "",
-                    department:          "",
-                    shiftType:           "",
-                    shiftCheckInTiming:  "",
+                    firstName: "",
+                    lastName: "",
+                    email: "",
+                    phone: "",
+                    address: "",
+                    city: "",
+                    state: "",
+                    pinCode: "",
+                    bloodGroup: "",
+                    aadharNo: "",
+                    source: "",
+                    jobRole: "",
+                    department: "",
+                    shiftType: "",
+                    shiftCheckInTiming: "",
                     shiftCheckOutTiming: "",
-                    idProof:             null,
-                    addressProof:        null,
-                    bankDetails:         null,
-                    contractLetter:      null,
-                    profileImage:        null,
-                    isApplicationUser:   false,
-                    role:                "",   // ── Fix 4: added to initialValues
+                    idProof: null,
+                    addressProof: null,
+                    bankDetails: null,
+                    contractLetter: null,
+                    profileImage: null,
+                    isApplicationUser: false,
+                    role: "",   // ── Fix 4: added to initialValues
                 }}
                 validationSchema={validationSchema}
                 onSubmit={handleSubmit}
@@ -276,7 +278,7 @@ const AddEmployee = () => {
                     isSubmitting,
                 }) => {
                     const uploadedCount = DOCUMENTS.filter((d) => values[d.name]).length;
-                    const progress      = Math.round((uploadedCount / DOCUMENTS.length) * 100);
+                    const progress = Math.round((uploadedCount / DOCUMENTS.length) * 100);
                     const isFormDisabled = loading || isSubmitting;
 
                     return (
@@ -290,10 +292,10 @@ const AddEmployee = () => {
                                     </div>
                                     <Row className="px-2">
                                         {[
-                                            { label: "First Name",     name: "firstName" },
-                                            { label: "Last Name",      name: "lastName"  },
-                                            { label: "Email Address",  name: "email",  type: "email" },
-                                            { label: "Phone Number",   name: "phone"             },
+                                            { label: "First Name", name: "firstName" },
+                                            { label: "Last Name", name: "lastName" },
+                                            { label: "Email Address", name: "email", type: "email" },
+                                            { label: "Phone Number", name: "phone" },
                                         ].map((f) => (
                                             <Col md={3} className="mb-3" key={f.name}>
                                                 <Form.Group>
@@ -396,7 +398,7 @@ const AddEmployee = () => {
                                                     disabled={isFormDisabled}
                                                 >
                                                     <option value="">Select blood group</option>
-                                                    {["A+","A-","B+","B-","O+","O-","AB+","AB-"].map((bg) => (
+                                                    {["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"].map((bg) => (
                                                         <option key={bg}>{bg}</option>
                                                     ))}
                                                 </Form.Select>
@@ -686,21 +688,24 @@ const AddEmployee = () => {
                                         >
                                             Cancel
                                         </Button>
-                                        <Button
-                                            type="submit"
-                                            variant="primary"
-                                            disabled={isFormDisabled}
-                                        >
-                                            {isFormDisabled ? (
-                                                <>
-                                                    <Spinner as="span" animation="border" size="sm"
-                                                        role="status" aria-hidden="true" className="me-2" />
-                                                    Saving...
-                                                </>
-                                            ) : (
-                                                "Save Employee"
-                                            )}
-                                        </Button>
+                                        {hasPermission('staff_directory.create') && (
+                                            <Button
+                                                type="submit"
+                                                variant="primary"
+                                                disabled={isFormDisabled}
+                                            >
+                                                {isFormDisabled ? (
+                                                    <>
+                                                        <Spinner as="span" animation="border" size="sm"
+                                                            role="status" aria-hidden="true" className="me-2" />
+                                                        Saving...
+                                                    </>
+                                                ) : (
+                                                    "Save Employee"
+                                                )}
+                                            </Button>
+                                        )}
+
                                     </div>
 
                                 </Card.Body>

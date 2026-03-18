@@ -15,6 +15,7 @@ import {
     clearError,
     clearSuccess,
 } from './slice/employeeSlice';
+import { useAuth } from '../../context/AuthContext';
 
 /* ================= DATE INPUT ================= */
 const DateInput = forwardRef(({ value, onClick, placeholder }, ref) => (
@@ -36,6 +37,8 @@ const filterSchema = Yup.object({
 const Employees = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
+
+    const { hasPermission, hasAnyPermission } = useAuth();
 
     const [showDelete, setShowDelete] = useState(false);
     const [deleteRow, setDeleteRow] = useState(null);
@@ -146,9 +149,12 @@ const Employees = () => {
                         )}
                     </small>
                 </div>
-                <Button size="sm" onClick={() => navigate('/employees/add')}>
-                    Add New Employee
-                </Button>
+                {hasPermission('staff_directory.create') && (
+                    <Button size="sm" onClick={() => navigate('/employees/add')}>
+                        Add New Employee
+                    </Button>
+                )}
+
             </div>
 
             {/* Error Alert */}
@@ -336,26 +342,32 @@ const Employees = () => {
                                             </div>
                                         </div>
                                         <div className="d-flex gap-1">
-                                            <Button
-                                                size="sm"
-                                                variant="light"
-                                                className="rounded-circle p-1"
-                                                style={{ width: 32, height: 32 }}
-                                                onClick={() => handleEdit(emp.id)}
-                                                title="Edit"
-                                            >
-                                                <Pencil size={14} />
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="light"
-                                                className="rounded-circle p-1"
-                                                style={{ width: 32, height: 32 }}
-                                                onClick={() => handleDelete(emp)}
-                                                title="Delete"
-                                            >
-                                                <Trash2 size={14} className="text-danger" />
-                                            </Button>
+                                            {hasPermission('staff_directory.update') && (
+                                                <Button
+                                                    size="sm"
+                                                    variant="light"
+                                                    className="rounded-circle p-1"
+                                                    style={{ width: 32, height: 32 }}
+                                                    onClick={() => handleEdit(emp.id)}
+                                                    title="Edit"
+                                                >
+                                                    <Pencil size={14} />
+                                                </Button>
+                                            )}
+
+                                            {hasPermission('staff_directory.delete') && (
+                                                <Button
+                                                    size="sm"
+                                                    variant="light"
+                                                    className="rounded-circle p-1"
+                                                    style={{ width: 32, height: 32 }}
+                                                    onClick={() => handleDelete(emp)}
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 size={14} className="text-danger" />
+                                                </Button>
+                                            )}
+
                                         </div>
                                     </div>
 
@@ -382,21 +394,24 @@ const Employees = () => {
                                 </Card.Body>
 
                                 <Card.Footer className="bg-white d-flex justify-content-between align-items-center border-0 pt-0">
-                                    <Badge
-                                        bg={
-                                            emp.status === 'On Duty'
-                                                ? 'success-subtle text-success'
-                                                : emp.status === 'Leave'
-                                                    ? 'warning-subtle text-warning'
-                                                    : 'secondary-subtle text-dark'
-                                        }
-                                        className="fw-semibold rounded-4"
-                                        style={{ cursor: 'pointer' }}
-                                        onClick={() => handleStatusToggle(emp.id, emp.status)}
-                                        title="Click to toggle status"
-                                    >
-                                        {emp.status || 'Inactive'}
-                                    </Badge>
+                                    {hasPermission('staff_directory.update') && (
+                                        <Badge
+                                            bg={
+                                                emp.status === 'On Duty'
+                                                    ? 'success-subtle text-success'
+                                                    : emp.status === 'Leave'
+                                                        ? 'warning-subtle text-warning'
+                                                        : 'secondary-subtle text-dark'
+                                            }
+                                            className="fw-semibold rounded-4"
+                                            style={{ cursor: 'pointer' }}
+                                            onClick={() => handleStatusToggle(emp.id, emp.status)}
+                                            title="Click to toggle status"
+                                        >
+                                            {emp.status || 'Inactive'}
+                                        </Badge>
+                                    )}
+
                                     {/* <Badge
                                         bg="primary-subtle text-primary"
                                         className="mb-0 fw-semibold rounded-4"

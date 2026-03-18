@@ -14,6 +14,7 @@ import {
 import { FaUserShield } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 /* ================= VALIDATION ================= */
 const validationSchema = Yup.object({
@@ -31,6 +32,7 @@ const Roles = () => {
   const [showDelete, setShowDelete] = useState(false);
   const [deleteRow, setDeleteRow] = useState(null);
   const navigate = useNavigate()
+  const { hasPermission, hasAnyPermission } = useAuth();
 
   /* ================= FETCH ================= */
   useEffect(() => {
@@ -45,8 +47,8 @@ const Roles = () => {
   }, [data, search]);
 
   /* ================= TABLE COLUMNS ================= */
-  const columns = useMemo(
-    () => [
+  const columns = useMemo(() => {
+    const baseColumn = [
       {
         name: "Role Name",
         selector: (row) => row.name,
@@ -56,42 +58,60 @@ const Roles = () => {
         name: "Guard",
         selector: (row) => row.guard_name,
       },
-      {
+    ];
+
+    if (hasAnyPermission(['roles_permission.update', 'roles_permission.delete'])) {
+      baseColumn.push({
         name: "Actions",
         cell: (row) => (
           <div className="d-flex gap-2">
-            <Button
-              size="sm"
-              variant="outline-primary"
-              onClick={() => handleEdit(row)}
-            >
-              <FiEdit />
-            </Button>
-            <Button
-              size="sm"
-              variant="outline-primary"
-              onClick={() => handleNavigation(row.id)}
-            >
-              <FaUserShield />
-            </Button>
-            
 
-            <Button
-              size="sm"
-              variant="outline-danger"
-              onClick={() => {
-                setDeleteRow(row);
-                setShowDelete(true);
-              }}
-            >
-              <LuTrash2 />
-            </Button>
+            {/* EDIT */}
+            {hasPermission('roles_permission.update') && (
+              <Button
+                size="sm"
+                variant="outline-primary"
+                onClick={() => handleEdit(row)}
+              >
+                <FiEdit size={16} />
+              </Button>
+            )}
+
+            {/* PERMISSION */}
+            {hasPermission('roles_permission.update') && (
+              <Button
+                size="sm"
+                variant="outline-warning"
+                onClick={() => handleNavigation(row.id)}
+              >
+                <FaUserShield size={16} />
+              </Button>
+            )}
+
+            {/* DELETE */}
+            {hasPermission('roles_permission.delete') && (
+              <Button
+                size="sm"
+                variant="outline-danger"
+                onClick={() => {
+                  setDeleteRow(row);
+                  setShowDelete(true);
+                }}
+              >
+                <LuTrash2 size={16} />
+              </Button>
+            )}
+
           </div>
         ),
-      },
-    ],
-    []
-  );
+        ignoreRowClick: true,
+        center: true,
+      });
+    }
+
+    return baseColumn;
+
+  }, [hasPermission, hasAnyPermission]);
 
   /* ================= HANDLERS ================= */
   const handleEdit = (row) => {
@@ -111,7 +131,7 @@ const Roles = () => {
     setShowDelete(false);
     setDeleteRow(null);
   };
-  
+
   const handleNavigation = (id) => {
 
     navigate(`/settings/${id}/fetch-permissions`)
@@ -124,11 +144,13 @@ const Roles = () => {
         {/* Header */}
         <div className="d-flex justify-content-between align-items-center border-bottom pb-2">
           <h5 className="mb-0 fw-normal fs-6">Roles</h5>
+          {hasPermission('roles_permission.create') && (
 
-          <Button variant="primary" size="sm" onClick={handleAddNew}>
-            <FiPlusCircle className="me-2" />
-            Create Role
-          </Button>
+            <Button variant="primary" size="sm" onClick={handleAddNew}>
+              <FiPlusCircle className="me-2" />
+              Create Role
+            </Button>
+          )}
         </div>
 
         {/* Search */}
