@@ -1,8 +1,6 @@
 import { useMemo, useState, useEffect, forwardRef } from 'react';
 import { Card, Badge, Button, Form, InputGroup, Image, Spinner, Alert } from "react-bootstrap";
 import { Pencil, Trash2 } from "lucide-react";
-import { Formik } from 'formik';
-import * as Yup from 'yup';
 import DatePicker from 'react-datepicker';
 import { BsCalendar3 } from 'react-icons/bs';
 import { useNavigate } from 'react-router-dom';
@@ -25,33 +23,23 @@ const DateInput = forwardRef(({ value, onClick, placeholder }, ref) => (
     </InputGroup>
 ));
 
-/* ================= VALIDATION ================= */
-const filterSchema = Yup.object({
-    startDate: Yup.date().nullable(),
-    endDate: Yup.date()
-        .nullable()
-        .min(Yup.ref('startDate'), 'End date must be after start date'),
-});
-
 /* ================= COMPONENT ================= */
 const Employees = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
-
-    const { hasPermission, hasAnyPermission } = useAuth();
+    const { hasPermission } = useAuth();
 
     const [showDelete, setShowDelete] = useState(false);
     const [deleteRow, setDeleteRow] = useState(null);
     const [deleting, setDeleting] = useState(false);
 
-    // Redux state
-    const { employees, loading, error, pagination } = useSelector((state) => state.employee);
+    const { employees, loading, error } = useSelector((state) => state.employee);
 
     const [filters, setFilters] = useState({
+        search: '',
         startDate: null,
         endDate: null,
         department: '',
-        staff: '',
         status: '',
     });
 
@@ -62,21 +50,37 @@ const Employees = () => {
 
     // Clear error on unmount
     useEffect(() => {
-        return () => {
-            dispatch(clearError());
-        };
+        return () => { dispatch(clearError()); };
     }, [dispatch]);
 
-    // Filter employees
+    // ── Filter employees client-side ──────────────────────────────────────────
     const filteredEmployees = useMemo(() => {
         if (!employees || employees.length === 0) return [];
 
         return employees.filter((emp) => {
-            const dojDate = emp.doj ? new Date(emp.doj) : null;
+            const fullName = `${emp.first_name ?? ''} ${emp.last_name ?? ''}`.toLowerCase();
+            const dojDate = emp.date_of_joining ? new Date(emp.date_of_joining) : null;
 
-            if (filters.department && emp.department !== filters.department) return false;
-            if (filters.staff && emp.name !== filters.staff) return false;
-            if (filters.status && emp.status !== filters.status) return false;
+            // Search: name, email, mobile, employee_code
+            if (filters.search) {
+                const q = filters.search.toLowerCase();
+                const match =
+                    fullName.includes(q) ||
+                    (emp.email ?? '').toLowerCase().includes(q) ||
+                    (emp.mobile ?? '').includes(q) ||
+                    (emp.employee_code ?? '').toLowerCase().includes(q);
+                if (!match) return false;
+            }
+
+            // Department — compare by department.id (value from select)
+            if (filters.department && String(emp.department?.id) !== String(filters.department))
+                return false;
+
+            // Status — backend returns "active" / "inactive"
+            if (filters.status && emp.status !== filters.status)
+                return false;
+
+            // Date range
             if (filters.startDate && dojDate && dojDate < filters.startDate) return false;
             if (filters.endDate && dojDate && dojDate > filters.endDate) return false;
 
@@ -84,19 +88,26 @@ const Employees = () => {
         });
     }, [employees, filters]);
 
-    console.log(filteredEmployees);
-
-    // Get unique departments
+    // Get unique departments from data
     const departments = useMemo(() => {
         if (!employees) return [];
-        return [...new Set(employees.map((e) => e.department).filter(Boolean))];
+        const seen = new Map();
+        employees.forEach((e) => {
+            if (e.department?.id) seen.set(e.department.id, e.department.name);
+        });
+        return [...seen.entries()].map(([id, name]) => ({ id, name }));
     }, [employees]);
 
-    // Get unique statuses
+    // Get unique statuses from data
     const statuses = useMemo(() => {
         if (!employees) return [];
         return [...new Set(employees.map((e) => e.status).filter(Boolean))];
     }, [employees]);
+
+    // Reset filters
+    const resetFilters = () => {
+        setFilters({ search: '', startDate: null, endDate: null, department: '', status: '' });
+    };
 
     // Handle delete
     const handleDelete = (employee) => {
@@ -106,7 +117,6 @@ const Employees = () => {
 
     const confirmDelete = async () => {
         if (!deleteRow) return;
-
         try {
             setDeleting(true);
             await dispatch(deleteEmployee(deleteRow.id)).unwrap();
@@ -121,7 +131,7 @@ const Employees = () => {
 
     // Handle status toggle
     const handleStatusToggle = async (id, currentStatus) => {
-        const newStatus = currentStatus === 'On Duty' ? 'Inactive' : 'On Duty';
+        const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
         try {
             await dispatch(toggleEmployeeStatus({ id, status: newStatus })).unwrap();
         } catch (err) {
@@ -129,24 +139,25 @@ const Employees = () => {
         }
     };
 
-    // Handle edit
-    const handleEdit = (id) => {
-        navigate(`/employees/edit/${id}`);
+    // Status badge color
+    const statusBadge = (status) => {
+        switch (status) {
+            case 'active':   return 'success';
+            case 'inactive': return 'secondary';
+            case 'on_leave': return 'warning';
+            default:         return 'secondary';
+        }
     };
 
     return (
         <div className="container-fluid g-0">
+
             {/* Header */}
             <div className="mt-3 d-flex justify-content-between align-items-center flex-wrap">
                 <div>
                     <h5 className="mb-0">Employee Directory</h5>
-                    <small>
-                        {loading ? (
-                            'Loading...'
-                        ) : (
-                            `${filteredEmployees.length} Employee${filteredEmployees.length !== 1 ? 's' : ''
-                            }`
-                        )}
+                    <small className="text-muted">
+                        {loading ? 'Loading...' : `${filteredEmployees.length} Employee${filteredEmployees.length !== 1 ? 's' : ''}`}
                     </small>
                 </div>
                 {hasPermission('staff_directory.create') && (
@@ -154,7 +165,6 @@ const Employees = () => {
                         Add New Employee
                     </Button>
                 )}
-
             </div>
 
             {/* Error Alert */}
@@ -167,117 +177,79 @@ const Employees = () => {
             {/* Filters */}
             <Card className="shadow-sm border-0 mt-3">
                 <Card.Body>
-                    <Formik
-                        initialValues={filters}
-                        validationSchema={filterSchema}
-                        onSubmit={() => { }}
-                    >
-                        {({ resetForm }) => (
-                            <Form className="d-flex flex-wrap align-items-end gap-3">
-                                {/* Date Range */}
-                                <div className="flex-fill flex-grow-1">
-                                    <Form.Label>Date of Joining</Form.Label>
-                                    <div className="d-flex gap-2">
-                                        <DatePicker
-                                            selected={filters.startDate}
-                                            placeholderText="Start date"
-                                            onChange={(date) =>
-                                                setFilters((p) => ({ ...p, startDate: date }))
-                                            }
-                                            customInput={<DateInput placeholder="Start" />}
-                                            wrapperClassName="w-100"
-                                            dateFormat="yyyy-MM-dd"
-                                        />
-                                        <DatePicker
-                                            selected={filters.endDate}
-                                            placeholderText="End date"
-                                            onChange={(date) =>
-                                                setFilters((p) => ({ ...p, endDate: date }))
-                                            }
-                                            minDate={filters.startDate}
-                                            customInput={<DateInput placeholder="End" />}
-                                            wrapperClassName="w-100"
-                                            dateFormat="yyyy-MM-dd"
-                                        />
-                                    </div>
-                                </div>
+                    <div className="d-flex flex-wrap align-items-end gap-3">
 
-                                {/* Department */}
-                                <div className="flex-fill">
-                                    <Form.Label>Department</Form.Label>
-                                    <Form.Select
-                                        value={filters.department}
-                                        onChange={(e) =>
-                                            setFilters((p) => ({ ...p, department: e.target.value }))
-                                        }
-                                    >
-                                        <option value="">All</option>
-                                        {/* {departments.map((dep) => (
-                                            <option key={dep} value={dep}>
-                                                {dep}
-                                            </option>
-                                        ))} */}
-                                    </Form.Select>
-                                </div>
+                        {/* Search */}
+                        <div className="flex-fill" style={{ minWidth: 180 }}>
+                            <Form.Label>Search</Form.Label>
+                            <Form.Control
+                                placeholder="Name, email, mobile, code..."
+                                value={filters.search}
+                                onChange={(e) => setFilters((p) => ({ ...p, search: e.target.value }))}
+                            />
+                        </div>
 
-                                {/* Staff */}
-                                <div className="flex-fill">
-                                    <Form.Label>Staff</Form.Label>
-                                    <Form.Select
-                                        value={filters.staff}
-                                        onChange={(e) =>
-                                            setFilters((p) => ({ ...p, staff: e.target.value }))
-                                        }
-                                    >
-                                        <option value="">All</option>
-                                        {employees?.map((emp) => (
-                                            <option key={emp.id} value={emp.name}>
-                                                {emp.name}
-                                            </option>
-                                        ))}
-                                    </Form.Select>
-                                </div>
+                        {/* Date Range */}
+                        <div className="flex-fill flex-grow-1" style={{ minWidth: 260 }}>
+                            <Form.Label>Date of Joining</Form.Label>
+                            <div className="d-flex gap-2">
+                                <DatePicker
+                                    selected={filters.startDate}
+                                    placeholderText="Start date"
+                                    onChange={(date) => setFilters((p) => ({ ...p, startDate: date }))}
+                                    customInput={<DateInput placeholder="Start" />}
+                                    wrapperClassName="w-100"
+                                    dateFormat="yyyy-MM-dd"
+                                />
+                                <DatePicker
+                                    selected={filters.endDate}
+                                    placeholderText="End date"
+                                    onChange={(date) => setFilters((p) => ({ ...p, endDate: date }))}
+                                    minDate={filters.startDate}
+                                    customInput={<DateInput placeholder="End" />}
+                                    wrapperClassName="w-100"
+                                    dateFormat="yyyy-MM-dd"
+                                />
+                            </div>
+                        </div>
 
-                                {/* Status */}
-                                <div className="flex-fill">
-                                    <Form.Label>Status</Form.Label>
-                                    <Form.Select
-                                        value={filters.status}
-                                        onChange={(e) =>
-                                            setFilters((p) => ({ ...p, status: e.target.value }))
-                                        }
-                                    >
-                                        <option value="">All</option>
-                                        {statuses.map((st) => (
-                                            <option key={st} value={st}>
-                                                {st}
-                                            </option>
-                                        ))}
-                                    </Form.Select>
-                                </div>
+                        {/* Department — uses department.id as value */}
+                        <div className="flex-fill" style={{ minWidth: 150 }}>
+                            <Form.Label>Department</Form.Label>
+                            <Form.Select
+                                value={filters.department}
+                                onChange={(e) => setFilters((p) => ({ ...p, department: e.target.value }))}
+                            >
+                                <option value="">All</option>
+                                {departments.map(({ id, name }) => (
+                                    <option key={id} value={id}>{name}</option>
+                                ))}
+                            </Form.Select>
+                        </div>
 
-                                {/* Reset */}
-                                <div className="flex-fill">
-                                    <Button
-                                        variant="outline-secondary"
-                                        className="w-100"
-                                        onClick={() => {
-                                            resetForm();
-                                            setFilters({
-                                                startDate: null,
-                                                endDate: null,
-                                                department: '',
-                                                staff: '',
-                                                status: '',
-                                            });
-                                        }}
-                                    >
-                                        Reset
-                                    </Button>
-                                </div>
-                            </Form>
-                        )}
-                    </Formik>
+                        {/* Status */}
+                        <div className="flex-fill" style={{ minWidth: 130 }}>
+                            <Form.Label>Status</Form.Label>
+                            <Form.Select
+                                value={filters.status}
+                                onChange={(e) => setFilters((p) => ({ ...p, status: e.target.value }))}
+                            >
+                                <option value="">All</option>
+                                {statuses.map((st) => (
+                                    <option key={st} value={st}>
+                                        {st.charAt(0).toUpperCase() + st.slice(1).replace('_', ' ')}
+                                    </option>
+                                ))}
+                            </Form.Select>
+                        </div>
+
+                        {/* Reset */}
+                        <div>
+                            <Button variant="outline-secondary" onClick={resetFilters}>
+                                Reset
+                            </Button>
+                        </div>
+                    </div>
                 </Card.Body>
             </Card>
 
@@ -300,12 +272,7 @@ const Employees = () => {
                                 : 'Try adjusting your filters'}
                         </p>
                         {employees?.length === 0 && (
-                            <Button
-                                variant="primary"
-                                size="sm"
-                                onClick={() => navigate('/employees/add')}
-                                className="mt-2"
-                            >
+                            <Button variant="primary" size="sm" onClick={() => navigate('/employees/add')} className="mt-2">
                                 Add Employee
                             </Button>
                         )}
@@ -315,7 +282,7 @@ const Employees = () => {
 
             {/* Employee Cards */}
             {!loading && filteredEmployees.length > 0 && (
-                <div className="row g-3 mt-3">
+                <div className="row g-3 mt-1">
                     {filteredEmployees.map((emp) => (
                         <div key={emp.id} className="col-xl-3 col-lg-4 col-md-6">
                             <Card className="h-100 shadow-sm border-0">
@@ -323,7 +290,10 @@ const Employees = () => {
                                     <div className="d-flex justify-content-between align-items-start">
                                         <div className="d-flex gap-2">
                                             <Image
-                                                src={emp.image || `https://ui-avatars.com/api/?name=${emp.name}&background=random`}
+                                                src={
+                                                    emp.image ||
+                                                    `https://ui-avatars.com/api/?name=${emp.first_name}+${emp.last_name}&background=random`
+                                                }
                                                 rounded
                                                 width={45}
                                                 height={45}
@@ -331,7 +301,7 @@ const Employees = () => {
                                             />
                                             <div className="lh-1">
                                                 <div className="fw-semibold mb-1 fs-14">
-                                                    {emp.first_name + ' ' + emp.last_name || 'N/A'}
+                                                    {`${emp.first_name ?? ''} ${emp.last_name ?? ''}`.trim() || 'N/A'}
                                                 </div>
                                                 <p className="text-muted mb-1 fs-12">
                                                     {emp.designation?.name || 'N/A'}
@@ -341,24 +311,22 @@ const Employees = () => {
                                                 </p>
                                             </div>
                                         </div>
+
                                         <div className="d-flex gap-1">
                                             {hasPermission('staff_directory.update') && (
                                                 <Button
-                                                    size="sm"
-                                                    variant="light"
+                                                    size="sm" variant="light"
                                                     className="rounded-circle p-1"
                                                     style={{ width: 32, height: 32 }}
-                                                    onClick={() => handleEdit(emp.id)}
+                                                    onClick={() => navigate(`/employees/edit/${emp.id}`)}
                                                     title="Edit"
                                                 >
                                                     <Pencil size={14} />
                                                 </Button>
                                             )}
-
                                             {hasPermission('staff_directory.delete') && (
                                                 <Button
-                                                    size="sm"
-                                                    variant="light"
+                                                    size="sm" variant="light"
                                                     className="rounded-circle p-1"
                                                     style={{ width: 32, height: 32 }}
                                                     onClick={() => handleDelete(emp)}
@@ -367,23 +335,20 @@ const Employees = () => {
                                                     <Trash2 size={14} className="text-danger" />
                                                 </Button>
                                             )}
-
                                         </div>
                                     </div>
 
                                     <div className="small text-muted mt-2">
                                         <div>{emp?.department?.name || 'N/A'}</div>
                                         <div>
-                                            {emp?.shift?.name || "N/A"} (
+                                            {emp?.shift?.name || 'N/A'} (
                                             {emp?.shift?.employee_shift?.[0]?.sign_in
                                                 ? `${emp.shift.employee_shift[0].sign_in} - ${emp.shift.employee_shift[0].sign_out}`
                                                 : emp?.shift?.sign_in
                                                     ? `${emp.shift.sign_in} - ${emp?.shift?.sign_out ?? 'N/A'}`
                                                     : 'N/A'
-                                            }
-                                            )
+                                            })
                                         </div>
-
                                         <div>
                                             DOJ:{' '}
                                             {emp.date_of_joining
@@ -394,72 +359,49 @@ const Employees = () => {
                                 </Card.Body>
 
                                 <Card.Footer className="bg-white d-flex justify-content-between align-items-center border-0 pt-0">
-                                    {hasPermission('staff_directory.update') && (
+                                    {hasPermission('staff_directory.update') ? (
                                         <Badge
-                                            bg={
-                                                emp.status === 'On Duty'
-                                                    ? 'success-subtle text-success'
-                                                    : emp.status === 'Leave'
-                                                        ? 'warning-subtle text-warning'
-                                                        : 'secondary-subtle text-dark'
-                                            }
+                                            bg={statusBadge(emp.status)}
                                             className="fw-semibold rounded-4"
                                             style={{ cursor: 'pointer' }}
                                             onClick={() => handleStatusToggle(emp.id, emp.status)}
                                             title="Click to toggle status"
                                         >
+                                            {emp.status
+                                                ? emp.status.charAt(0).toUpperCase() + emp.status.slice(1).replace('_', ' ')
+                                                : 'Inactive'}
+                                        </Badge>
+                                    ) : (
+                                        <Badge bg={statusBadge(emp.status)} className="fw-semibold rounded-4">
                                             {emp.status || 'Inactive'}
                                         </Badge>
                                     )}
-
-                                    {/* <Badge
-                                        bg="primary-subtle text-primary"
-                                        className="mb-0 fw-semibold rounded-4"
-                                    >
-                                        {emp.type || emp.employment_type || 'N/A'}
-                                    </Badge> */}
                                 </Card.Footer>
                             </Card>
                         </div>
                     ))}
                 </div>
             )}
-            {/* ================= DELETE CONFIRM MODAL ================= */}
+
+            {/* Delete Confirm Modal */}
             <Modal show={showDelete} onHide={() => setShowDelete(false)} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title className="h6 fw-bold text-dark">
-                        Confirm Delete
-                    </Modal.Title>
+                    <Modal.Title className="h6 fw-bold">Confirm Delete</Modal.Title>
                 </Modal.Header>
-
                 <Modal.Body>
                     <p className="mb-0">
-                        Are you sure you want to delete employee{" "}
-                        <strong>
-                            {deleteRow?.first_name} {deleteRow?.last_name}
-                        </strong>?
+                        Are you sure you want to delete{' '}
+                        <strong>{deleteRow?.first_name} {deleteRow?.last_name}</strong>?
                         <br />
-                        <small className="text-muted">
-                            This action cannot be undone.
-                        </small>
+                        <small className="text-muted">This action cannot be undone.</small>
                     </p>
                 </Modal.Body>
-
                 <Modal.Footer>
-                    <Button
-                        variant="secondary"
-                        onClick={() => setShowDelete(false)}
-                        disabled={deleting}
-                    >
+                    <Button variant="secondary" onClick={() => setShowDelete(false)} disabled={deleting}>
                         Cancel
                     </Button>
-
-                    <Button
-                        variant="danger"
-                        onClick={confirmDelete}
-                        disabled={deleting}
-                    >
-                        {deleting ? "Deleting..." : "Delete"}
+                    <Button variant="danger" onClick={confirmDelete} disabled={deleting}>
+                        {deleting ? 'Deleting...' : 'Delete'}
                     </Button>
                 </Modal.Footer>
             </Modal>

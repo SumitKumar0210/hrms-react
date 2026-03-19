@@ -3,13 +3,14 @@ import { Formik, Form as FormikForm } from "formik";
 import { Card, Form, Button, Row, Col, Spinner } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import { getSettingData, uploadLog } from "./slice/settingSlice";
+import { useAuth } from "../../context/AuthContext";
 
 const FILE_MEDIA_URL = import.meta.env.VITE_MEDIA_URL;
 
 const LOGO_FIELDS = [
-  { name: "logo",       label: "Brand Logo",     apiKey: "logo",       height: 70 },
-  { name: "logoWhite",  label: "Logo (White)",    apiKey: "logo_white", height: 70 },
-  { name: "icon",       label: "Favicon / Icon",  apiKey: "favicon",    height: 48 },
+  { name: "logo", label: "Brand Logo", apiKey: "logo", height: 70 },
+  { name: "logoWhite", label: "Logo (White)", apiKey: "logo_white", height: 70 },
+  { name: "icon", label: "Favicon / Icon", apiKey: "favicon", height: 48 },
 ];
 
 const buildPreviews = (data) =>
@@ -24,6 +25,7 @@ const INITIAL_VALUES = Object.fromEntries(LOGO_FIELDS.map(({ name }) => [name, n
 
 const ThemeSettings = () => {
   const dispatch = useDispatch();
+  const { hasPermission, refreshAppDetails } = useAuth();
   const { data = {}, loading } = useSelector((state) => state.setting);
   const [previews, setPreviews] = useState(() => buildPreviews(null));
 
@@ -47,7 +49,9 @@ const ThemeSettings = () => {
     LOGO_FIELDS.forEach(({ name, apiKey }) => {
       if (values[name]) formData.append(apiKey, values[name]);
     });
-    dispatch(uploadLog(formData));
+    const res = dispatch(uploadLog(formData));
+    if(res.error) return ;
+    refreshAppDetails();
   };
 
   return (
@@ -73,9 +77,12 @@ const ThemeSettings = () => {
               ))}
 
               <Col md={12} className="text-end">
-                <Button type="submit" variant="primary" disabled={loading}>
-                  {loading ? <><Spinner size="sm" className="me-2" />Updating...</> : "Update Logos"}
-                </Button>
+                {hasPermission('setting.update') && (
+                  <Button type="submit" variant="primary" disabled={loading}>
+                    {loading ? <><Spinner size="sm" className="me-2" />Updating...</> : "Update Logos"}
+                  </Button>
+                )}
+
               </Col>
             </Row>
           </FormikForm>

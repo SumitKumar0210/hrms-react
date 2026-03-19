@@ -29,7 +29,7 @@ export const fetchAllEmployees = createAsyncThunk(
     "employee/fetchAllEmployees",
     async (params = {}, { rejectWithValue }) => {
         try {
-            const {search = "", status = "" } = params;
+            const { search = "", status = "" } = params;
             const queryParams = new URLSearchParams({
                 ...(search && { search }),
                 ...(status && { status }),
@@ -186,16 +186,31 @@ const employeeSlice = createSlice({
                 state.loading = true;
                 state.error = null;
             })
+            // .addCase(fetchEmployees.fulfilled, (state, action) => {
+            //     state.loading = false;
+            //     state.employees = action.payload.data || action.payload.employees || [];
+            //     state.pagination = {
+            //         currentPage: action.payload.currentPage || action.payload.page || 1,
+            //         totalPages: action.payload.totalPages || 1,
+            //         totalEmployees: action.payload.total || action.payload.totalEmployees || 0,
+            //         limit: action.payload.limit || 10,
+            //     };
+            // })
+
             .addCase(fetchEmployees.fulfilled, (state, action) => {
                 state.loading = false;
-                state.employees = action.payload.data || action.payload.employees || [];
+                state.employees = action.payload.data || [];
+
+                // ✅ Backend returns nested pagination object
+                const pg = action.payload.pagination ?? {};
                 state.pagination = {
-                    currentPage: action.payload.currentPage || action.payload.page || 1,
-                    totalPages: action.payload.totalPages || 1,
-                    totalEmployees: action.payload.total || action.payload.totalEmployees || 0,
-                    limit: action.payload.limit || 10,
+                    currentPage: pg.current_page ?? 1,
+                    totalPages: pg.last_page ?? 1,
+                    totalEmployees: pg.total ?? 0,
+                    limit: pg.per_page ?? 10,
                 };
             })
+
             .addCase(fetchEmployees.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
@@ -209,7 +224,7 @@ const employeeSlice = createSlice({
             .addCase(fetchAllEmployees.fulfilled, (state, action) => {
                 state.searchLoading = false;
                 state.employees = action.payload.data || action.payload.employees || [];
-              
+
             })
             .addCase(fetchAllEmployees.rejected, (state, action) => {
                 state.searchLoading = false;
@@ -306,18 +321,28 @@ const employeeSlice = createSlice({
                 state.loading = true;
                 state.error = null;
             })
+            // .addCase(toggleEmployeeStatus.fulfilled, (state, action) => {
+            //     state.loading = false;
+            //     state.success = true;
+            //     // Update employee status in the list
+            //     const updatedEmployee = action.payload.data || action.payload.employee;
+            //     if (updatedEmployee) {
+            //         const index = state.employees.findIndex(
+            //             (emp) => emp.id === updatedEmployee.id
+            //         );
+            //         if (index !== -1) {
+            //             state.employees[index] = updatedEmployee;
+            //         }
+            //     }
+            // })
+
             .addCase(toggleEmployeeStatus.fulfilled, (state, action) => {
                 state.loading = false;
-                state.success = true;
-                // Update employee status in the list
-                const updatedEmployee = action.payload.data || action.payload.employee;
-                if (updatedEmployee) {
-                    const index = state.employees.findIndex(
-                        (emp) => emp.id === updatedEmployee.id
-                    );
-                    if (index !== -1) {
-                        state.employees[index] = updatedEmployee;
-                    }
+                // Fix: use the id passed in the thunk arg, not from response
+                const { id, status } = action.meta.arg;
+                const index = state.employees.findIndex((emp) => emp.id === id);
+                if (index !== -1) {
+                    state.employees[index].status = status;
                 }
             })
             .addCase(toggleEmployeeStatus.rejected, (state, action) => {

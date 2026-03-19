@@ -12,6 +12,7 @@ import {
 import { getSettingData, updateSetting } from "./slice/settingSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { Copyright } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 
 /* ================= VALIDATION ================= */
 const validationSchema = Yup.object({
@@ -66,6 +67,7 @@ const FormField = ({
 const GeneralSettings = () => {
   const dispatch = useDispatch();
   const { data, loading, error } = useSelector((state) => state.setting);
+  const { refreshAppDetails, hasPermission } = useAuth();
 
   /* ================= FETCH ================= */
   useEffect(() => {
@@ -99,7 +101,8 @@ const GeneralSettings = () => {
       .unwrap()
       .then(() => {
         // Optional: Show success message
-        console.log("Settings updated successfully");
+         refreshAppDetails();
+        setSuccessMessage("Settings updated successfully!");
       })
       .catch((err) => {
         // Optional: Show error message
@@ -273,7 +276,7 @@ const GeneralSettings = () => {
                   errors={errors}
                 />
 
-                <BootstrapForm.Group className="mb-2">
+                {/* <BootstrapForm.Group className="mb-2">
                   <BootstrapForm.Label>Brand Color</BootstrapForm.Label>
                   <Field
                     name="brandColor"
@@ -293,13 +296,14 @@ const GeneralSettings = () => {
                     component="div" 
                     className="text-danger error-message" 
                   />
-                </BootstrapForm.Group>
+                </BootstrapForm.Group> */}
               </Col>
 
               {/* SUBMIT BUTTON */}
               <Col xl={12}>
                 <div className="text-end mt-1">
-                  <Button
+                  { hasPermission('setting.update') && (
+                    <Button
                     type="submit"
                     variant="primary"
                     className="fw-normal btn-sm py-2 px-3"
@@ -321,6 +325,8 @@ const GeneralSettings = () => {
                       "Update Details"
                     )}
                   </Button>
+                  )}
+                  
                 </div>
               </Col>
             </Row>

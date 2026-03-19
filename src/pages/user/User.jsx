@@ -23,7 +23,6 @@ const User = () => {
   const [selectedType, setSelectedType] = useState('');
   const [selectedDesignation, setSelectedDesignation] = useState({ value: 'all', label: 'All' });
 
-  // Redux state
   const { data: usersData, loading: usersLoading } = useSelector((state) => state.user);
   const { employees: employeesData, loading: empLoading } = useSelector((state) => state.employee);
 
@@ -35,73 +34,72 @@ const User = () => {
   // ─── Normalize Users ───────────────────────────────────────────────────────
   const normalizedUsers = (usersData || []).map((u) => ({
     id: u.id,
-    name: u.name,
-    phone: u.phone || u.mobile || '—',
-    email: u.email,
-    designation: u.designation || '—',
-    crew: u.crew || '—',
-    payoutRate: u.payout_rate || u.payoutRate || '—',
-    profile: u.profile_photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&size=48&background=f3f2ff&color=5174f3`,
+    name: u.name ?? '—',
+    phone: u.phone ?? u.mobile ?? '—',
+    email: u.email ?? '—',
+    designation: '—',
+    department: '—',
+    payoutRate: '—',
+    profile: u.profile_photo_url ||
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&size=48&background=f3f2ff&color=5174f3`,
     userType: 'user',
-    // API returns "1" / "0" or "active" / "inactive"
-    status: u.status === '1' || u.status === 'active' ? 'active' : 'inactive',
-    rawStatus: u.status,
+    // Fix: backend returns "1"/"0" as string
+    status: u.status === '1' || u.status === 1 ? 'active' : 'inactive',
   }));
 
   // ─── Normalize Employees ───────────────────────────────────────────────────
   const normalizedEmployees = (employeesData || []).map((e) => ({
     id: e.id,
-    name: `${e.first_name} ${e.last_name}`,
-    phone: e.mobile || '—',
-    email: e.email || '—',
-    designation: e.designation?.name || '—',
-    crew: e.department?.name || '—',
-    payoutRate: e.salaries?.[0]?.amount || '—',
-    profile:
-      e.profile_photo_url ||
-      `https://ui-avatars.com/api/?name=${encodeURIComponent(e.first_name + '+' + e.last_name)}&size=48&background=f3f2ff&color=5174f3`,
+    // Fix: safely combine first_name + last_name
+    name: `${e.first_name ?? ''} ${e.last_name ?? ''}`.trim() || '—',
+    phone: e.mobile ?? '—',
+    email: e.email ?? '—',
+    // Fix: was e.designation (object) — need .name
+    designation: e.designation?.name ?? '—',
+    // Fix: typo "depatment" + was e.crew — correct is e.department?.name
+    department: e.department?.name ?? '—',
+    // Fix: was e.salaries?.[0]?.amount — correct key is basic_salary
+    payoutRate: e.salaries?.[0]?.basic_salary ?? '—',
+    profile: e.profile_photo_url ||
+      `https://ui-avatars.com/api/?name=${encodeURIComponent((e.first_name ?? '') + '+' + (e.last_name ?? ''))}&size=48&background=f3f2ff&color=5174f3`,
     userType: 'employee',
+    // Backend returns "active" / "inactive"
     status: e.status === 'active' ? 'active' : 'inactive',
-    rawStatus: e.status,
   }));
 
   // ─── Merge both lists ──────────────────────────────────────────────────────
   const allUsers = [...normalizedUsers, ...normalizedEmployees];
 
-  // ─── Dynamic designation options from data ─────────────────────────────────
-  const designationSet = new Set(allUsers.map((u) => u.designation).filter((d) => d && d !== '—'));
+  // ─── Designation options — only from employees (users have no designation) ─
+  const designationSet = new Set(
+    normalizedEmployees.map((u) => u.designation).filter((d) => d && d !== '—')
+  );
   const designationOptions = [
     { value: 'all', label: 'All' },
     ...Array.from(designationSet).map((d) => ({ value: d.toLowerCase(), label: d })),
   ];
 
-  // ─── Status options (removed "Fired") ─────────────────────────────────────
   const statusOptions = [
     { label: 'Active', color: '#0f883930' },
     { label: 'Inactive', color: '#cfb00f66' },
   ];
 
-  // ─── Layout options ────────────────────────────────────────────────────────
   const layoutOptions = {
     card: { icon: <SlGrid />, label: 'As Card' },
     table: { icon: <BsLayoutThreeColumns />, label: 'As Table' },
   };
 
-  const handleSelect = (eventKey) => {
-    setLayout(eventKey);
-    setShow(false);
-  };
-
-  const handleClick = (status) => {
-    setSelectedStatus((prev) => (prev === status ? null : status));
-  };
+  const handleSelect = (eventKey) => { setLayout(eventKey); setShow(false); };
+  const handleClick = (status) => setSelectedStatus((prev) => (prev === status ? null : status));
 
   // ─── Toggle status handler ─────────────────────────────────────────────────
   const handleToggle = (item) => {
     if (item.userType === 'user') {
+      // Fix: removed `usersLoading = false` (was illegally mutating a const)
+      // User API expects "1" / "0"
       dispatch(updateStatus({ id: item.id, status: item.status === 'active' ? '0' : '1' }));
-      usersLoading = false;
     } else {
+      // Employee API expects "active" / "inactive"
       dispatch(toggleEmployeeStatus({ id: item.id, status: item.status === 'active' ? 'inactive' : 'active' }));
     }
   };
@@ -112,9 +110,11 @@ const User = () => {
       ? user.status.toLowerCase() === selectedStatus.toLowerCase()
       : true;
     const matchType = selectedType ? user.userType === selectedType : true;
+    // Fix: added null guard for selectedDesignation
     const matchDesignation =
-      selectedDesignation?.value === 'all' ||
-      user.designation.toLowerCase() === selectedDesignation?.value;
+      !selectedDesignation || selectedDesignation.value === 'all'
+        ? true
+        : user.designation.toLowerCase() === selectedDesignation.value.toLowerCase();
     return matchStatus && matchType && matchDesignation;
   });
 
@@ -166,7 +166,7 @@ const User = () => {
                 ))}
               </div>
 
-              {/* Status filter (Active / Inactive only) */}
+              {/* Status filter */}
               <div className="svg-container d-flex">
                 {statusOptions.map(({ label, color }) => {
                   const isSelected = selectedStatus === label;
@@ -232,7 +232,7 @@ const User = () => {
                                         {user.designation}
                                       </Badge>
                                       <Badge pill bg="dark" className='ms-2 fw-normal'>
-                                        {user.crew}
+                                        {user.department}
                                       </Badge>
                                     </div>
                                   </div>
@@ -260,9 +260,7 @@ const User = () => {
                             <tr>
                               <th>Name</th>
                               <th>Designation</th>
-                              {/* Show Permission only for users, hide for employees */}
-                              <th>Permission</th>
-                              <th>Crew</th>
+                              <th>Department</th>
                               <th>Phone</th>
                               <th>Email</th>
                               <th>Status</th>
@@ -274,16 +272,7 @@ const User = () => {
                               <tr key={`${user.userType}-${user.id}`}>
                                 <td>{user.name}</td>
                                 <td>{user.designation}</td>
-                                <td>
-                                  {/* Show icons only for 'user' type; empty for employees */}
-                                  {user.userType === 'user' ? (
-                                    <>
-                                      <BiLogInCircle size={'1.2rem'} className='text-success me-2' />
-                                      <LuFilePen size={'1rem'} className='text-warning' />
-                                    </>
-                                  ) : null}
-                                </td>
-                                <td>{user.crew}</td>
+                                <td>{user.department}</td>
                                 <td>{user.phone}</td>
                                 <td>{user.email}</td>
                                 <td>

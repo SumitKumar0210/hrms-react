@@ -471,9 +471,9 @@ const DocumentTemplates = () => {
                                                                     setTempTitle(t.title);
                                                                 }}
                                                             /> */}
-                                                            { hasPermission('document_template.delete') && (
+                                                            {hasPermission('document_template.delete') && t.id !== 2 && (
                                                                 <BsTrash3
-                                                                    size={11}
+                                                                    size={12}
                                                                     className="text-danger"
                                                                     style={{ cursor: "pointer" }}
                                                                     title="Delete"

@@ -329,7 +329,7 @@ const Permissions = () => {
   return (
     <Container fluid className="gx-0">
       {/* Header */}
-      <Row className="align-items-center mb-3">
+      <Row className="align-items-center my-3">
         <Col>
           <h5 className="mb-0">Permissions</h5>
         </Col>

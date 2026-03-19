@@ -293,6 +293,7 @@ export const AuthProvider = ({ children, eager = true }) => {
           if (isMountedRef.current) setFetchingAppDetails(false);
           return null;
         }
+        
 
         const normalized = {
           favicon: appData.favicon ? MEDIA_URL + appData.favicon : "",
@@ -300,7 +301,7 @@ export const AuthProvider = ({ children, eager = true }) => {
           horizontal_logo: appData.horizontal_logo
             ? MEDIA_URL + appData.horizontal_logo
             : "",
-          application_name: appData.app_name ?? "",
+          application_name: appData.application_name ?? "",
           company_address: appData.address ?? "",
           gst_no: appData.gst_no ?? "",
           is_powered_by: appData.is_powered_by ?? "",

@@ -63,13 +63,12 @@ const PayrollFinalization = () => {
       correction_status: correction,
       pf_calculation_status: pf,
       payslip_generation_status: slips,
-      compliance_status: confirmFinal,
+      confirmation_status: confirmFinal,
     };
 
-    dispatch(storeFinalizedPayroll(payload)).then(() => {
-      // Refetch updated finalized data
-      dispatch(finalizePayrollByMonth(payrollMonth));
-    });
+     const res =dispatch(storeFinalizedPayroll(payload));
+     if(res.error) return; // handle error
+    dispatch(finalizePayrollByMonth(payrollMonth));
   };
   return (
     <Container fluid className="my-3">
@@ -267,7 +266,11 @@ const PayrollFinalization = () => {
                     className="border-0 ms-3"
                   >
                     <Form.Check.Input
-                      checked={confirmFinal}
+                    checked={
+                      isReadonly
+                        ? data?.finalized_status
+                        : confirmFinal
+                    }
                       disabled={isReadonly}
                       onChange={(e) =>
                         setConfirmFinal(e.target.checked)

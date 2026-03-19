@@ -65,16 +65,24 @@ const userSlice = createSlice({
                 state.loading = true;
                 state.error = null;
             })
+            // .addCase(updateStatus.fulfilled, (state, action) => {
+            //     state.loading = false;
+            //     const updatedUser = action.payload?.data;
+            //     if (updatedUser) {
+            //         const index = state.data.findIndex( // ✅ was state.user (bug)
+            //             (user) => user.id === updatedUser.id
+            //         );
+            //         if (index !== -1) {
+            //             state.data[index] = updatedUser;
+            //         }
+            //     }
+            // })
             .addCase(updateStatus.fulfilled, (state, action) => {
                 state.loading = false;
-                const updatedUser = action.payload?.data;
-                if (updatedUser) {
-                    const index = state.data.findIndex( // ✅ was state.user (bug)
-                        (user) => user.id === updatedUser.id
-                    );
-                    if (index !== -1) {
-                        state.data[index] = updatedUser;
-                    }
+                const { id, status } = action.meta.arg;
+                const index = state.data.findIndex((u) => u.id === id);
+                if (index !== -1) {
+                    state.data[index].status = status;
                 }
             })
             .addCase(updateStatus.rejected, (state, action) => {
