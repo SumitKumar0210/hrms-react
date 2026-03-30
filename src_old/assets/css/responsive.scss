@@ -1,0 +1,33 @@
+
+@import './variables';
+@media screen and (max-width: 767px) {
+.nav-link {
+    display: flex;
+    color: $body-text-color;
+    padding: 10px 15px;
+    gap: 15px;
+    transition: all 0.5s;
+    align-items: center;
+}
+.nav-icon{
+    margin: 0 !important;
+    color: $brand-color;
+  }
+  .sidebar-content {
+    height: calc(100% - 90px);
+}
+.main-container {
+  padding: 3.5rem 1rem 1rem 1rem;
+}
+.sidebar-wrapper .nav-link {
+    border-bottom: 1px solid rgb(226, 226, 226);
+
+    &:last-child {
+        border-bottom: 0;
+    }
+}
+.page-header .breadcrumb {
+  
+  padding: 0.5rem 0;
+}
+}

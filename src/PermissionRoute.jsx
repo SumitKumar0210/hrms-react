@@ -18,7 +18,7 @@ const PermissionRoute = ({ children, permission = null, anyOf = null }) => {
   }
 
   // Admin bypasses all checks
-  // if (user?.roles?.includes("Admin")) return children;
+  if (user?.roles?.includes("Admin") || user?.roles?.includes("Administrator")) return children;
 
   // Single permission check
   if (permission && !hasPermission(permission)) {

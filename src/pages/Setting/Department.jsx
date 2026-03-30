@@ -5,6 +5,7 @@ import {
   Badge,
   Modal,
   Form,
+  Spinner,
 } from "react-bootstrap";
 import DataTable from "react-data-table-component";
 import { FiEdit, FiPlusCircle } from "react-icons/fi";
@@ -51,6 +52,10 @@ const Department = () => {
     );
   }, [data, search]);
 
+  const handleSuccess = () => {
+    dispatch(getDepartment());
+  };
+
   /* ================= TABLE COLUMNS ================= */
   const columns = useMemo(() => {
     const baseColumns = [
@@ -81,24 +86,24 @@ const Department = () => {
           <div className="d-flex gap-2">
             {hasPermission('department.update') && (
               <Button
-              size="sm"
-              variant="outline-primary"
-              onClick={() => handleEdit(row)}
-            >
-              <FiEdit size={16} />
-            </Button>
+                size="sm"
+                variant="outline-primary"
+                onClick={() => handleEdit(row)}
+              >
+                <FiEdit size={16} />
+              </Button>
             )}
             {hasPermission('department.delete') && (
-            <Button
-              size="sm"
-              variant="outline-danger"
-              onClick={() => {
-                setDeleteRow(row);
-                setShowDelete(true);
-              }}
-            >
-              <LuTrash2 size={16} />
-            </Button>
+              <Button
+                size="sm"
+                variant="outline-danger"
+                onClick={() => {
+                  setDeleteRow(row);
+                  setShowDelete(true);
+                }}
+              >
+                <LuTrash2 size={16} />
+              </Button>
             )}
           </div>
         ),
@@ -122,7 +127,12 @@ const Department = () => {
   const confirmDelete = () => {
     if (!deleteRow) return;
 
-    dispatch(deleteDepartment(deleteRow.id));
+    dispatch(deleteDepartment(deleteRow.id))
+      .unwrap()
+      .then(() => {
+        dispatch(getDepartment()); // ✅ reload after delete
+      });
+
     setShowDelete(false);
     setDeleteRow(null);
   };
@@ -135,7 +145,7 @@ const Department = () => {
         {/* Header */}
         <div className="d-flex justify-content-between align-items-center border-bottom pb-2">
           <h5 className="mb-0 fw-normal fs-6">Department</h5>
-          {hasPermission('dapartment.create') && (
+          {hasPermission('department.create') && (
             <Button variant="primary" size="sm" onClick={handleAddNew}>
               <FiPlusCircle className="me-2" />
               Create New
@@ -162,6 +172,11 @@ const Department = () => {
           data={filteredData}
           pagination
           progressPending={loading}
+          progressComponent={
+            <div className="text-center py-5">
+              <Spinner animation="border" />
+            </div>
+          }
           highlightOnHover
           responsive
           persistTableHead
@@ -184,9 +199,17 @@ const Department = () => {
             };
 
             if (editRow) {
-              dispatch(updateDepartment({ ...payload, id: editRow.id }));
+              dispatch(updateDepartment({ ...payload, id: editRow.id }))
+                .unwrap()
+                .then(() => {
+                  dispatch(getDepartment()); // ✅ reload after update
+                });
             } else {
-              dispatch(storeDepartment(payload));
+              dispatch(storeDepartment(payload))
+                .unwrap()
+                .then(() => {
+                  dispatch(getDepartment()); // ✅ reload after create
+                });
             }
 
             actions.resetForm();

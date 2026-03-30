@@ -27,7 +27,7 @@ export const getAttendance = createAsyncThunk(
             const res = await api.post("/attendance");
             // console.log(res.data.data);
             successMessage("Attendance retrieved");
-            return res.data.data; 
+            return res.data; 
         } catch (error) {
             const errMsg = getErrorMessage(error);
             errorMessage(errMsg);
@@ -61,6 +61,7 @@ const attendanceSlice = createSlice({
         error: null,
         uploadResult: [],
         data: [],
+        summary: [],
     },
     reducers: {},
     extraReducers: (builder) => {
@@ -96,7 +97,8 @@ const attendanceSlice = createSlice({
             })
             .addCase(getAttendance.fulfilled, (state, action) => {
                 state.loading = false;
-                state.data = action.payload;
+                state.data = action.payload.data;
+                state.summary = action.payload.summary;
             })
             .addCase(getAttendance.rejected, (state, action) => {
                 state.loading = false;

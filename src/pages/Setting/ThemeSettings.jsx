@@ -9,9 +9,13 @@ const FILE_MEDIA_URL = import.meta.env.VITE_MEDIA_URL;
 
 const LOGO_FIELDS = [
   { name: "logo", label: "Brand Logo", apiKey: "logo", height: 70 },
-  { name: "logoWhite", label: "Logo (White)", apiKey: "logo_white", height: 70 },
-  { name: "icon", label: "Favicon / Icon", apiKey: "favicon", height: 48 },
+  { name: "icon", label: "Favicon / Icon", apiKey: "favicon", height: 70 },
 ];
+// const LOGO_FIELDS = [
+//   { name: "logo", label: "Brand Logo", apiKey: "logo", height: 70 },
+//   { name: "logoWhite", label: "Logo (White)", apiKey: "logo_white", height: 70 },
+//   { name: "icon", label: "Favicon / Icon", apiKey: "favicon", height: 48 },
+// ];
 
 const buildPreviews = (data) =>
   LOGO_FIELDS.reduce((acc, { name, apiKey }) => {

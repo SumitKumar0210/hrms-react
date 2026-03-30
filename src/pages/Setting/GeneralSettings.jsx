@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import {
@@ -8,60 +8,109 @@ import {
   Card,
   Form as BootstrapForm,
   Spinner,
+  Alert,
 } from "react-bootstrap";
 import { getSettingData, updateSetting } from "./slice/settingSlice";
 import { useDispatch, useSelector } from "react-redux";
-import { Copyright } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
 /* ================= VALIDATION ================= */
 const validationSchema = Yup.object({
-  companyName: Yup.string().required("Company Name is required"),
-  phone: Yup.string()
+  companyName: Yup.string()
+    .trim()
+    .required("Company Name is required"),
+  phone: Yup.string()                                   // FIX: was "contact", mismatched with initialValues key "phone"
     .required("Phone is required")
-    .matches(/^[0-9+\-\s()]+$/, "Invalid phone number format"),
-  email: Yup.string().email("Invalid email").required("Email is required"),
-  address: Yup.string().required("Address is required"),
-  city: Yup.string().required("City is required"),
-  state: Yup.string().required("State is required"),
-  country: Yup.string().required("Country is required"),
-  zip: Yup.string().required("ZIP Code is required"),
-  // about: Yup.string().required("About Us is required"),
-  // shortDescription: Yup.string().required("Short Description is required"),
-  // apiKey: Yup.string().required("Google Map API Key is required"),
-  // brandColor: Yup.string()
-  //   .matches(/^#[0-9A-Fa-f]{6}$/, "Invalid color format")
-  //   .required("Brand Color is required"),
+    .matches(/^[0-9+\-\s()]+$/, "Invalid phone number format")
+    .test("max-digits", "Phone number cannot exceed 10 digits", (value) => {
+      if (!value) return true;
+      return (value.replace(/\D/g, "").length <= 10);
+    }),
+  email: Yup.string()
+    .email("Invalid email address")
+    .required("Email is required"),
+  address: Yup.string()
+    .trim()
+    .required("Address is required"),
+  city: Yup.string()
+    .trim()
+    .required("City is required"),
+  state: Yup.string()
+    .trim()
+    .required("State is required"),
+  country: Yup.string()
+    .trim()
+    .required("Country is required"),
+  zip: Yup.string()
+    .trim()
+    .required("ZIP Code is required"),
+  about: Yup.string()
+    .trim()
+    .required("About Us is required"),
+  shortDescription: Yup.string()
+    .trim()
+    .required("Short Description is required"),
+  apiKey: Yup.string()
+    .trim(),
+    // .required("Google Map API Key is required"),
+  brandColor: Yup.string()
+    .matches(/^#[0-9A-Fa-f]{6}$/, "Invalid color format")
+    .required("Brand Color is required"),
+  powered_by: Yup.string().trim(),
+  copyright: Yup.string().trim(),
 });
 
 /* ================= REUSABLE FORM FIELD ================= */
-const FormField = ({ 
-  name, 
-  label, 
-  type = "text", 
-  placeholder, 
-  as, 
-  rows, 
-  touched, 
+const FormField = ({
+  name,
+  label,
+  type = "text",
+  placeholder,
+  as,
+  rows,
+  touched,
   errors,
-  list 
-}) => (
-  <BootstrapForm.Group className="mb-2">
-    <BootstrapForm.Label>{label}</BootstrapForm.Label>
-    <Field
-      name={name}
-      type={type}
-      placeholder={placeholder}
-      as={as || BootstrapForm.Control}
-      rows={rows}
-      list={list}
-      className={`${as === "textarea" ? "form-control" : ""} ${
-        touched[name] && errors[name] ? "is-invalid" : ""
-      }`.trim()}
-    />
-    <ErrorMessage name={name} component="div" className="text-danger error-message" />
-  </BootstrapForm.Group>
-);
+  list,
+}) => {
+  const isInvalid = !!(touched[name] && errors[name]);
+
+  return (
+    <BootstrapForm.Group className="mb-2">
+      <BootstrapForm.Label>{label}</BootstrapForm.Label>
+      <Field
+        name={name}
+        type={type}
+        placeholder={placeholder}
+        as={as || BootstrapForm.Control}
+        rows={rows}
+        list={list}
+        className={`${as === "textarea" ? "form-control" : ""} ${
+          isInvalid ? "is-invalid" : ""
+        }`.trim()}
+      />
+      <ErrorMessage
+        name={name}
+        component="div"
+        className="text-danger error-message"
+      />
+    </BootstrapForm.Group>
+  );
+};
+
+/* ================= FEEDBACK ALERT ================= */
+const FeedbackAlert = ({ feedback, onDismiss }) => {
+  if (!feedback) return null;
+  return (
+    <Alert
+      variant={feedback.type}
+      dismissible
+      onClose={onDismiss}
+      className="mb-3"
+    >
+      {feedback.message}
+    </Alert>
+  );
+};
 
 /* ================= COMPONENT ================= */
 const GeneralSettings = () => {
@@ -69,16 +118,26 @@ const GeneralSettings = () => {
   const { data, loading, error } = useSelector((state) => state.setting);
   const { refreshAppDetails, hasPermission } = useAuth();
 
+  // FIX: replaced undefined setSuccessMessage with proper state
+  const [feedback, setFeedback] = useState(null);
+
   /* ================= FETCH ================= */
   useEffect(() => {
     dispatch(getSettingData());
   }, [dispatch]);
 
+  // Auto-dismiss feedback after 4 seconds
+  useEffect(() => {
+    if (!feedback) return;
+    const timer = setTimeout(() => setFeedback(null), 4000);
+    return () => clearTimeout(timer);
+  }, [feedback]);
+
   /* ================= INITIAL VALUES (DYNAMIC) ================= */
   const initialValues = useMemo(
     () => ({
       companyName: data?.application_name || "",
-      phone: data?.contact || "",
+      phone: data?.contact || "",               // key is "phone" — validation schema now matches
       email: data?.email || "",
       address: data?.address || "",
       city: data?.city || "",
@@ -97,16 +156,23 @@ const GeneralSettings = () => {
 
   /* ================= SUBMIT HANDLER ================= */
   const handleSubmit = (values, { setSubmitting }) => {
+    setFeedback(null);
     dispatch(updateSetting(values))
       .unwrap()
       .then(() => {
-        // Optional: Show success message
-         refreshAppDetails();
-        setSuccessMessage("Settings updated successfully!");
+        refreshAppDetails();
+        setFeedback({
+          type: "success",
+          message: "Settings updated successfully!",
+        });
       })
       .catch((err) => {
-        // Optional: Show error message
         console.error("Failed to update settings:", err);
+        setFeedback({
+          type: "danger",
+          message:
+            err?.message || "Failed to update settings. Please try again.",
+        });
       })
       .finally(() => {
         setSubmitting(false);
@@ -138,6 +204,8 @@ const GeneralSettings = () => {
 
   return (
     <Card.Body>
+      <FeedbackAlert feedback={feedback} onDismiss={() => setFeedback(null)} />
+
       <Formik
         initialValues={initialValues}
         validationSchema={validationSchema}
@@ -153,26 +221,46 @@ const GeneralSettings = () => {
                   <Col xl={12}>
                     <FormField
                       name="companyName"
-                      label="Company Name"
+                      label={<>Company Name <span className="text-danger">*</span></>}
                       placeholder="Enter Company Name"
                       touched={touched}
                       errors={errors}
                     />
                   </Col>
                   <Col xl={12}>
-                    <FormField
-                      name="phone"
-                      label="Company Phone Number"
-                      placeholder="Enter Company Phone Number"
-                      touched={touched}
-                      errors={errors}
-                    />
+                    <BootstrapForm.Group className="mb-2">
+                      <BootstrapForm.Label>Company Phone Number <span className="text-danger">*</span></BootstrapForm.Label>
+                      <Field name="phone">
+                        {({ field, form }) => (
+                          <BootstrapForm.Control
+                            {...field}
+                            type="tel"
+                            placeholder="Enter Company Phone Number"
+                            isInvalid={!!(form.touched.phone && form.errors.phone)}
+                            onChange={(e) => {
+                              const raw = e.target.value;
+                              const digits = raw.replace(/\D/g, "");
+                              // Block any input that would exceed 10 digits
+                              if (digits.length <= 10) {
+                                form.setFieldValue("phone", raw);
+                              }
+                            }}
+                          />
+                        )}
+                      </Field>
+                      <ErrorMessage
+                        name="phone"
+                        component="div"
+                        className="text-danger error-message"
+                      />
+                    </BootstrapForm.Group>
                   </Col>
                   <Col xl={12}>
                     <FormField
                       name="email"
                       type="email"
-                      label="Company Email"
+                      label={<> Company Details <span className="text-danger">*</span></>}
+                      // label="Company Email"
                       placeholder="Enter Company Email"
                       touched={touched}
                       errors={errors}
@@ -181,7 +269,8 @@ const GeneralSettings = () => {
                   <Col xl={12}>
                     <FormField
                       name="address"
-                      label="Company Address"
+                      label={<> Company Address <span className="text-danger">*</span></>}
+                      // label="Company Address"
                       placeholder="Enter Company Address"
                       touched={touched}
                       errors={errors}
@@ -190,7 +279,8 @@ const GeneralSettings = () => {
                   <Col xl={6}>
                     <FormField
                       name="city"
-                      label="Company City"
+                      label={<>Company City <span className="text-danger">*</span></>}
+                      // label="Company City"
                       placeholder="Enter Company City"
                       touched={touched}
                       errors={errors}
@@ -199,7 +289,8 @@ const GeneralSettings = () => {
                   <Col xl={6}>
                     <FormField
                       name="state"
-                      label="State / Province"
+                      label={<>State / Province <span className="text-danger">*</span></>}
+                      // label="State / Province"
                       placeholder="Enter State / Province"
                       touched={touched}
                       errors={errors}
@@ -208,7 +299,8 @@ const GeneralSettings = () => {
                   <Col xl={6}>
                     <FormField
                       name="country"
-                      label="Country"
+                      label={<> Country <span className="text-danger">*</span></>}
+                      // label="Country"
                       placeholder="Enter Country"
                       touched={touched}
                       errors={errors}
@@ -217,7 +309,8 @@ const GeneralSettings = () => {
                   <Col xl={6}>
                     <FormField
                       name="zip"
-                      label="PIN / ZIP Code"
+                      label={<>PIN / ZIP Code <span className="text-danger">*</span></>}
+                      // label="PIN / ZIP Code"
                       placeholder="Enter ZIP Code"
                       touched={touched}
                       errors={errors}
@@ -230,17 +323,18 @@ const GeneralSettings = () => {
               <Col xl={6}>
                 <FormField
                   name="about"
-                  label="Company About Us"
+                  label={<>Company About Us <span className="text-danger">*</span></>}
+                  // label="Company About Us"
                   as="textarea"
                   rows={5}
                   placeholder="Write about your company"
                   touched={touched}
                   errors={errors}
                 />
-
                 <FormField
                   name="shortDescription"
-                  label="Company Short Description"
+                  label={<> Company Short Description <span className="text-danger">*</span></>}
+                  // label="Company Short Description"
                   as="textarea"
                   rows={4}
                   placeholder="Enter a short description"
@@ -251,6 +345,7 @@ const GeneralSettings = () => {
                   <Col xl={6}>
                     <FormField
                       name="powered_by"
+                      // label={<> Powered By <span className="text-danger">*</span></>}
                       label="Powered By"
                       placeholder="Enter Powered By"
                       touched={touched}
@@ -260,6 +355,7 @@ const GeneralSettings = () => {
                   <Col xl={6}>
                     <FormField
                       name="copyright"
+                      // label={<>Copyright <span className="text-danger">*</span></>}
                       label="Copyright"
                       placeholder="Enter Copyright"
                       touched={touched}
@@ -267,66 +363,43 @@ const GeneralSettings = () => {
                     />
                   </Col>
                 </Row>
-
                 <FormField
                   name="apiKey"
+                  // label={<> Google Map API Key <span className="text-danger">*</span></>}
                   label="Google Map API Key"
                   placeholder="Enter Google Map API Key"
                   touched={touched}
                   errors={errors}
                 />
-
-                {/* <BootstrapForm.Group className="mb-2">
-                  <BootstrapForm.Label>Brand Color</BootstrapForm.Label>
-                  <Field
-                    name="brandColor"
-                    type="color"
-                    as={BootstrapForm.Control}
-                    list="colors"
-                    className="w-100"
-                  />
-                  <datalist id="colors">
-                    <option value="#27a348" />
-                    <option value="#791116" />
-                    <option value="#30a32e" />
-                    <option value="#308b8d" />
-                  </datalist>
-                  <ErrorMessage 
-                    name="brandColor" 
-                    component="div" 
-                    className="text-danger error-message" 
-                  />
-                </BootstrapForm.Group> */}
               </Col>
 
               {/* SUBMIT BUTTON */}
               <Col xl={12}>
                 <div className="text-end mt-1">
-                  { hasPermission('setting.update') && (
+                  {hasPermission("setting.update") && (
                     <Button
-                    type="submit"
-                    variant="primary"
-                    className="fw-normal btn-sm py-2 px-3"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Spinner
-                          as="span"
-                          animation="border"
-                          size="sm"
-                          role="status"
-                          aria-hidden="true"
-                          className="me-2"
-                        />
-                        Updating...
-                      </>
-                    ) : (
-                      "Update Details"
-                    )}
-                  </Button>
+                      type="submit"
+                      variant="primary"
+                      className="fw-normal btn-sm py-2 px-3"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Spinner
+                            as="span"
+                            animation="border"
+                            size="sm"
+                            role="status"
+                            aria-hidden="true"
+                            className="me-2"
+                          />
+                          Updating...
+                        </>
+                      ) : (
+                        "Update Details"
+                      )}
+                    </Button>
                   )}
-                  
                 </div>
               </Col>
             </Row>

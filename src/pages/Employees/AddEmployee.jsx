@@ -299,7 +299,7 @@ const AddEmployee = () => {
                                         ].map((f) => (
                                             <Col md={3} className="mb-3" key={f.name}>
                                                 <Form.Group>
-                                                    <Form.Label>{f.label}</Form.Label>
+                                                    <Form.Label>{f.label} <span className="text-danger">*</span></Form.Label>
                                                     <Form.Control
                                                         type={f.type || "text"}
                                                         name={f.name}
@@ -325,7 +325,7 @@ const AddEmployee = () => {
                                     <Row className="px-2">
                                         <Col md={6} className="mb-3">
                                             <Form.Group>
-                                                <Form.Label>Address</Form.Label>
+                                                <Form.Label>Address <span className="text-danger">*</span></Form.Label>
                                                 <Form.Control
                                                     name="address"
                                                     value={values.address}
@@ -340,7 +340,7 @@ const AddEmployee = () => {
                                         </Col>
                                         <Col md={3} className="mb-3">
                                             <Form.Group>
-                                                <Form.Label>City</Form.Label>
+                                                <Form.Label>City <span className="text-danger">*</span></Form.Label>
                                                 <Form.Control
                                                     name="city"
                                                     value={values.city}
@@ -355,7 +355,7 @@ const AddEmployee = () => {
                                         </Col>
                                         <Col md={3} className="mb-3">
                                             <Form.Group>
-                                                <Form.Label>State</Form.Label>
+                                                <Form.Label>State <span className="text-danger">*</span></Form.Label>
                                                 <Form.Control
                                                     name="state"
                                                     value={values.state}
@@ -373,7 +373,7 @@ const AddEmployee = () => {
                                     <Row className="px-2">
                                         <Col md={3} className="mb-3">
                                             <Form.Group>
-                                                <Form.Label>PIN Code</Form.Label>
+                                                <Form.Label>PIN Code <span className="text-danger">*</span></Form.Label>
                                                 <Form.Control
                                                     name="pinCode"
                                                     value={values.pinCode}
@@ -388,7 +388,7 @@ const AddEmployee = () => {
                                         </Col>
                                         <Col md={3} className="mb-3">
                                             <Form.Group>
-                                                <Form.Label>Blood Group</Form.Label>
+                                                <Form.Label>Blood Group <span className="text-danger">*</span></Form.Label>
                                                 <Form.Select
                                                     name="bloodGroup"
                                                     value={values.bloodGroup}
@@ -407,7 +407,7 @@ const AddEmployee = () => {
                                         </Col>
                                         <Col md={3} className="mb-3">
                                             <Form.Group>
-                                                <Form.Label>Aadhaar Number</Form.Label>
+                                                <Form.Label>Aadhaar Number <span className="text-danger">*</span></Form.Label>
                                                 <Form.Control
                                                     name="aadharNo"
                                                     value={values.aadharNo}
@@ -422,7 +422,7 @@ const AddEmployee = () => {
                                         </Col>
                                         <Col md={3} className="mb-3">
                                             <Form.Group>
-                                                <Form.Label>Source</Form.Label>
+                                                <Form.Label>Source <span className="text-danger">*</span></Form.Label>
                                                 <Form.Select
                                                     name="source"
                                                     value={values.source}
@@ -448,7 +448,7 @@ const AddEmployee = () => {
                                     <Row className="px-2">
                                         <Col md={3} className="mb-3">
                                             <Form.Group>
-                                                <Form.Label>Job Role</Form.Label>
+                                                <Form.Label>Job Role <span className="text-danger">*</span></Form.Label>
                                                 <Form.Select
                                                     name="jobRole"
                                                     value={values.jobRole}
@@ -469,7 +469,7 @@ const AddEmployee = () => {
                                         </Col>
                                         <Col md={3} className="mb-3">
                                             <Form.Group>
-                                                <Form.Label>Department</Form.Label>
+                                                <Form.Label>Department <span className="text-danger">*</span></Form.Label>
                                                 <Form.Select
                                                     name="department"
                                                     value={values.department}
@@ -490,7 +490,7 @@ const AddEmployee = () => {
                                         </Col>
                                         <Col md={3} className="mb-3">
                                             <Form.Group>
-                                                <Form.Label>Shift Type</Form.Label>
+                                                <Form.Label>Shift Type <span className="text-danger">*</span></Form.Label>
                                                 <Form.Select
                                                     name="shiftType"
                                                     value={values.shiftType}
@@ -521,7 +521,7 @@ const AddEmployee = () => {
                                             <>
                                                 <Col md={3} className="mb-3">
                                                     <Form.Group>
-                                                        <Form.Label>Check-in Timing</Form.Label>
+                                                        <Form.Label>Check-in Timing <span className="text-danger">*</span></Form.Label>
                                                         <Form.Control
                                                             type="time"
                                                             name="shiftCheckInTiming"
@@ -536,7 +536,7 @@ const AddEmployee = () => {
                                                 </Col>
                                                 <Col md={3} className="mb-3">
                                                     <Form.Group>
-                                                        <Form.Label>Check-out Timing</Form.Label>
+                                                        <Form.Label>Check-out Timing <span className="text-danger">*</span></Form.Label>
                                                         <Form.Control
                                                             type="time"
                                                             name="shiftCheckOutTiming"
@@ -571,7 +571,7 @@ const AddEmployee = () => {
                                                 <div className={`rounded p-3 border ${values[doc.name] ? "border-success" : ""}`}>
                                                     <div className="d-flex justify-content-between align-items-center">
                                                         <div>
-                                                            <div className="fw-semibold">{doc.label}</div>
+                                                            <div className="fw-semibold">{doc.label} <span className="text-danger">*</span></div>
                                                             <small className="text-muted">{doc.desc}</small>
                                                         </div>
                                                         <div className="d-flex align-items-center gap-2 flex-wrap">

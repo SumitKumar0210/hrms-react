@@ -54,13 +54,13 @@ const filterSchema = Yup.object({
 
 
 
-const stats = [
-  { title: "Total Employees", value: 150, color: "primary", bg: "rgba(13,110,253,.08)" },
-  { title: "On Time", value: 120, color: "success", bg: "rgba(25,135,84,.08)" },
-  { title: "Late", value: 30, color: "warning", bg: "rgba(255,193,7,.08)" },
-  { title: "Absent Today", value: 30, color: "danger", bg: "rgba(220,53,69,.08)" },
-  { title: "Total Hours", value: 30, color: "info", bg: "rgba(103,58,183,.08)" },
-];
+// const stats = [
+//   { title: "Total Employees", value: summary.total_employees ?? 0, color: "primary", bg: "rgba(13,110,253,.08)" },
+//   { title: "On Time", value: summary.on_time ?? 0, color: "success", bg: "rgba(25,135,84,.08)" },
+//   // { title: "Late", value: 30, color: "warning", bg: "rgba(255,193,7,.08)" },
+//   { title: "Absent Today", value: summary.absent ?? 0, color: "danger", bg: "rgba(220,53,69,.08)" },
+//   { title: "Total Hours", value: summary.total_hours ?? 0, color: "info", bg: "rgba(103,58,183,.08)" },
+// ];
 
 /* ================= COMPONENT ================= */
 
@@ -71,6 +71,7 @@ const Attendance = () => {
 
   const {
     data: attendanceData = [],
+    summary,
     error,
     loading = false,
   } = useSelector((state) => state.attendance);
@@ -95,6 +96,13 @@ const Attendance = () => {
 
     return `${day}-${month}-${year}`;
   };
+
+  const stats = [
+    { title: "Total Employees", value: summary.total_employees ?? 0, color: "primary", bg: "rgba(13,110,253,.08)" },
+    { title: "On Time", value: summary.on_time ?? 0, color: "success", bg: "rgba(25,135,84,.08)" },
+    { title: "Absent Today", value: summary.absent ?? 0, color: "danger", bg: "rgba(220,53,69,.08)" },
+    { title: "Total Hours", value: summary.total_hours ?? 0, color: "info", bg: "rgba(103,58,183,.08)" },
+  ];
 
   const data = useMemo(() => {
     return attendanceData.map((item) => ({
@@ -123,37 +131,64 @@ const Attendance = () => {
     status: "",
   });
 
+  // useEffect(() => {
+  //   let result = [...data];
+
+  //   if (filters.department) {
+  //     result = result.filter((r) => r.role === filters.department);
+  //   }
+
+  //   if (filters.status) {
+  //     result = result.filter((r) => r.status === filters.status);
+  //   }
+
+  //   if (filters.startDate && filters.endDate) {
+  //     result = result.filter((r) => {
+  //       const rowDate = new Date(r.rawDate);
+  //       return (
+  //         rowDate >= filters.startDate &&
+  //         rowDate <= filters.endDate
+  //       );
+  //     });
+  //   }
+
+  //   if (search) {
+  //     result = result.filter(
+  //       (r) =>
+  //         r.name.toLowerCase().includes(search.toLowerCase()) ||
+  //         r.employeeId.toLowerCase().includes(search.toLowerCase())
+  //     );
+  //   }
+
+  //   setFilteredData(result);
+  // }, [filters, search, data]);
+
+
   useEffect(() => {
-    let result = [...data];
+  let result = [...data]; // ✅ this already runs when data loads, no change needed
 
-    if (filters.department) {
-      result = result.filter((r) => r.role === filters.department);
-    }
+  if (filters.department) {
+    result = result.filter((r) => r.role === filters.department);
+  }
+  if (filters.status) {
+    result = result.filter((r) => r.status === filters.status);
+  }
+  if (filters.startDate && filters.endDate) {
+    result = result.filter((r) => {
+      const rowDate = new Date(r.rawDate);
+      return rowDate >= filters.startDate && rowDate <= filters.endDate;
+    });
+  }
+  if (search) {
+    result = result.filter(
+      (r) =>
+        r.name.toLowerCase().includes(search.toLowerCase()) ||
+        r.employeeId.toLowerCase().includes(search.toLowerCase())
+    );
+  }
 
-    if (filters.status) {
-      result = result.filter((r) => r.status === filters.status);
-    }
-
-    if (filters.startDate && filters.endDate) {
-      result = result.filter((r) => {
-        const rowDate = new Date(r.rawDate);
-        return (
-          rowDate >= filters.startDate &&
-          rowDate <= filters.endDate
-        );
-      });
-    }
-
-    if (search) {
-      result = result.filter(
-        (r) =>
-          r.name.toLowerCase().includes(search.toLowerCase()) ||
-          r.employeeId.toLowerCase().includes(search.toLowerCase())
-      );
-    }
-
-    setFilteredData(result);
-  }, [filters, search, data]);
+  setFilteredData(result); // ✅ runs on every data/search/filter change
+}, [filters, search, data]); // ✅ `data` in deps ensures table populates on load
 
   /* ================= TABLE COLUMNS ================= */
 

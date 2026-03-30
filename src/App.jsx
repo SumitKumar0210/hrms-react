@@ -77,7 +77,12 @@ const LoginRoute = () => {
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+    var path = "/dashboard";
+    if(localStorage.getItem("redirectAfterLogin")) {
+      path = localStorage.getItem("redirectAfterLogin");
+      localStorage.removeItem("redirectAfterLogin");
+    }
+    return <Navigate to={path} replace />;
   }
 
   return <Login />;

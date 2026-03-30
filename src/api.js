@@ -45,6 +45,11 @@ api.interceptors.response.use(
     // Handle 401 errors
     if (error?.response?.status === 401) {
       const message = error.response.data?.error || "Unauthorized";
+      // localStorage.setItem("redirectAfterLogin", window.location.pathname);
+      // console.log(window.location.href);
+      localStorage.removeItem("token");
+
+      window.dispatchEvent(new Event("auth-logout"));
 
       if (message.includes("Token expired")) {
         // Dispatch custom event for centralized handling
