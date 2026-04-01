@@ -27,17 +27,6 @@ import { useAuth } from "../../context/AuthContext";
 /* ================= VALIDATION ================= */
 const validationSchema = Yup.object({
   name: Yup.string().required("Shift name is required"),
-  check_in_timing: Yup.string().required("Check-in time is required"),
-  check_out_timing: Yup.string()
-    .required("Check-out time is required")
-    .test(
-      "is-after",
-      "Check-out time must be after check-in time",
-      function (value) {
-        const { check_in_timing } = this.parent;
-        return !check_in_timing || value > check_in_timing;
-      }
-    ),
 });
 
 /* ================= COMPONENT ================= */
@@ -48,7 +37,6 @@ const Shift = () => {
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editRow, setEditRow] = useState(null);
-
   const [showDelete, setShowDelete] = useState(false);
   const [deleteRow, setDeleteRow] = useState(null);
 
@@ -89,26 +77,24 @@ const Shift = () => {
         cell: (row) => (
           <Badge
             bg="transparent"
-            className={`rounded-4 px-3 border ${row.status === "active"
+            className={`rounded-4 px-3 border ${
+              row.status === "active"
                 ? "bg-success-subtle text-success border-success"
                 : "bg-secondary-subtle text-secondary border-secondary"
-              }`}
+            }`}
           >
-            {row.status}
+            {row.status?.charAt(0).toUpperCase() + row.status?.slice(1)}
           </Badge>
         ),
       },
     ];
 
-    // ✅ Permission check
-    if (hasAnyPermission(['shift.update', 'shift.delete'])) {
+    if (hasAnyPermission(["shift.update", "shift.delete"])) {
       baseColumn.push({
         name: "Actions",
         cell: (row) => (
           <div className="d-flex gap-2">
-
-            {/* EDIT */}
-            {hasPermission('shift.update') && (
+            {hasPermission("shift.update") && (
               <Button
                 size="sm"
                 variant="outline-primary"
@@ -120,9 +106,7 @@ const Shift = () => {
                 <FiEdit size={16} />
               </Button>
             )}
-
-            {/* DELETE */}
-            {hasPermission('shift.delete') && (
+            {hasPermission("shift.delete") && (
               <Button
                 size="sm"
                 variant="outline-danger"
@@ -134,7 +118,6 @@ const Shift = () => {
                 <LuTrash2 size={16} />
               </Button>
             )}
-
           </div>
         ),
         ignoreRowClick: true,
@@ -143,7 +126,6 @@ const Shift = () => {
     }
 
     return baseColumn;
-
   }, [hasAnyPermission, hasPermission]);
 
   /* ================= DELETE CONFIRM ================= */
@@ -160,7 +142,7 @@ const Shift = () => {
         {/* Header */}
         <div className="d-flex justify-content-between align-items-center border-bottom pb-2">
           <h5 className="mb-0 fw-normal fs-6">Shift</h5>
-          {hasPermission('shift.create') && (
+          {hasPermission("shift.create") && (
             <Button
               variant="primary"
               size="sm"
@@ -173,7 +155,6 @@ const Shift = () => {
               Create New
             </Button>
           )}
-
         </div>
 
         {/* Search */}
@@ -254,6 +235,7 @@ const Shift = () => {
               </Modal.Header>
 
               <Modal.Body>
+                {/* Shift Name */}
                 <Form.Group className="mb-3">
                   <Form.Label>Shift Name</Form.Label>
                   <Form.Control
@@ -262,8 +244,12 @@ const Shift = () => {
                     onChange={handleChange}
                     isInvalid={touched.name && !!errors.name}
                   />
+                  <Form.Control.Feedback type="invalid">
+                    {errors.name}
+                  </Form.Control.Feedback>
                 </Form.Group>
 
+                {/* Check In / Check Out */}
                 <Row className="mb-3">
                   <Col>
                     <Form.Label>Check In</Form.Label>
@@ -281,17 +267,11 @@ const Shift = () => {
                       name="check_out_timing"
                       value={values.check_out_timing}
                       onChange={handleChange}
-                      isInvalid={
-                        touched.check_out_timing &&
-                        !!errors.check_out_timing
-                      }
                     />
-                    <Form.Control.Feedback type="invalid">
-                      {errors.check_out_timing}
-                    </Form.Control.Feedback>
                   </Col>
                 </Row>
 
+                {/* Rotational */}
                 <Form.Check
                   type="checkbox"
                   id="rotationalShift"
@@ -302,14 +282,13 @@ const Shift = () => {
                   }
                 />
 
+                {/* Status */}
                 <Form.Check
                   type="switch"
                   id="status"
                   label="Status (Active / Inactive)"
                   checked={values.status}
-                  onChange={() =>
-                    setFieldValue("status", !values.status)
-                  }
+                  onChange={() => setFieldValue("status", !values.status)}
                 />
               </Modal.Body>
 
@@ -338,7 +317,7 @@ const Shift = () => {
         <Modal.Header closeButton>
           <Modal.Title className="h6 fw-bold text-dark">
             Confirm Delete
-          </Modal.Title>
+          </Modal.Title>  
         </Modal.Header>
 
         <Modal.Body>
@@ -346,9 +325,7 @@ const Shift = () => {
             Are you sure you want to delete the shift{" "}
             <strong>{deleteRow?.name}</strong>?
             <br />
-            <small className="text-muted">
-              This action cannot be undone.
-            </small>
+            <small className="text-muted">This action cannot be undone.</small>
           </p>
         </Modal.Body>
 
@@ -360,7 +337,6 @@ const Shift = () => {
           >
             Cancel
           </Button>
-
           <Button
             variant=""
             onClick={confirmDelete}

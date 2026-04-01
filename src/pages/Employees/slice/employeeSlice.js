@@ -61,18 +61,47 @@ export const fetchEmployeeById = createAsyncThunk(
 );
 
 // Create new employee
+// export const createEmployee = createAsyncThunk(
+//     "employee/createEmployee",
+//     async (employeeData, { rejectWithValue }) => {
+//         try {
+//             const res = await api.post("/employees/onboarding", employeeData, {
+//                 headers: {
+//                     "Content-Type": "multipart/form-data",
+//                 }
+//             });
+//             successMessage(res.data.message || "Employee created successfully");
+//             return res.data;
+//         } catch (error) {
+//             const errMsg = getErrorMessage(error);
+//             errorMessage(errMsg);
+//             return rejectWithValue(errMsg);
+//         }
+//     }
+// );
+
+// In your getErrorMessage utility (or in the thunk itself)
 export const createEmployee = createAsyncThunk(
     "employee/createEmployee",
     async (employeeData, { rejectWithValue }) => {
         try {
             const res = await api.post("/employees/onboarding", employeeData, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                }
+                headers: { "Content-Type": "multipart/form-data" }
             });
             successMessage(res.data.message || "Employee created successfully");
             return res.data;
         } catch (error) {
+            // ✅ Handle Laravel 422 validation errors specifically
+            if (error.response?.status === 422) {
+                const laravelErrors = error.response.data?.errors;
+                const firstError = laravelErrors
+                    ? Object.values(laravelErrors)[0]?.[0]
+                    : error.response.data?.message;
+                const errMsg = firstError || "Validation failed";
+                errorMessage(errMsg);
+                return rejectWithValue(errMsg);
+            }
+
             const errMsg = getErrorMessage(error);
             errorMessage(errMsg);
             return rejectWithValue(errMsg);

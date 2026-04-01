@@ -21,7 +21,6 @@ import {
 import CustomStatusSwitch from "../../components/CustomSwitch/CustomStatusSwitch.";
 import CustomSwitch from "../../components/Customswitch/Customswitch";
 import { LuDollarSign, LuPhone, LuEye, LuEyeOff } from "react-icons/lu";
-import { FaRupeeSign } from "react-icons/fa";
 import { MdAlternateEmail } from "react-icons/md";
 import Select from "react-select";
 import { SlGrid } from "react-icons/sl";
@@ -36,30 +35,6 @@ import {
 } from "../Employees/slice/employeeSlice";
 import { getactiveRoles } from "../Setting/slice/roleSlice";
 
-// ─── Reusable Avatar Component ────────────────────────────────────────────────
-const Avatar = ({ name, src, size = 48, darkBg = false, className = "", style = {} }) => {
-  const bg    = darkBg ? "1e3a5f" : "f3f2ff";
-  const color = darkBg ? "ffffff" : "5174f3";
-  const safeName = encodeURIComponent(name ?? "?");
-  const fallback = `https://ui-avatars.com/api/?name=${safeName}&size=${size}&background=${bg}&color=${color}`;
-
-  return (
-    <Image
-      src={src || fallback}
-      roundedCircle
-      alt={name ?? "avatar"}
-      width={size}
-      height={size}
-      className={className}
-      style={{ objectFit: "cover", flexShrink: 0, ...style }}
-      onError={(e) => {
-        e.target.onerror = null;
-        e.target.src = fallback;
-      }}
-    />
-  );
-};
-
 /* ─── Edit User Modal ──────────────────────────────────────────────────── */
 const EditUserModal = ({
   user,
@@ -73,17 +48,17 @@ const EditUserModal = ({
   const [activeTab, setActiveTab] = useState("password");
 
   // Password tab state
-  const [newPassword, setNewPassword]       = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [showNew, setShowNew]               = useState(false);
-  const [showConfirm, setShowConfirm]       = useState(false);
-  const [pwError, setPwError]               = useState("");
-  const [pwSuccess, setPwSuccess]           = useState("");
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [pwError, setPwError] = useState("");
+  const [pwSuccess, setPwSuccess] = useState("");
 
-  // Role tab state
+  // Role tab state — single selected role ID
   const [selectedRoleId, setSelectedRoleId] = useState(null);
-  const [roleSuccess, setRoleSuccess]       = useState("");
-  const [roleError, setRoleError]           = useState("");
+  const [roleSuccess, setRoleSuccess] = useState("");
+  const [roleError, setRoleError] = useState("");
 
   // Reset state when user changes
   useEffect(() => {
@@ -148,10 +123,10 @@ const EditUserModal = ({
 
   const passwordStrength = (pw) => {
     if (!pw) return null;
-    if (pw.length < 6) return { label: "Weak",   color: "#ef4444", width: "25%"  };
+    if (pw.length < 6) return { label: "Weak", color: "#ef4444", width: "25%" };
     if (pw.length < 10 || !/[A-Z]/.test(pw) || !/\d/.test(pw))
-                          return { label: "Fair",   color: "#f59e0b", width: "55%"  };
-    return                       { label: "Strong", color: "#10b981", width: "100%" };
+      return { label: "Fair", color: "#f59e0b", width: "55%" };
+    return { label: "Strong", color: "#10b981", width: "100%" };
   };
   const strength = passwordStrength(newPassword);
 
@@ -166,13 +141,15 @@ const EditUserModal = ({
         }}
       >
         <div className="d-flex align-items-center gap-3">
-          {/* ✅ Fix 1: Avatar replaces bare <Image> in modal header */}
-          <Avatar
-            name={user.name}
+          <Image
             src={user.profile}
-            size={42}
-            darkBg
-            style={{ border: "2px solid rgba(255,255,255,0.4)" }}
+            roundedCircle
+            width={42}
+            height={42}
+            style={{
+              border: "2px solid rgba(255,255,255,0.4)",
+              objectFit: "cover",
+            }}
           />
           <div>
             <Modal.Title
@@ -197,7 +174,7 @@ const EditUserModal = ({
         <Nav variant="tabs" style={{ border: "none", padding: "0 1.5rem" }}>
           {[
             { key: "password", label: "Password" },
-            { key: "roles",    label: "Roles"    },
+            { key: "roles", label: "Roles" },
           ].map((tab) => (
             <Nav.Item key={tab.key}>
               <Nav.Link
@@ -209,7 +186,7 @@ const EditUserModal = ({
                     activeTab === tab.key
                       ? "2px solid #2d5fa6"
                       : "2px solid transparent",
-                  color:      activeTab === tab.key ? "#2d5fa6" : "#64748b",
+                  color: activeTab === tab.key ? "#2d5fa6" : "#64748b",
                   fontWeight: activeTab === tab.key ? 600 : 400,
                   fontSize: "0.875rem",
                   padding: "0.75rem 1rem",
@@ -276,7 +253,14 @@ const EditUserModal = ({
               {/* Strength bar */}
               {strength && (
                 <div className="mt-2">
-                  <div style={{ height: 4, borderRadius: 4, background: "#e2e8f0", overflow: "hidden" }}>
+                  <div
+                    style={{
+                      height: 4,
+                      borderRadius: 4,
+                      background: "#e2e8f0",
+                      overflow: "hidden",
+                    }}
+                  >
                     <div
                       style={{
                         height: "100%",
@@ -390,7 +374,14 @@ const EditUserModal = ({
               Select a role to assign to this user.
             </p>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginBottom: "1.5rem" }}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.5rem",
+                marginBottom: "1.5rem",
+              }}
+            >
               {(allRoles ?? []).length === 0 && (
                 <p className="text-muted text-center py-3" style={{ fontSize: "0.825rem" }}>
                   No roles available.
@@ -451,7 +442,14 @@ const EditUserModal = ({
                       }}
                     >
                       {isSelected && (
-                        <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#fff" }} />
+                        <div
+                          style={{
+                            width: 7,
+                            height: 7,
+                            borderRadius: "50%",
+                            background: "#fff",
+                          }}
+                        />
                       )}
                     </div>
                   </div>
@@ -494,22 +492,24 @@ const User = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const [layout, setLayout]                     = useState("card");
-  const [show, setShow]                         = useState(false);
-  const [selectedStatus, setSelectedStatus]     = useState(null);
-  const [selectedType, setSelectedType]         = useState("");
+  const [layout, setLayout] = useState("card");
+  const [show, setShow] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState(null);
+  const [selectedType, setSelectedType] = useState("");
   const [selectedDesignation, setSelectedDesignation] = useState({
     value: "all",
     label: "All",
   });
 
   // Modal state
-  const [editUser, setEditUser]       = useState(null);
+  const [editUser, setEditUser] = useState(null);
   const [modalSaving, setModalSaving] = useState(false);
 
   const { data: usersData, loading: usersLoading } = useSelector(
     (state) => state.user,
   );
+  // Use searchLoading (set by fetchAllEmployees) NOT loading (set by toggleEmployeeStatus/updateEmployee)
+  // This prevents status toggles from triggering a full list re-render
   const {
     employees: employeesData,
     loading: empLoading,
@@ -518,8 +518,6 @@ const User = () => {
   const { data: rolesData = [], loading: rolesLoading } = useSelector(
     (state) => state.role,
   );
-
-  const MediaUrl = import.meta.env.VITE_MEDIA_URL;
 
   useEffect(() => {
     dispatch(getUsers());
@@ -545,36 +543,31 @@ const User = () => {
   }));
 
   // ─── Normalize Employees ───────────────────────────────────────────────────
-  const normalizedEmployees = (employeesData || []).map((e) => {
-    const profileDoc = (e.documents ?? []).find(
-      (doc) => doc.document_type === "profile_image"
-    );
-    const profileUrl = profileDoc
-      ? `${MediaUrl}/${profileDoc.file_path}`
-      : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-          (e.first_name ?? "") + "+" + (e.last_name ?? "")
-        )}&size=48&background=f3f2ff&color=5174f3`;
+  const normalizedEmployees = (employeesData || []).map((e) => ({
+    id: e.id,
+    name: `${e.first_name ?? ""} ${e.last_name ?? ""}`.trim() || "—",
+    phone: e.mobile ?? "—",
+    email: e.email ?? "—",
+    designation: e.designation?.name ?? "—",
+    department: e.department?.name ?? "—",
+    payoutRate: e.salaries?.[0]?.basic_salary ?? "—",
+    profile:
+      e.profile_photo_url ||
+      `https://ui-avatars.com/api/?name=${encodeURIComponent((e.first_name ?? "") + "+" + (e.last_name ?? ""))}&size=48&background=f3f2ff&color=5174f3`,
+    userType: "employee",
+    status: e.status === "active" ? "active" : "inactive",
+    roles: [],
+  }));
 
-    return {
-      id: e.id,
-      name: `${e.first_name ?? ""} ${e.last_name ?? ""}`.trim() || "—",
-      phone: e.mobile ?? "—",
-      email: e.email ?? "—",
-      designation: e.designation?.name ?? "—",
-      department: e.department?.name ?? "—",
-      payoutRate: e.salaries?.[0]?.basic_salary ?? "—",
-      profile: profileUrl,
-      userType: "employee",
-      status: e.status === "active" ? "active" : "inactive",
-      roles: [],
-    };
-  });
-
-  // ─── Local status map ─────────────────────────────────────────────────────
+  // ─── Local status map — keyed by "userType-id" ────────────────────────────
+  // ONLY source of truth for toggle display. Seeded ONCE from Redux on first
+  // successful load, then updated purely locally. Redux state changes after
+  // that point (from toggles, loading flags etc.) never touch this map.
   const [localStatusMap, setLocalStatusMap] = useState({});
-  const seededRef = useRef(false);
+  const seededRef = useRef(false); // useRef so seeding never triggers re-render
 
   useEffect(() => {
+    // Seed only once — when both lists have finished loading for the first time
     if (
       seededRef.current === false &&
       !usersLoading &&
@@ -593,7 +586,7 @@ const User = () => {
     }
   }, [usersLoading, empSearchLoading, usersData, employeesData]);
 
-  // ─── Merge ────────────────────────────────────────────────────────────────
+  // ─── Merge: use localStatusMap status when available, else Redux status ────
   const allUsers = [...normalizedUsers, ...normalizedEmployees].map((u) => {
     const key = `${u.userType}-${u.id}`;
     return localStatusMap[key] !== undefined
@@ -601,7 +594,7 @@ const User = () => {
       : u;
   });
 
-  // ─── Designation options ──────────────────────────────────────────────────
+  // ─── Designation options ───────────────────────────────────────────────────
   const designationSet = new Set(
     normalizedEmployees.map((u) => u.designation).filter((d) => d && d !== "—"),
   );
@@ -614,13 +607,13 @@ const User = () => {
   ];
 
   const statusOptions = [
-    { label: "Active",   color: "#0f883930" },
+    { label: "Active", color: "#0f883930" },
     { label: "Inactive", color: "#cfb00f66" },
   ];
 
   const layoutOptions = {
-    card:  { icon: <SlGrid />,                label: "As Card"  },
-    table: { icon: <BsLayoutThreeColumns />,  label: "As Table" },
+    card: { icon: <SlGrid />, label: "As Card" },
+    table: { icon: <BsLayoutThreeColumns />, label: "As Table" },
   };
 
   const handleSelect = (eventKey) => {
@@ -630,28 +623,40 @@ const User = () => {
   const handleClick = (status) =>
     setSelectedStatus((prev) => (prev === status ? null : status));
 
-  // ─── Toggle status ────────────────────────────────────────────────────────
+  // ─── Toggle status handler ─────────────────────────────────────────────────
   const handleToggle = (item) => {
     const key = `${item.userType}-${item.id}`;
     const currentStatus = localStatusMap[key] ?? item.status;
-    const nextStatus    = currentStatus === "active" ? "inactive" : "active";
+    const nextStatus = currentStatus === "active" ? "inactive" : "active";
 
+    // Update local map immediately — this is the only thing that drives the UI
     setLocalStatusMap((prev) => ({ ...prev, [key]: nextStatus }));
+
     const revert = () =>
       setLocalStatusMap((prev) => ({ ...prev, [key]: currentStatus }));
 
     if (item.userType === "user") {
-      dispatch(updateStatus({ id: item.id, status: nextStatus === "active" ? "1" : "0" }))
+      dispatch(
+        updateStatus({
+          id: item.id,
+          status: nextStatus === "active" ? "1" : "0",
+        }),
+      )
         .unwrap()
         .catch(revert);
     } else {
-      dispatch(toggleEmployeeStatus({ id: item.id, status: nextStatus }))
+      dispatch(
+        toggleEmployeeStatus({
+          id: item.id,
+          status: nextStatus,
+        }),
+      )
         .unwrap()
         .catch(revert);
     }
   };
 
-  // ─── Edit click ───────────────────────────────────────────────────────────
+  // ─── Open edit modal for users / redirect to edit page for employees ───────
   const handleEditClick = (item) => {
     if (item.userType === "employee") {
       navigate(`/employees/edit/${item.id}`);
@@ -660,24 +665,41 @@ const User = () => {
     }
   };
 
-  // ─── Save password ────────────────────────────────────────────────────────
+  // ─── Save password via updateUser thunk ───────────────────────────────────
+  // thunk signature: updateUser({ id, data })  →  POST /api/users/{id}
   const handleSavePassword = ({ userId, password, password_confirmation }) => {
     setModalSaving(true);
-    return dispatch(updateUser({ id: userId, data: { password, password_confirmation } }))
-      .unwrap()
+
+    return dispatch(
+      updateUser({
+        id: userId,
+        data: { password, password_confirmation },
+      }),
+    )
+      .unwrap()   // throws on rejected thunk so modal .catch() fires
       .finally(() => setModalSaving(false));
   };
 
-  // ─── Save role ────────────────────────────────────────────────────────────
+  // ─── Save role via updateUser thunk ───────────────────────────────────────
+  // thunk signature: updateUser({ id, data })  →  POST /api/users/{id}
   const handleSaveRoles = ({ userId, roleId }) => {
     setModalSaving(true);
-    return dispatch(updateUser({ id: userId, data: { role_id: roleId } }))
+
+    return dispatch(
+      updateUser({
+        id: userId,
+        data: { role_id: roleId },  // adjust key if your API expects "roleId" or "roles"
+      }),
+    )
       .unwrap()
-      .then(() => dispatch(getUsers()))
+      .then(() => {
+        // Re-fetch so the modal shows the updated role next time it opens
+        dispatch(getUsers());
+      })
       .finally(() => setModalSaving(false));
   };
 
-  // ─── Filtering ────────────────────────────────────────────────────────────
+  // ─── Filtering ─────────────────────────────────────────────────────────────
   const filteredUsers = allUsers.filter((user) => {
     const matchStatus = selectedStatus
       ? user.status.toLowerCase() === selectedStatus.toLowerCase()
@@ -686,10 +708,12 @@ const User = () => {
     const matchDesignation =
       !selectedDesignation || selectedDesignation.value === "all"
         ? true
-        : user.designation.toLowerCase() === selectedDesignation.value.toLowerCase();
+        : user.designation.toLowerCase() ===
+          selectedDesignation.value.toLowerCase();
     return matchStatus && matchType && matchDesignation;
   });
 
+  // Only show full-page spinner before the map is seeded (i.e. first load only)
   const isLoading = !seededRef.current && (usersLoading || empSearchLoading);
 
   return (
@@ -700,11 +724,20 @@ const User = () => {
             <div className="page-header w-100">
               <h5 className="mb-0">Users</h5>
             </div>
-            <Dropdown show={show} onToggle={(isOpen) => setShow(isOpen)} onSelect={handleSelect}>
-              <Dropdown.Toggle id="layout-dropdown" className="border bg-transparent text-dark">
+            <Dropdown
+              show={show}
+              onToggle={(isOpen) => setShow(isOpen)}
+              onSelect={handleSelect}
+            >
+              <Dropdown.Toggle
+                id="layout-dropdown"
+                className="border bg-transparent text-dark"
+              >
                 <div>
                   {layoutOptions[layout].icon}
-                  <span className="ms-2"><RiArrowDownSLine /></span>
+                  <span className="ms-2">
+                    <RiArrowDownSLine />
+                  </span>
                 </div>
               </Dropdown.Toggle>
               <Dropdown.Menu>
@@ -732,7 +765,9 @@ const User = () => {
                     onClick={() => setSelectedType(type)}
                   >
                     <p className="mb-0">
-                      {type === "" ? "All" : type.charAt(0).toUpperCase() + type.slice(1)}
+                      {type === ""
+                        ? "All"
+                        : type.charAt(0).toUpperCase() + type.slice(1)}
                     </p>
                   </div>
                 ))}
@@ -749,7 +784,10 @@ const User = () => {
                       onClick={() => handleClick(label)}
                       style={{ cursor: "pointer" }}
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="185 358.75 450 102.5">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="185 358.75 450 102.5"
+                      >
                         <polygon
                           fill={isSelected ? color : "#fff"}
                           stroke={color}
@@ -782,7 +820,9 @@ const User = () => {
                   {isLoading ? (
                     <div className="text-center py-5">Loading...</div>
                   ) : filteredUsers.length === 0 ? (
-                    <div className="text-center py-5 text-muted">No users found.</div>
+                    <div className="text-center py-5 text-muted">
+                      No users found.
+                    </div>
                   ) : layout === "card" ? (
                     <Row>
                       {filteredUsers.map((user) => (
@@ -791,25 +831,22 @@ const User = () => {
                             <CardHeader className="bg-white">
                               <div className="d-flex justify-content-between align-items-center">
                                 <div className="d-flex align-items-center">
-                                  {/* ✅ Fix 2: Avatar replaces bare <Image> in card view */}
-                                  <Avatar
-                                    name={user.name}
+                                  <Image
                                     src={user.profile}
-                                    size={48}
+                                    roundedCircle
+                                    alt={user.name}
                                     className="border p-1 avatar"
                                   />
                                   <div className="ms-2 ps-2 border-start">
-                                    <label className="ps-1 d-block">{user.name}</label>
+                                    <label className="ps-1 d-block">
+                                      {user.name}
+                                    </label>
                                     <div>
                                       <Badge pill bg="primary" className="fw-normal">
-                                        {user.designation?.length > 17
-                                          ? user.designation.substring(0, 17) + "..."
-                                          : user.designation}
+                                        {user.designation}
                                       </Badge>
                                       <Badge pill bg="dark" className="ms-2 fw-normal">
-                                        {user.department?.length > 17
-                                          ? user.department.substring(0, 17) + "..."
-                                          : user.department}
+                                        {user.department}
                                       </Badge>
                                     </div>
                                   </div>
@@ -827,21 +864,25 @@ const User = () => {
                               </p>
                               <p>
                                 <MdAlternateEmail />
-                                <span className="text-truncate ms-1">{user.email}</span>
+                                <span className="text-truncate ms-1">
+                                  {user.email}
+                                </span>
                               </p>
                               <p>
-                                <FaRupeeSign />
-                                <span className="text-truncate ms-1">{user.payoutRate}</span>
+                                <LuDollarSign />
+                                <span className="text-truncate ms-1">
+                                  {user.payoutRate}
+                                </span>
                               </p>
                               <div className="d-flex justify-content-end mt-1">
-                                <button
-                                  className="btn btn-sm btn-outline-primary d-flex align-items-center gap-1"
-                                  style={{ fontSize: "0.75rem" }}
-                                  onClick={() => handleEditClick(user)}
-                                >
-                                  <FiEdit size={13} /> Edit
-                                </button>
-                              </div>
+                                  <button
+                                    className="btn btn-sm btn-outline-primary d-flex align-items-center gap-1"
+                                    style={{ fontSize: "0.75rem" }}
+                                    onClick={() => handleEditClick(user)}
+                                  >
+                                    <FiEdit size={13} /> Edit
+                                  </button>
+                                </div>
                             </CardBody>
                           </Card>
                         </Col>

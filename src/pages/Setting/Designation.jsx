@@ -71,7 +71,7 @@ const Designation = () => {
                 : "bg-secondary-subtle text-secondary border-secondary"
               }`}
           >
-            {row.status}
+            {row.status?.charAt(0).toUpperCase() + row.status?.slice(1)}
           </Badge>
         ),
         center: true,

@@ -279,9 +279,9 @@ const GeneralSettings = () => {
                   <Col xl={6}>
                     <FormField
                       name="city"
-                      label={<>Company City <span className="text-danger">*</span></>}
+                      label={<>City <span className="text-danger">*</span></>}
                       // label="Company City"
-                      placeholder="Enter Company City"
+                      placeholder="Enter City"
                       touched={touched}
                       errors={errors}
                     />

@@ -20,6 +20,7 @@ import {
 } from "./slice/departmentSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useAuth } from "../../context/AuthContext";
+import { capitalize } from "lodash";
 
 /* ================= VALIDATION ================= */
 const validationSchema = Yup.object({
@@ -74,7 +75,7 @@ const Department = () => {
               : "bg-secondary-subtle text-secondary border-secondary"
               }`}
           >
-            {row.status}
+           {row.status?.charAt(0).toUpperCase() + row.status?.slice(1)}
           </Badge>
         ),
       },

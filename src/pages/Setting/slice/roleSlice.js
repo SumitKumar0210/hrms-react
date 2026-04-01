@@ -44,8 +44,9 @@ export const storeRole = createAsyncThunk(
       return res.data;
     } catch (error) {
       const errMsg = getErrorMessage(error);
-      errorMessage(errMsg);
-      return rejectWithValue(errMsg);
+      console.log(error.message);
+      errorMessage(error.message);
+      return rejectWithValue(error.message);
     }
   }
 );

@@ -142,7 +142,7 @@ const Roles = () => {
     <>
       <Container fluid>
         {/* Header */}
-        <div className="d-flex justify-content-between align-items-center border-bottom pb-2">
+        <div className="d-flex justify-content-between align-items-center border-bottom py-2">
           <h5 className="mb-0 fw-normal fs-6">Roles</h5>
           {hasPermission('roles_permission.create') && (
 
@@ -190,7 +190,11 @@ const Roles = () => {
             if (editRow) {
               dispatch(updateRole({ ...values, id: editRow.id }));
             } else {
-              dispatch(storeRole(values));
+             const res = dispatch(storeRole(values));
+           
+             if(res.error) return;
+             navigate(`/settings/${res.payload.id}/fetch-permissions`);
+
             }
 
             actions.resetForm();

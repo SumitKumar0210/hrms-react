@@ -77,6 +77,7 @@ const LoginRoute = () => {
   }
 
   if (isAuthenticated) {
+    // var path = "/users";
     var path = "/dashboard";
     if(localStorage.getItem("redirectAfterLogin")) {
       path = localStorage.getItem("redirectAfterLogin");

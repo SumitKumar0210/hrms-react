@@ -54,21 +54,22 @@ const EMPTY_FORM = { checkIn: null, checkOut: null, status: "", reason: "" };
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const ManualAttendanceCorrection = () => {
-    const dispatch     = useDispatch();
-    const dropdownRef  = useRef(null);
+    const dispatch = useDispatch();
+    const dropdownRef = useRef(null);
     const { hasPermission } = useAuth();
 
     // ── Redux ────────────────────────────────────────────────────────────────
     const { employees = [], searchLoading } = useSelector((s) => s.employee);
     const { currentRecord, history, searching, saving, error, success } =
         useSelector((s) => s.manualAttendance);
+    // console.log(history)
 
     // ── Search state ─────────────────────────────────────────────────────────
-    const [searchTerm,        setSearchTerm]        = useState("");
-    const [selectedEmployee,  setSelectedEmployee]  = useState(null);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [selectedEmployee, setSelectedEmployee] = useState(null);
     const [filteredEmployees, setFilteredEmployees] = useState([]);
-    const [showDropdown,      setShowDropdown]       = useState(false);
-    const [searchDate,        setSearchDate]         = useState(new Date());
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [searchDate, setSearchDate] = useState(new Date());
 
     // ── Fix: track whether the user has clicked Search at least once ─────────
     const [hasSearched, setHasSearched] = useState(false);
@@ -114,10 +115,10 @@ const ManualAttendanceCorrection = () => {
     useEffect(() => {
         if (currentRecord) {
             setForm({
-                checkIn:  timeStrToDate(currentRecord.sign_in),
+                checkIn: timeStrToDate(currentRecord.sign_in),
                 checkOut: timeStrToDate(currentRecord.sign_out),
-                status:   currentRecord.status || "",
-                reason:   "",
+                status: currentRecord.status || "",
+                reason: "",
             });
         } else {
             setForm(EMPTY_FORM);
@@ -161,7 +162,7 @@ const ManualAttendanceCorrection = () => {
         setHasSearched(true);
         dispatch(fetchAttendanceWithHistory({
             employee_id: selectedEmployee.id,
-            date:        formatDate(searchDate),
+            date: formatDate(searchDate),
         }));
     };
 
@@ -172,17 +173,17 @@ const ManualAttendanceCorrection = () => {
 
     const handleSave = () => {
         if (!currentRecord) return;
-        if (!form.status)          { alert("Status is required.");               return; }
-        if (!form.reason.trim())   { alert("Please provide a correction reason."); return; }
+        if (!form.status) { alert("Status is required."); return; }
+        if (!form.reason.trim()) { alert("Please provide a correction reason."); return; }
 
         dispatch(correctAttendance({
             correctionData: {
                 employee_id: selectedEmployee.id,
-                sign_in:     dateToTimeStr(form.checkIn),
-                sign_out:    dateToTimeStr(form.checkOut),
-                date:        formatDate(searchDate),
-                status:      form.status.toLowerCase(),
-                reason:      form.reason.trim(),
+                sign_in: dateToTimeStr(form.checkIn),
+                sign_out: dateToTimeStr(form.checkOut),
+                date: formatDate(searchDate),
+                status: form.status.toLowerCase(),
+                reason: form.reason.trim(),
             },
         }));
     };
@@ -363,7 +364,7 @@ const ManualAttendanceCorrection = () => {
                                                 </div>
 
                                                 {[
-                                                    { label: "CHECK-IN TIME",  field: "checkIn",  value: form.checkIn,  setter: handleFormChange("checkIn")  },
+                                                    { label: "CHECK-IN TIME", field: "checkIn", value: form.checkIn, setter: handleFormChange("checkIn") },
                                                     { label: "CHECK-OUT TIME", field: "checkOut", value: form.checkOut, setter: handleFormChange("checkOut") },
                                                 ].map(({ label, field, value, setter }) => (
                                                     <Form.Group key={field} className="py-2 border-bottom">
@@ -486,14 +487,34 @@ const ManualAttendanceCorrection = () => {
                                     {history.map((entry, idx) => (
                                         <Card key={entry.id ?? idx} className="mb-2 border">
                                             <Card.Body className="py-2">
-                                                <div className="d-flex justify-content-between align-items-start mb-1">
-                                                    <small className="text-muted fw-semibold">
-                                                        {fmtDateTime(entry.updated_at)}
-                                                    </small>
-                                                    <Badge bg="warning" text="dark" pill>
-                                                        Correction #{history.length - idx}
-                                                    </Badge>
+                                                {/* Header: Correction badge + updated_at below */}
+                                                <div className="d-flex justify-content-between align-items-start mb-2">
+                                                    <div>
+                                                        <strong className="small">Date:</strong>{" "}
+                                                        <span className="small">{entry.date || "—"}</span>
+                                                        <div className="d-flex gap-3 mt-1">
+                                                            <span className="small">
+                                                                <strong>In:</strong> {entry.sign_in || "—"}
+                                                            </span>
+                                                            <span className="small">
+                                                                <strong>Out:</strong> {entry.sign_out || "—"}
+                                                            </span>
+                                                            <span className="small">
+                                                                <strong>Hrs:</strong> {entry.total_hours || "—"}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-end">
+                                                        <Badge bg="warning" text="dark" pill>
+                                                            Correction #{history.length - idx}
+                                                        </Badge>
+                                                        <div>
+                                                            <small className="text-muted">{fmtDateTime(entry.updated_at)}</small>
+                                                        </div>
+                                                    </div>
                                                 </div>
+
+                                                {/* Reason + By */}
                                                 <div className="small">
                                                     <strong>Reason:</strong> {entry.reason || "—"}
                                                 </div>

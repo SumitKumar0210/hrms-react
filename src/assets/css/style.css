@@ -103,7 +103,7 @@ main {
   display: flex;
   align-items: center;
   display: block;
-  filter: contrast(0) brightness(100);
+  /* filter: contrast(0) brightness(100); */
 }
 .sidebar-wrapper .sidebar-brand .logo img {
   max-width: 100%;
@@ -881,10 +881,3 @@ main {
 .rdt_Pagination {
   margin-top: 15px;
 }/*# sourceMappingURL=style.css.map */
-
-.modal .modal-header {
-    background-color: #f0f0f0 !important;
-    color: #080808 !important;
-    border: 0;
-    border-radius: 3px 3px 0 0;
-}

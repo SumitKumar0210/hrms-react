@@ -99,11 +99,11 @@ const Login = () => {
             {loading ? 'Signing in...' : 'Sign In'}
           </Button>
 
-          <div className="text-center mt-3">
+          {/* <div className="text-center mt-3">
             <a href="/forgot-password" className="text-decoration-none">
               Forgot password?
             </a>
-          </div>
+          </div> */}
         </Form>
       </Card.Body>
     </Card>

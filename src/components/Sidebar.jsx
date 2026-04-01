@@ -215,7 +215,7 @@ const Sidebar = () => {
           <div className="header-items">
             <ul className="header-actions">
               {/* ADD MENU */}
-              <li>
+              {/* <li>
                 <Dropdown
                   onMouseEnter={() => setShowAdd(true)}
                   onMouseLeave={() => setShowAdd(false)}
@@ -235,7 +235,7 @@ const Sidebar = () => {
                     </div>
                   </Dropdown.Menu>
                 </Dropdown>
-              </li>
+              </li> */}
 
               {/* USER PROFILE */}
               <li>
@@ -262,12 +262,12 @@ const Sidebar = () => {
                         <h5 className="mt-2 mb-0 fw-normal">{user.name ?? "User"}</h5>
                         <p className="mb-1">{user.roles[0] ?? "User"}</p>
                       </div>
-                      <Dropdown.Item>
+                      {/* <Dropdown.Item>
                         <BiRefresh /> User Dashboard
                       </Dropdown.Item>
                       <Dropdown.Item>
                         <FaRegUser /> My Profile
-                      </Dropdown.Item>
+                      </Dropdown.Item> */}
                       <Dropdown.Item onClick={() => handleLogout()}>
                         <MdOutlineLogout /> Sign Out
                       </Dropdown.Item>

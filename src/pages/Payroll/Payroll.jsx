@@ -46,10 +46,12 @@ const STATUS_OPTIONS = [
   "compensatory_off",
   "leave_without_pay",
   "public_holiday",
+  "week_off",
 ];
 
 const STATUS_META = {
   present: { bg: "#d1fae5", border: "#6ee7b7", label: "Present" },
+  week_off: { bg: "#d1fae5", border: "#6ee7b7", label: "Week Off" },
   absent: { bg: "#fee2e2", border: "#fca5a5", label: "Absent" },
   half_day: { bg: "#e0f2fe", border: "#7dd3fc", label: "Half Day" },
   casual_leave: { bg: "#fef9c3", border: "#fde047", label: "Casual Leave" },
