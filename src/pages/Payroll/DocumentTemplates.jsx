@@ -32,6 +32,7 @@ const EMPLOYEE_FIELD_MAP = {
     employee_code: (e) => e.employee_code,
     name: (e) => `${e.first_name ?? ""} ${e.last_name ?? ""}`.trim(),
     first_name: (e) => e.first_name,
+    middle_name: (e) => e.middle_name,
     last_name: (e) => e.last_name,
     blood_group: (e) => e.blood_group,
     aadhar_number: (e) => e.aadhar_number,
@@ -40,6 +41,7 @@ const EMPLOYEE_FIELD_MAP = {
     department: (e) => e.department?.name,
     shift: (e) => e.shift?.name,
     date_of_joining: (e) => e.date_of_joining,
+    probation_date: (e) => e.probation_date,
     employment_type: (e) => e.employment_type,
     designation: (e) => e.designation?.name,
     status: (e) => e.status,
@@ -49,14 +51,25 @@ const EMPLOYEE_FIELD_MAP = {
     city: (e) => e.city,
     state: (e) => e.state,
     source: (e) => e.source,
+
+    // Salary
     basic_salary: (e) => e.salaries?.[0]?.basic_salary,
     hra: (e) => e.salaries?.[0]?.hra,
     special_allowance: (e) => e.salaries?.[0]?.special_allowance,
+
+    // Bank Details
+    bank_name: (e) => e.bank_name,
+    branch_address: (e) => e.branch_address,
+    ifsc_code: (e) => e.ifsc_code,
+    account_number: (e) => e.account_number,
+    pan_number: (e) => e.pan_number,
+    beneficiary_name: (e) => e.beneficiary_name
 };
 const tableVariablesList = [
     'employee_code',
     'name',
     'first_name',
+    'middle_name',
     'last_name',
     'blood_group',
     'aadhar_number',
@@ -65,6 +78,7 @@ const tableVariablesList = [
     'department',
     'shift',
     'date_of_joining',
+    'probation_date',
     'employment_type',
     'designation',
     'status',
@@ -76,7 +90,13 @@ const tableVariablesList = [
     'source',
     'basic_salary',
     'hra',
-    'special_allowance'
+    'special_allowance',
+    'bank_name',
+    'branch_address',
+    'ifsc_code',
+    'account_number',
+    'pan_number',
+    'beneficiary_name'
 ];
 
 /* ─────────────────────────────────────────────
@@ -413,10 +433,10 @@ const DocumentTemplates = () => {
                                             onClick={() => !editingId && setSelectedId(t.id)}
                                         >
                                             <Card.Body className="py-2 px-3">
-                                                <div className="d-flex align-items-start justify-content-between gap-1">
+                                                <div className="d-flex align-items-start justify-content-between gap-2">
 
                                                     {/* Title / rename input */}
-                                                    <div className="flex-grow-1 min-w-0">
+                                                    <div className="flex-grow-1 overflow-hidden">
                                                         {editingId === t.id ? (
                                                             <Form.Control
                                                                 size="sm" autoFocus
@@ -430,9 +450,9 @@ const DocumentTemplates = () => {
                                                                 onClick={(e) => e.stopPropagation()}
                                                             />
                                                         ) : (
-                                                            <div className="d-flex align-items-center gap-1">
+                                                            <div className="d-flex align-items-center gap-1 overflow-hidden">
                                                                 <span
-                                                                    className="fw-semibold text-truncate"
+                                                                    className="fw-semibold text-truncate d-block"
                                                                     style={{ fontSize: 13 }}
                                                                     title={t.title}
                                                                 >
@@ -441,19 +461,19 @@ const DocumentTemplates = () => {
                                                                 {hasDraft && (
                                                                     <span
                                                                         title="Unsaved changes"
-                                                                        className="text-warning"
+                                                                        className="text-warning flex-shrink-0"
                                                                         style={{ fontSize: 7 }}
                                                                     >●</span>
                                                                 )}
                                                             </div>
                                                         )}
-                                                        <small
-                                                            className="text-muted text-truncate d-block"
+                                                        <div
+                                                            className="text-muted text-truncate"
                                                             style={{ fontSize: 11 }}
                                                             title={t.subject}
                                                         >
                                                             {t.subject || "No subject"}
-                                                        </small>
+                                                        </div>
                                                     </div>
 
                                                     {/* Actions */}
@@ -471,7 +491,7 @@ const DocumentTemplates = () => {
                                                                     setTempTitle(t.title);
                                                                 }}
                                                             /> */}
-                                                            {hasPermission('document_template.delete') && t.id !== 2 && (
+                                                            {hasPermission('document_template.delete') && ![2, 4, 5, 6].includes(t.id) && (
                                                                 <BsTrash3
                                                                     size={12}
                                                                     className="text-danger"
@@ -483,7 +503,6 @@ const DocumentTemplates = () => {
                                                                     }}
                                                                 />
                                                             )}
-
                                                         </div>
                                                     </div>
 
@@ -729,14 +748,20 @@ const DocumentTemplates = () => {
                                     <Form.Control.Feedback type="invalid">{errors.value}</Form.Control.Feedback>
                                 </Form.Group>
 
-                                <Form.Check
-                                    type="switch"
-                                    id="variable-status"
-                                    className="border px-3 py-2 rounded"
-                                    label="Active"
-                                    checked={values.status}
-                                    onChange={() => setFieldValue("status", !values.status)}
-                                />
+                                <div className="d-flex align-items-center justify-content-between px-3 py-2 rounded bg-light border">
+                                    <div>
+                                        <div className="fw-medium" style={{ fontSize: "13px" }}>Active</div>
+                                        <div className="text-muted" style={{ fontSize: "12px" }}>
+                                            Variable will be available in templates
+                                        </div>
+                                    </div>
+                                    <Form.Check
+                                        type="switch"
+                                        id="variable-status"
+                                        checked={values.status}
+                                        onChange={() => setFieldValue("status", !values.status)}
+                                    />
+                                </div>
                             </Modal.Body>
 
                             <Modal.Footer>

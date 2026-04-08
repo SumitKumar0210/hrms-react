@@ -266,7 +266,7 @@ const ManualAttendanceCorrection = () => {
                                                             style={{ cursor: "pointer" }}
                                                         >
                                                             <div className="fw-semibold">
-                                                                {emp.first_name} {emp.last_name}
+                                                                {emp.first_name} {emp.middle_name} {emp.last_name}
                                                             </div>
                                                             <small className="text-muted">
                                                                 {emp.employee_code} | {emp.designation?.name} | {emp.department?.name}

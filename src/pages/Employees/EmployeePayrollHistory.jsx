@@ -56,7 +56,7 @@ const EmployeePayrollHistory = () => {
         const q = searchTerm.toLowerCase();
         setFilteredEmployees(
             employees.filter((emp) =>
-                `${emp.first_name} ${emp.last_name}`.toLowerCase().includes(q) ||
+                `${emp.first_name} ${emp.middle_name ?? ""} ${emp.last_name}`.toLowerCase().includes(q) ||
                 emp.employee_code?.toLowerCase().includes(q)
             )
         );
@@ -77,7 +77,7 @@ const EmployeePayrollHistory = () => {
     /* ── Handlers — wrapped in useCallback to keep columns memo stable ── */
     const handleEmployeeSelect = useCallback((emp) => {
         setSelectedEmployee(emp);
-        setSearchTerm(`${emp.first_name} ${emp.last_name}`);
+        setSearchTerm(`${emp.first_name} ${emp.middle_name ?? ""} ${emp.last_name}`);
         setShowDropdown(false);
         dispatch(getHistoryWithEmpId(emp.id));
     }, [dispatch]);
@@ -124,7 +124,7 @@ const EmployeePayrollHistory = () => {
             row: {
                 id:            row.id,
                 employee_name: selectedEmployee
-                    ? `${selectedEmployee.first_name} ${selectedEmployee.last_name}`
+                    ? `${selectedEmployee.first_name} ${selectedEmployee.middle_name ?? ""} ${selectedEmployee.last_name}`
                     : "",
                 employee_code: selectedEmployee?.employee_code ?? "",
                 month:         row.month,
@@ -258,7 +258,7 @@ const EmployeePayrollHistory = () => {
                                         {filteredEmployees.length > 0
                                             ? filteredEmployees.map((emp) => (
                                                 <ListGroup.Item key={emp.id} action onClick={() => handleEmployeeSelect(emp)}>
-                                                    <div className="fw-semibold">{emp.first_name} {emp.last_name}</div>
+                                                    <div className="fw-semibold">{emp.first_name} {emp.middle_name ?? ""} {emp.last_name}</div>
                                                     <small className="text-muted">
                                                         {emp.employee_code} | {emp.designation?.name} | {emp.department?.name}
                                                     </small>
@@ -274,7 +274,7 @@ const EmployeePayrollHistory = () => {
                                 <div className="mt-2 p-2 bg-light rounded small d-flex justify-content-between align-items-center">
                                     <div>
                                         <span className="fw-semibold">
-                                            {selectedEmployee.first_name} {selectedEmployee.last_name}
+                                            {selectedEmployee.first_name} {selectedEmployee.middle_name?? ""} {selectedEmployee.last_name}
                                         </span>
                                         <span className="text-muted ms-2">({selectedEmployee.employee_code})</span>
                                     </div>

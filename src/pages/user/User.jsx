@@ -557,7 +557,7 @@ const User = () => {
 
     return {
       id: e.id,
-      name: `${e.first_name ?? ""} ${e.last_name ?? ""}`.trim() || "—",
+      name: `${e.first_name ?? ""} ${e.middle_name ?? ""} ${e.last_name ?? ""}`.trim() || "—",
       phone: e.mobile ?? "—",
       email: e.email ?? "—",
       designation: e.designation?.name ?? "—",

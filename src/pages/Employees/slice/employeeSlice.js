@@ -118,9 +118,38 @@ export const updateEmployee = createAsyncThunk(
             successMessage(res.data.message || "Employee updated successfully");
             return res.data;
         } catch (error) {
-            const errMsg = getErrorMessage(error);
-            errorMessage(errMsg);
-            return rejectWithValue(errMsg);
+            if (error.response?.status === 422) {
+                const laravelErrors = error.response.data?.errors;
+                const firstError = laravelErrors
+                    ? Object.values(laravelErrors)[0]?.[0]
+                    : error.response.data?.message;
+                const errMsg = firstError || "Validation failed";
+                errorMessage(errMsg);
+                return rejectWithValue(errMsg);
+            }
+        }
+    }
+);
+
+export const uploadDocuments = createAsyncThunk(
+    "employee/uploadDocuments",
+    async ({ id, employeeData }, { rejectWithValue }) => {
+        try {
+            const res = await api.post(`/employees/${id}/upload/documents`, employeeData, {
+                headers: { "Content-Type": "multipart/form-data" }
+            });
+            successMessage(res.data.message || "Employee updated successfully");
+            return res.data;
+        } catch (error) {
+            if (error.response?.status === 422) {
+                const laravelErrors = error.response.data?.errors;
+                const firstError = laravelErrors
+                    ? Object.values(laravelErrors)[0]?.[0]
+                    : error.response.data?.message;
+                const errMsg = firstError || "Validation failed";
+                errorMessage(errMsg);
+                return rejectWithValue(errMsg);
+            }
         }
     }
 );
@@ -165,6 +194,66 @@ export const searchEmployees = createAsyncThunk(
     async (searchTerm, { rejectWithValue }) => {
         try {
             const res = await api.get(`/employees/search?q=${searchTerm}`);
+            return res.data;
+        } catch (error) {
+            const errMsg = getErrorMessage(error);
+            errorMessage(errMsg);
+            return rejectWithValue(errMsg);
+        }
+    }
+);
+
+export const endProbation = createAsyncThunk(
+    "employee/endProbation",
+    async (id, { rejectWithValue }) => {
+        try {
+            const res = await api.post(`/employees/end/probation`, { id: id });
+            successMessage(res.data.message);
+            return res.data;
+        } catch (error) {
+            const errMsg = getErrorMessage(error);
+            errorMessage(errMsg);
+            return rejectWithValue(errMsg);
+        }
+    }
+);
+
+export const contractLetter = createAsyncThunk(
+    "employee/contractLetter",
+    async (id, { rejectWithValue }) => {
+        try {
+            const res = await api.post(`/employees/send/contract-letter`, { id: id });
+            successMessage(res.data.message);
+            return res.data;
+        } catch (error) {
+            const errMsg = getErrorMessage(error);
+            errorMessage(errMsg);
+            return rejectWithValue(errMsg);
+        }
+    }
+);
+
+export const onboardingMail = createAsyncThunk(
+    "employee/onboardingMail",
+    async (id, { rejectWithValue }) => {
+        try {
+            const res = await api.post(`/employees/send/OnboardingMail`, id);
+            successMessage(res.data.message);
+            return res.data;
+        } catch (error) {
+            const errMsg = getErrorMessage(error);
+            errorMessage(errMsg);
+            return rejectWithValue(errMsg);
+        }
+    }
+);
+
+export const checkTodayOnboardEmployee = createAsyncThunk(
+    "employee/checkTodayOnboardEmployee",
+    async (id, { rejectWithValue }) => {
+        try {
+            const res = await api.post(`/employees/check-today-onboard-employee`, id);
+            successMessage(res.data.message);
             return res.data;
         } catch (error) {
             const errMsg = getErrorMessage(error);
@@ -321,6 +410,34 @@ const employeeSlice = createSlice({
                 }
             })
             .addCase(updateEmployee.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+                state.success = false;
+            })
+            .addCase(uploadDocuments.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+                state.success = false;
+            })
+            .addCase(uploadDocuments.fulfilled, (state, action) => {
+                state.loading = false;
+                state.success = true;
+                // Update employee in the list
+                const updatedEmployee = action.payload.data || action.payload.employee;
+                if (updatedEmployee) {
+                    const index = state.employees.findIndex(
+                        (emp) => emp.id === updatedEmployee.id
+                    );
+                    if (index !== -1) {
+                        state.employees[index] = updatedEmployee;
+                    }
+                    // Update current employee if it's the same
+                    if (state.currentEmployee?.id === updatedEmployee.id) {
+                        state.currentEmployee = updatedEmployee;
+                    }
+                }
+            })
+            .addCase(uploadDocuments.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
                 state.success = false;

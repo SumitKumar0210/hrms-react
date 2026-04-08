@@ -12,7 +12,10 @@ import {
     toggleEmployeeStatus,
     clearError,
     clearSuccess,
+    onboardingMail,
+    checkTodayOnboardEmployee,
 } from './slice/employeeSlice';
+import { FiSend } from "react-icons/fi";
 import { useAuth } from '../../context/AuthContext';
 
 /* ================= DATE INPUT ================= */
@@ -31,9 +34,13 @@ const Employees = () => {
 
     const [showDelete, setShowDelete] = useState(false);
     const [deleteRow, setDeleteRow] = useState(null);
+    const [newEmployee, setNewEmployee] = useState(null);
+    console.log(newEmployee);
     const [deleting, setDeleting] = useState(false);
 
     const { employees, loading, error } = useSelector((state) => state.employee);
+
+    const MediaUrl = import.meta.env.VITE_MEDIA_URL;
 
     const [filters, setFilters] = useState({
         search: '',
@@ -44,8 +51,24 @@ const Employees = () => {
     });
 
     // Fetch employees on mount
+    // useEffect(() => {
+    //     dispatch(fetchEmployees({ page: 1, limit: 100 }));
+    // }, [dispatch]);
+
     useEffect(() => {
-        dispatch(fetchEmployees({ page: 1, limit: 100 }));
+        const init = async () => {
+            try {
+                const res = await dispatch(checkTodayOnboardEmployee()).unwrap();
+
+                dispatch(fetchEmployees({ page: 1, limit: 100 }));
+
+                setNewEmployee(res.data); // ✅ correct
+            } catch (error) {
+                console.error("Error fetching onboard employees:", error);
+            }
+        };
+
+        init();
     }, [dispatch]);
 
     // Clear error on unmount
@@ -142,12 +165,21 @@ const Employees = () => {
     // Status badge color
     const statusBadge = (status) => {
         switch (status) {
-            case 'active':   return 'success';
+            case 'active': return 'success';
             case 'inactive': return 'secondary';
             case 'on_leave': return 'warning';
-            default:         return 'secondary';
+            default: return 'secondary';
         }
     };
+
+    const handleOnboardingMail = async () => {
+        try {
+            await dispatch(onboardingMail());
+        } catch (error) {
+            console.error('Onboarding mail failed:', error);
+        }
+    };
+
 
     return (
         <div className="container-fluid g-0">
@@ -160,11 +192,21 @@ const Employees = () => {
                         {loading ? 'Loading...' : `${filteredEmployees.length} Employee${filteredEmployees.length !== 1 ? 's' : ''}`}
                     </small>
                 </div>
-                {hasPermission('staff_directory.create') && (
-                    <Button size="sm" onClick={() => navigate('/employees/add')}>
-                        Add New Employee
-                    </Button>
-                )}
+                <div className='d-flex gap-2'>
+                    {hasPermission('staff_directory.create') && (
+                        <Button size="sm" onClick={() => navigate('/employees/add')}>
+                            Add New Employee
+                        </Button>
+                    )}
+                    {newEmployee?.length > 0 && (
+                        <Button size="sm" onClick={handleOnboardingMail}>
+                            <FiSend className="me-2" />
+                            Send Onboarding Mail ({newEmployee.length})
+                        </Button>
+                    )}
+
+                </div>
+
             </div>
 
             {/* Error Alert */}
@@ -291,8 +333,9 @@ const Employees = () => {
                                         <div className="d-flex gap-2">
                                             <Image
                                                 src={
-                                                    emp.image ||
-                                                    `https://ui-avatars.com/api/?name=${emp.first_name}+${emp.last_name}&background=random`
+                                                    (emp.documents ?? []).find(d => d.document_type === "profile_image")
+                                                        ? `${MediaUrl}/${(emp.documents ?? []).find(d => d.document_type === "profile_image").file_path}`
+                                                        : `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.first_name + " " + emp.last_name)}`
                                                 }
                                                 rounded
                                                 width={45}
@@ -301,7 +344,7 @@ const Employees = () => {
                                             />
                                             <div className="lh-1">
                                                 <div className="fw-semibold mb-1 fs-14">
-                                                    {`${emp.first_name ?? ''} ${emp.last_name ?? ''}`.trim() || 'N/A'}
+                                                    {`${emp.first_name ?? ''} ${emp.middle_name ?? ''} ${emp.last_name ?? ''}`.trim() || 'N/A'}
                                                 </div>
                                                 <p className="text-muted mb-1 fs-12">
                                                     {emp.designation?.name || 'N/A'}

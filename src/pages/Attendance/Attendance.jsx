@@ -108,7 +108,7 @@ const Attendance = () => {
     return attendanceData.map((item) => ({
       id: item.id,
       employeeId: item.employees?.employee_code || "-",
-      name: `${item.employees?.first_name || ""} ${item.employees?.last_name || ""}`,
+      name: `${item.employees?.first_name || ""} ${item.employees?.middle_name || ""} ${item.employees?.last_name || ""}`,
       role: item.employees?.department?.name || "-",
       shift: item.employees?.shift?.name || "-",
       shiftTime: "",

@@ -141,12 +141,12 @@ const Sidebar = () => {
 
         <div className="sidebar-content">
           {/* DASHBOARD */}
-          <NavLink to="/" className="nav-link">
+          {/* <NavLink to="/" className="nav-link">
             <div className="nav-icon">
               <RiDashboardLine />
               <span className="menu-item d-none d-sm-block">Dashboard</span>
             </div>
-          </NavLink>
+          </NavLink> */}
 
           {/* USERS – CLICKABLE (NO POPOVER) */}
           <NavLink to="/users" className="nav-link">
@@ -185,12 +185,12 @@ const Sidebar = () => {
               </div>
             </NavLink>
 
-            {/* <NavLink to="/archived-users" className="nav-link">
+            <NavLink to="/archived-users" className="nav-link">
               <div className="nav-icon">
                 <RiArchiveLine />
                 <span className="menu-item d-none d-sm-block">Archived</span>
               </div>
-            </NavLink> */}
+            </NavLink>
 
             <NavLink onClick={() => handleLogout()} className="nav-link">
               <div className="nav-icon">

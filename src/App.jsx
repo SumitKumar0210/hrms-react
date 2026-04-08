@@ -77,8 +77,8 @@ const LoginRoute = () => {
   }
 
   if (isAuthenticated) {
-    // var path = "/users";
-    var path = "/dashboard";
+    var path = "/users";
+    // var path = "/dashboard";
     if(localStorage.getItem("redirectAfterLogin")) {
       path = localStorage.getItem("redirectAfterLogin");
       localStorage.removeItem("redirectAfterLogin");
@@ -105,7 +105,7 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       >
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/" element={<Navigate to="/users" replace />} />
 
         {/* No permission needed */}
         <Route path="/dashboard" element={<Dashboard />} />

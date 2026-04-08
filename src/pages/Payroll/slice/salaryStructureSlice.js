@@ -7,7 +7,11 @@ export const createSalaryStructure = createAsyncThunk(
     "salaryStructure/createSalaryStructure",
     async (values, { rejectWithValue }) => {
         try {
-            const res = await api.post(`/salary`, values); // Changed from GET to POST
+            const res = await api.post(`/salary`, values, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            }); // Changed from GET to POST
             successMessage(res.data.message || "Salary structure created successfully");
             return res.data;
         } catch (error) {
@@ -23,7 +27,11 @@ export const updateSalary = createAsyncThunk(
     "salaryStructure/updateSalary",
     async ({ id, values }, { rejectWithValue }) => {
         try {
-            const res = await api.post(`/salary/${id}`, values);
+            const res = await api.post(`/salary`, values, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
             successMessage(res.data.message || "Salary structure updated successfully");
             return res.data;
         } catch (error) {

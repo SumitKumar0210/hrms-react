@@ -90,7 +90,7 @@ const validationSchema = Yup.object({
 
 // ─── Document definitions ─────────────────────────────────────────────────────
 const DOCUMENTS = [
-    { label: "ID Proof", desc: "Passport, Driving License or National ID", name: "idProof" },
+    { label: "Aadhar card", desc: "Passport, Driving License or National ID", name: "idProof" },
     { label: "Address Proof", desc: "Utility bill or Rental agreement", name: "addressProof" },
     { label: "Bank Details", desc: "Cancelled Cheque or Bank statement", name: "bankDetails" },
     { label: "Contract Letter", desc: "Signed employment contract", name: "contractLetter" },

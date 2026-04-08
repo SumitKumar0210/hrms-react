@@ -186,14 +186,17 @@ const Roles = () => {
           }}
           validationSchema={validationSchema}
           enableReinitialize
-          onSubmit={(values, actions) => {
+          onSubmit={ async(values, actions) => {
             if (editRow) {
-              dispatch(updateRole({ ...values, id: editRow.id }));
+              const res = await dispatch(updateRole({ ...values, id: editRow.id }));
+              setEditRow(null);
+              if(res.error) return;
+              
             } else {
-             const res = dispatch(storeRole(values));
-           
+             const res =await dispatch(storeRole(values));
              if(res.error) return;
-             navigate(`/settings/${res.payload.id}/fetch-permissions`);
+            
+             navigate(`/settings/${res.payload.data.id}/fetch-permissions`);
 
             }
 

@@ -584,7 +584,7 @@ const Payroll = () => {
                     <tbody>
                       {filteredEmployees.map((emp, empIdx) => {
                         const empId = emp.id;
-                        const fullName = `${emp.first_name} ${emp.last_name}`;
+                        const fullName = `${emp.first_name} ${emp.middle_name ?? ""} ${emp.last_name}`;
                         const rowBg = empIdx % 2 === 0 ? "#fff" : "#f8fafc";
 
                         return ["sign_in", "sign_out", "status"].map(
